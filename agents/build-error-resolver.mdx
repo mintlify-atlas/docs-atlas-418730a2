@@ -1,0 +1,214 @@
+---
+title: Build Error Resolver Agent
+description: TypeScript and build error resolution specialist
+---
+
+## Overview
+
+The **build-error-resolver** agent is an expert build error resolution specialist. Its mission is to get builds passing with minimal changes — no refactoring, no architecture changes, no improvements.
+
+<ParamField path="name" type="string" default="build-error-resolver">
+  Agent identifier
+</ParamField>
+
+<ParamField path="model" type="string" default="sonnet">
+  Uses Claude Sonnet for efficient error resolution
+</ParamField>
+
+<ParamField path="tools" type="array">
+  Available tools: `Read`, `Write`, `Edit`, `Bash`, `Grep`, `Glob`
+</ParamField>
+
+## When to Use
+
+<Check>Build fails with TypeScript errors</Check>
+<Check>Compilation errors prevent development</Check>
+<Check>Type inference issues</Check>
+<Check>Module resolution errors</Check>
+
+<Info>The build-error-resolver agent activates **PROACTIVELY** when build fails or type errors occur.</Info>
+
+## Core Responsibilities
+
+1. **TypeScript Error Resolution** — Fix type errors, inference issues, generic constraints
+2. **Build Error Fixing** — Resolve compilation failures, module resolution
+3. **Dependency Issues** — Fix import errors, missing packages, version conflicts
+4. **Configuration Errors** — Resolve tsconfig, webpack, Next.js config issues
+5. **Minimal Diffs** — Make smallest possible changes to fix errors
+6. **No Architecture Changes** — Only fix errors, don't redesign
+
+## Diagnostic Commands
+
+```bash
+npx tsc --noEmit --pretty
+npx tsc --noEmit --pretty --incremental false   # Show all errors
+npm run build
+npx eslint . --ext .ts,.tsx,.js,.jsx
+```
+
+## Workflow
+
+### 1. Collect All Errors
+
+- Run `npx tsc --noEmit --pretty` to get all type errors
+- Categorize: type inference, missing types, imports, config, dependencies
+- Prioritize: build-blocking first, then type errors, then warnings
+
+### 2. Fix Strategy (MINIMAL CHANGES)
+
+For each error:
+1. Read the error message carefully — understand expected vs actual
+2. Find the minimal fix (type annotation, null check, import fix)
+3. Verify fix doesn't break other code — rerun tsc
+4. Iterate until build passes
+
+### 3. Common Fixes
+
+| Error | Fix |
+|-------|-----|
+| `implicitly has 'any' type` | Add type annotation |
+| `Object is possibly 'undefined'` | Optional chaining `?.` or null check |
+| `Property does not exist` | Add to interface or use optional `?` |
+| `Cannot find module` | Check tsconfig paths, install package, or fix import path |
+| `Type 'X' not assignable to 'Y'` | Parse/convert type or fix the type |
+| `Generic constraint` | Add `extends { ... }` |
+| `Hook called conditionally` | Move hooks to top level |
+| `'await' outside async` | Add `async` keyword |
+
+## Examples
+
+### Fix: Implicit Any Type
+
+```typescript
+// ERROR: Parameter 'user' implicitly has an 'any' type
+function greet(user) {
+  return `Hello, ${user.name}`;
+}
+
+// FIX: Add type annotation
+interface User {
+  name: string;
+}
+
+function greet(user: User) {
+  return `Hello, ${user.name}`;
+}
+```
+
+### Fix: Possibly Undefined
+
+```typescript
+// ERROR: Object is possibly 'undefined'
+const userName = users.find(u => u.id === userId).name;
+
+// FIX: Optional chaining
+const userName = users.find(u => u.id === userId)?.name;
+
+// OR: Null check
+const user = users.find(u => u.id === userId);
+if (!user) throw new Error('User not found');
+const userName = user.name;
+```
+
+### Fix: Module Not Found
+
+```typescript
+// ERROR: Cannot find module '@/lib/utils'
+import { formatDate } from '@/lib/utils';
+
+// FIX: Check tsconfig.json paths
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+
+// OR: Use relative import
+import { formatDate } from '../../lib/utils';
+```
+
+### Fix: Type Mismatch
+
+```typescript
+// ERROR: Type 'string' is not assignable to type 'number'
+const userId: number = req.params.id;
+
+// FIX: Parse string to number
+const userId: number = parseInt(req.params.id, 10);
+```
+
+## DO and DON'T
+
+<AccordionGroup>
+  <Accordion title="DO">
+    - Add type annotations where missing
+    - Add null checks where needed
+    - Fix imports/exports
+    - Add missing dependencies
+    - Update type definitions
+    - Fix configuration files
+  </Accordion>
+
+  <Accordion title="DON'T">
+    - Refactor unrelated code
+    - Change architecture
+    - Rename variables (unless causing error)
+    - Add new features
+    - Change logic flow (unless fixing error)
+    - Optimize performance or style
+  </Accordion>
+</AccordionGroup>
+
+## Priority Levels
+
+| Level | Symptoms | Action |
+|-------|----------|--------|
+| **CRITICAL** | Build completely broken, no dev server | Fix immediately |
+| **HIGH** | Single file failing, new code type errors | Fix soon |
+| **MEDIUM** | Linter warnings, deprecated APIs | Fix when possible |
+
+## Quick Recovery
+
+```bash
+# Nuclear option: clear all caches
+rm -rf .next node_modules/.cache && npm run build
+
+# Reinstall dependencies
+rm -rf node_modules package-lock.json && npm install
+
+# Fix ESLint auto-fixable
+npx eslint . --fix
+```
+
+## Success Metrics
+
+<Check>`npx tsc --noEmit` exits with code 0</Check>
+<Check>`npm run build` completes successfully</Check>
+<Check>No new errors introduced</Check>
+<Check>Minimal lines changed (< 5% of affected file)</Check>
+<Check>Tests still passing</Check>
+
+## When NOT to Use
+
+<Warning>Use different agents for these scenarios:</Warning>
+
+- Code needs refactoring → use `refactor-cleaner`
+- Architecture changes needed → use `architect`
+- New features required → use `planner`
+- Tests failing → use `tdd-guide`
+- Security issues → use `security-reviewer`
+
+## Usage Example
+
+```bash
+# Invoke build-error-resolver directly
+ask build-error-resolver "Fix all TypeScript errors"
+
+# Or let it activate automatically
+npm run build  # Fails with errors
+# → build-error-resolver activates and fixes errors
+```
+
+<Tip>Fix the error, verify the build passes, move on. Speed and precision over perfection.</Tip>

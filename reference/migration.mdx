@@ -1,0 +1,336 @@
+---
+title: Migration Guide
+description: Migrate between ECC versions and from other Claude Code configurations
+---
+
+## Migrating to v1.7.0
+
+### Breaking Changes
+
+**None.** v1.7.0 is fully backward compatible with v1.6.0.
+
+### New Features to Adopt
+
+#### 1. Codex Support
+
+If using OpenAI Codex CLI:
+
+```bash
+# Copy Codex config
+cp .codex/config.toml ~/.codex/config.toml
+
+# AGENTS.md is auto-detected at repo root
+codex
+```
+
+#### 2. Frontend Slides Skill
+
+New zero-dependency HTML presentation builder:
+
+```bash
+cp -r skills/frontend-slides ~/.claude/skills/
+```
+
+Use for:
+- Creating slide decks without external tools
+- PPTX-to-web conversion workflows
+- Visual style exploration
+
+#### 3. New Business Skills
+
+Five new cross-functional skills:
+
+```bash
+cp -r skills/article-writing ~/.claude/skills/
+cp -r skills/content-engine ~/.claude/skills/
+cp -r skills/market-research ~/.claude/skills/
+cp -r skills/investor-materials ~/.claude/skills/
+cp -r skills/investor-outreach ~/.claude/skills/
+```
+
+## Migrating to v1.6.0
+
+### Breaking Changes
+
+**None.** v1.6.0 is fully backward compatible with v1.4.1.
+
+### New Features to Adopt
+
+#### 1. AgentShield Integration
+
+Run security scans:
+
+```bash
+/security-scan
+# Or directly:
+npx ecc-agentshield scan
+```
+
+#### 2. GitHub Marketplace App
+
+Install the GitHub App for automated skill creation:
+
+[github.com/marketplace/ecc-tools](https://github.com/marketplace/ecc-tools)
+
+#### 3. New Skills
+
+Seven new skills added:
+
+```bash
+cp -r skills/search-first ~/.claude/skills/
+cp -r skills/swift-actor-persistence ~/.claude/skills/
+cp -r skills/swift-protocol-di-testing ~/.claude/skills/
+cp -r skills/regex-vs-llm-structured-text ~/.claude/skills/
+cp -r skills/content-hash-cache-pattern ~/.claude/skills/
+cp -r skills/cost-aware-llm-pipeline ~/.claude/skills/
+cp -r skills/skill-stocktake ~/.claude/skills/
+```
+
+## Migrating to v1.4.1
+
+### Bug Fix
+
+**Fixed:** Instinct import content loss in `/instinct-import`.
+
+If you imported instincts before v1.4.1:
+
+1. Re-import from original source
+2. Verify `Action`, `Evidence`, and `Examples` sections are present
+
+```bash
+/instinct-import path/to/instincts.md
+```
+
+## Migrating to v1.4.0
+
+### Breaking Changes: Multi-Language Rules
+
+Rules were restructured from flat files to `common/` + language-specific directories.
+
+**Before v1.4.0:**
+```
+rules/
+  ├── coding-style.md
+  ├── git-workflow.md
+  ├── testing.md
+  ...
+```
+
+**After v1.4.0:**
+```
+rules/
+  ├── common/
+  │   ├── coding-style.md
+  │   ├── git-workflow.md
+  │   ├── testing.md
+  ├── typescript/
+  │   ├── coding-style.md
+  │   ├── testing.md
+  ├── python/
+  ├── golang/
+```
+
+### Migration Steps
+
+#### 1. Backup Existing Rules
+
+```bash
+cp -r ~/.claude/rules ~/.claude/rules.backup
+```
+
+#### 2. Remove Old Rules
+
+```bash
+rm -rf ~/.claude/rules
+mkdir ~/.claude/rules
+```
+
+#### 3. Install New Structure
+
+```bash
+# Using installer (recommended)
+./install.sh typescript
+
+# Or manually
+cp -r rules/common/* ~/.claude/rules/
+cp -r rules/typescript/* ~/.claude/rules/
+```
+
+#### 4. Verify Installation
+
+```bash
+ls ~/.claude/rules/
+# Should show files from both common/ and typescript/
+```
+
+## Migrating from Other Configs
+
+### From Cursor IDE
+
+If migrating from Cursor to Claude Code:
+
+#### 1. Convert Rules
+
+Cursor rules use `.cursorrules` format. Convert to Claude Code:
+
+```bash
+# Copy and rename
+cp .cursorrules CLAUDE.md
+```
+
+Then manually restructure:
+- Extract general guidelines → `~/.claude/rules/coding-style.md`
+- Extract testing rules → `~/.claude/rules/testing.md`
+- Extract project-specific → `.claude/CLAUDE.md`
+
+#### 2. Convert Hooks
+
+Cursor hooks are in `.cursor/hooks/`. Claude Code uses `hooks/hooks.json`:
+
+**Cursor hook:**
+```json
+{
+  "afterFileEdit": "prettier --write $file"
+}
+```
+
+**Claude Code hook:**
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [{"type": "command", "command": "npx prettier --write $file_path"}]
+      }
+    ]
+  }
+}
+```
+
+### From OpenCode
+
+If migrating from OpenCode:
+
+#### 1. Convert Instructions to Rules
+
+OpenCode uses `.opencode/instructions/`. Convert to rules:
+
+```bash
+cp .opencode/instructions/coding-standards.md ~/.claude/rules/coding-style.md
+```
+
+#### 2. Convert Plugin Hooks
+
+OpenCode plugins use `onToolExecute`. Claude Code uses `PreToolUse`/`PostToolUse`:
+
+**OpenCode:**
+```js
+export function onToolExecute(tool, input) {
+  if (tool === 'Edit') {
+    // format file
+  }
+}
+```
+
+**Claude Code:**
+```json
+{
+  "PostToolUse": [
+    {
+      "matcher": "Edit",
+      "hooks": [{"type": "command", "command": "node format.js"}]
+    }
+  ]
+}
+```
+
+### From Vanilla Claude Code
+
+If migrating from basic Claude Code setup:
+
+#### 1. Install ECC Plugin
+
+```bash
+/plugin marketplace add affaan-m/everything-claude-code
+/plugin install everything-claude-code@everything-claude-code
+```
+
+#### 2. Keep Existing Agents
+
+ECC agents supplement yours. Keep both:
+
+```bash
+ls ~/.claude/agents/
+# Your agents + ECC agents
+```
+
+#### 3. Merge Rules
+
+If you have custom rules, merge with ECC rules:
+
+```bash
+# Backup yours
+cp -r ~/.claude/rules ~/.claude/rules.backup
+
+# Install ECC rules
+cp -r rules/common/* ~/.claude/rules/
+cp -r rules/typescript/* ~/.claude/rules/
+
+# Manually merge your custom rules back
+```
+
+## Version Compatibility Matrix
+
+| ECC Version | Claude Code Version | Breaking Changes |
+|-------------|---------------------|------------------|
+| v1.7.0 | v2.1.0+ | None |
+| v1.6.0 | v2.1.0+ | None |
+| v1.4.1 | v2.1.0+ | None |
+| v1.4.0 | v2.1.0+ | Rules structure changed |
+| v1.3.0 | v2.0.0+ | Hooks auto-loading |
+| v1.2.0 | v1.8.0+ | N/A |
+
+## Rollback Procedures
+
+### Rollback to Previous ECC Version
+
+```bash
+# Uninstall current
+/plugin uninstall everything-claude-code@everything-claude-code
+
+# Install specific version
+git clone -b v1.6.0 https://github.com/affaan-m/everything-claude-code.git
+cd everything-claude-code
+./install.sh typescript
+```
+
+### Restore Backup
+
+```bash
+# Restore rules
+rm -rf ~/.claude/rules
+mv ~/.claude/rules.backup ~/.claude/rules
+
+# Restore agents
+rm -rf ~/.claude/agents
+mv ~/.claude/agents.backup ~/.claude/agents
+```
+
+## Getting Help
+
+If migration issues occur:
+
+1. Check [Troubleshooting](/reference/troubleshooting)
+2. Search [GitHub Issues](https://github.com/affaan-m/everything-claude-code/issues)
+3. Open a new issue with:
+   - Current ECC version
+   - Target ECC version
+   - Error messages
+   - Migration steps attempted
+
+## Related Resources
+
+- [Troubleshooting](/reference/troubleshooting)
+- [FAQ](/reference/faq)
+- [Changelog](/reference/changelog)

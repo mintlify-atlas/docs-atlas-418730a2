@@ -1,0 +1,281 @@
+---
+title: Database Reviewer Agent
+description: PostgreSQL database specialist for query optimization and schema design
+---
+
+## Overview
+
+The **database-reviewer** agent is an expert PostgreSQL database specialist focused on query optimization, schema design, security, and performance. It incorporates patterns from Supabase's postgres-best-practices.
+
+<ParamField path="name" type="string" default="database-reviewer">
+  Agent identifier
+</ParamField>
+
+<ParamField path="model" type="string" default="sonnet">
+  Uses Claude Sonnet for comprehensive database review
+</ParamField>
+
+<ParamField path="tools" type="array">
+  Available tools: `Read`, `Write`, `Edit`, `Bash`, `Grep`, `Glob`
+</ParamField>
+
+## When to Use
+
+<Check>Writing SQL queries or migrations</Check>
+<Check>Designing database schemas</Check>
+<Check>Optimizing slow queries</Check>
+<Check>Implementing Row Level Security (RLS)</Check>
+<Check>Troubleshooting database performance</Check>
+
+<Info>The database-reviewer agent activates **PROACTIVELY** when writing SQL, creating migrations, designing schemas, or troubleshooting database performance.</Info>
+
+## Core Responsibilities
+
+1. **Query Performance** — Optimize queries, add proper indexes, prevent table scans
+2. **Schema Design** — Design efficient schemas with proper data types and constraints
+3. **Security & RLS** — Implement Row Level Security, least privilege access
+4. **Connection Management** — Configure pooling, timeouts, limits
+5. **Concurrency** — Prevent deadlocks, optimize locking strategies
+6. **Monitoring** — Set up query analysis and performance tracking
+
+## Diagnostic Commands
+
+```bash
+psql $DATABASE_URL
+
+# Slow queries
+psql -c "SELECT query, mean_exec_time, calls FROM pg_stat_statements ORDER BY mean_exec_time DESC LIMIT 10;"
+
+# Table sizes
+psql -c "SELECT relname, pg_size_pretty(pg_total_relation_size(relid)) FROM pg_stat_user_tables ORDER BY pg_total_relation_size(relid) DESC;"
+
+# Index usage
+psql -c "SELECT indexrelname, idx_scan, idx_tup_read FROM pg_stat_user_indexes ORDER BY idx_scan DESC;"
+```
+
+## Review Workflow
+
+### 1. Query Performance (CRITICAL)
+
+- Are WHERE/JOIN columns indexed?
+- Run `EXPLAIN ANALYZE` on complex queries — check for Seq Scans on large tables
+- Watch for N+1 query patterns
+- Verify composite index column order (equality first, then range)
+
+### 2. Schema Design (HIGH)
+
+- Use proper types: `bigint` for IDs, `text` for strings, `timestamptz` for timestamps, `numeric` for money, `boolean` for flags
+- Define constraints: PK, FK with `ON DELETE`, `NOT NULL`, `CHECK`
+- Use `lowercase_snake_case` identifiers (no quoted mixed-case)
+
+### 3. Security (CRITICAL)
+
+- RLS enabled on multi-tenant tables with `(SELECT auth.uid())` pattern
+- RLS policy columns indexed
+- Least privilege access — no `GRANT ALL` to application users
+- Public schema permissions revoked
+
+## Key Principles
+
+<CardGroup cols={2}>
+  <Card title="Index Foreign Keys" icon="key">
+    Always, no exceptions
+  </Card>
+  <Card title="Use Partial Indexes" icon="filter">
+    `WHERE deleted_at IS NULL` for soft deletes
+  </Card>
+  <Card title="Covering Indexes" icon="layer-group">
+    `INCLUDE (col)` to avoid table lookups
+  </Card>
+  <Card title="SKIP LOCKED for Queues" icon="lock">
+    10x throughput for worker patterns
+  </Card>
+  <Card title="Cursor Pagination" icon="arrow-right">
+    `WHERE id > $last` instead of `OFFSET`
+  </Card>
+  <Card title="Batch Inserts" icon="table">
+    Multi-row `INSERT` or `COPY`, never loops
+  </Card>
+  <Card title="Short Transactions" icon="clock">
+    Never hold locks during external API calls
+  </Card>
+  <Card title="Consistent Lock Ordering" icon="list-ol">
+    `ORDER BY id FOR UPDATE` to prevent deadlocks
+  </Card>
+</CardGroup>
+
+## Anti-Patterns to Flag
+
+<Warning>Common database mistakes:</Warning>
+
+- `SELECT *` in production code
+- `int` for IDs (use `bigint`), `varchar(255)` without reason (use `text`)
+- `timestamp` without timezone (use `timestamptz`)
+- Random UUIDs as PKs (use UUIDv7 or IDENTITY)
+- OFFSET pagination on large tables
+- Unparameterized queries (SQL injection risk)
+- `GRANT ALL` to application users
+- RLS policies calling functions per-row (not wrapped in `SELECT`)
+
+## Example: Proper Schema Design
+
+```sql
+-- BAD: Common mistakes
+CREATE TABLE users (
+  id int PRIMARY KEY,                    -- Should be bigint
+  email varchar(255),                    -- Should be text
+  created_at timestamp,                  -- Should be timestamptz
+  balance decimal                        -- Needs precision
+);
+
+-- GOOD: Proper types and constraints
+CREATE TABLE users (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  email text NOT NULL UNIQUE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  balance numeric(12, 2) NOT NULL DEFAULT 0 CHECK (balance >= 0)
+);
+
+CREATE INDEX idx_users_email ON users(email);  -- Index for WHERE/JOIN
+```
+
+## Example: Query Optimization
+
+```sql
+-- BAD: N+1 query pattern
+SELECT * FROM users;
+-- Then in application code, for each user:
+SELECT * FROM posts WHERE user_id = ?;
+
+-- GOOD: Single query with JOIN
+SELECT 
+  u.id, u.email, u.created_at,
+  json_agg(json_build_object(
+    'id', p.id,
+    'title', p.title,
+    'created_at', p.created_at
+  )) as posts
+FROM users u
+LEFT JOIN posts p ON p.user_id = u.id
+GROUP BY u.id;
+```
+
+## Example: Row Level Security (RLS)
+
+```sql
+-- Enable RLS
+ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
+
+-- BAD: Calling function per-row (slow)
+CREATE POLICY "Users can read own posts" ON posts
+  FOR SELECT
+  USING (user_id = auth.uid());
+
+-- GOOD: Using SELECT subquery (fast)
+CREATE POLICY "Users can read own posts" ON posts
+  FOR SELECT
+  USING (user_id = (SELECT auth.uid()));
+
+-- Index RLS policy column
+CREATE INDEX idx_posts_user_id ON posts(user_id);
+```
+
+## Example: Pagination
+
+```sql
+-- BAD: OFFSET pagination (slow on large tables)
+SELECT * FROM posts
+ORDER BY created_at DESC
+LIMIT 20 OFFSET 10000;  -- Scans 10,020 rows!
+
+-- GOOD: Cursor pagination (fast)
+SELECT * FROM posts
+WHERE created_at < $last_created_at
+ORDER BY created_at DESC
+LIMIT 20;
+
+CREATE INDEX idx_posts_created_at ON posts(created_at DESC);
+```
+
+## Example: Avoiding Deadlocks
+
+```sql
+-- BAD: Inconsistent lock ordering (deadlock risk)
+BEGIN;
+  UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+  UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+COMMIT;
+
+-- In another transaction (reverse order):
+BEGIN;
+  UPDATE accounts SET balance = balance - 50 WHERE id = 2;
+  UPDATE accounts SET balance = balance + 50 WHERE id = 1;
+COMMIT;
+-- DEADLOCK!
+
+-- GOOD: Consistent lock ordering (no deadlock)
+BEGIN;
+  SELECT * FROM accounts WHERE id IN (1, 2) ORDER BY id FOR UPDATE;
+  UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+  UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+COMMIT;
+```
+
+## Example: Worker Queue Pattern
+
+```sql
+-- BAD: Concurrent workers fight over same rows
+SELECT * FROM jobs WHERE status = 'pending' LIMIT 1;
+-- Process job...
+UPDATE jobs SET status = 'completed' WHERE id = ?;
+
+-- GOOD: SKIP LOCKED for 10x throughput
+BEGIN;
+  SELECT * FROM jobs 
+  WHERE status = 'pending'
+  ORDER BY created_at
+  LIMIT 1
+  FOR UPDATE SKIP LOCKED;
+  
+  -- Process job...
+  
+  UPDATE jobs SET status = 'completed' WHERE id = ?;
+COMMIT;
+```
+
+## Review Checklist
+
+- [ ] All WHERE/JOIN columns indexed
+- [ ] Composite indexes in correct column order
+- [ ] Proper data types (bigint, text, timestamptz, numeric)
+- [ ] RLS enabled on multi-tenant tables
+- [ ] RLS policies use `(SELECT auth.uid())` pattern
+- [ ] Foreign keys have indexes
+- [ ] No N+1 query patterns
+- [ ] EXPLAIN ANALYZE run on complex queries
+- [ ] Transactions kept short
+
+## Usage Example
+
+```bash
+# Invoke database-reviewer directly
+ask database-reviewer "Review this migration for performance issues"
+
+# Or let it activate automatically
+# (after writing SQL/migrations, it activates proactively)
+```
+
+## Success Criteria
+
+<Check>All queries indexed properly</Check>
+<Check>No N+1 query patterns</Check>
+<Check>RLS policies performant</Check>
+<Check>Schema uses proper data types</Check>
+<Check>No security vulnerabilities</Check>
+<Check>Transactions are short</Check>
+
+<Tip>For detailed index patterns, schema design examples, connection management, concurrency strategies, JSONB patterns, and full-text search, see skills: `postgres-patterns` and `database-migrations`.</Tip>
+
+<Warning>Database issues are often the root cause of application performance problems. Optimize queries and schema design early. Use EXPLAIN ANALYZE to verify assumptions. Always index foreign keys and RLS policy columns.</Warning>
+
+<Info>Patterns adapted from [Supabase Agent Skills](https://github.com/supabase/agent-skills) under MIT license.</Info>

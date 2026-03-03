@@ -1,0 +1,307 @@
+---
+title: MCP Servers
+description: Model Context Protocol server configurations for Claude Code
+---
+
+## Overview
+
+MCP (Model Context Protocol) servers extend Claude Code with external integrations for GitHub, databases, deployment platforms, and more. ECC includes 14 pre-configured MCP servers.
+
+## Available MCP Servers
+
+### Development Tools
+
+#### GitHub
+
+```json
+{
+  "github": {
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-github"],
+    "env": {
+      "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_PAT_HERE"
+    },
+    "description": "GitHub operations - PRs, issues, repos"
+  }
+}
+```
+
+**Setup:**
+1. Create a GitHub Personal Access Token at [github.com/settings/tokens](https://github.com/settings/tokens)
+2. Replace `YOUR_GITHUB_PAT_HERE` with your token
+3. Scopes needed: `repo`, `read:org`, `workflow`
+
+#### Firecrawl
+
+```json
+{
+  "firecrawl": {
+    "command": "npx",
+    "args": ["-y", "firecrawl-mcp"],
+    "env": {
+      "FIRECRAWL_API_KEY": "YOUR_FIRECRAWL_KEY_HERE"
+    },
+    "description": "Web scraping and crawling"
+  }
+}
+```
+
+**Setup:** Get an API key from [firecrawl.dev](https://firecrawl.dev)
+
+### Database & Backend
+
+#### Supabase
+
+```json
+{
+  "supabase": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@supabase/mcp-server-supabase@latest",
+      "--project-ref=YOUR_PROJECT_REF"
+    ],
+    "description": "Supabase database operations"
+  }
+}
+```
+
+**Setup:** Get your project ref from Supabase dashboard settings
+
+#### ClickHouse
+
+```json
+{
+  "clickhouse": {
+    "type": "http",
+    "url": "https://mcp.clickhouse.cloud/mcp",
+    "description": "ClickHouse analytics queries"
+  }
+}
+```
+
+#### PostgreSQL (via Filesystem)
+
+```json
+{
+  "filesystem": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-filesystem",
+      "/path/to/your/projects"
+    ],
+    "description": "Filesystem operations (set your path)"
+  }
+}
+```
+
+### Deployment Platforms
+
+#### Vercel
+
+```json
+{
+  "vercel": {
+    "type": "http",
+    "url": "https://mcp.vercel.com",
+    "description": "Vercel deployments and projects"
+  }
+}
+```
+
+#### Railway
+
+```json
+{
+  "railway": {
+    "command": "npx",
+    "args": ["-y", "@railway/mcp-server"],
+    "description": "Railway deployments"
+  }
+}
+```
+
+### Cloudflare Services
+
+#### Cloudflare Documentation
+
+```json
+{
+  "cloudflare-docs": {
+    "type": "http",
+    "url": "https://docs.mcp.cloudflare.com/mcp",
+    "description": "Cloudflare documentation search"
+  }
+}
+```
+
+#### Cloudflare Workers Builds
+
+```json
+{
+  "cloudflare-workers-builds": {
+    "type": "http",
+    "url": "https://builds.mcp.cloudflare.com/mcp",
+    "description": "Cloudflare Workers builds"
+  }
+}
+```
+
+#### Cloudflare Workers Bindings
+
+```json
+{
+  "cloudflare-workers-bindings": {
+    "type": "http",
+    "url": "https://bindings.mcp.cloudflare.com/mcp",
+    "description": "Cloudflare Workers bindings"
+  }
+}
+```
+
+#### Cloudflare Observability
+
+```json
+{
+  "cloudflare-observability": {
+    "type": "http",
+    "url": "https://observability.mcp.cloudflare.com/mcp",
+    "description": "Cloudflare observability/logs"
+  }
+}
+```
+
+### AI & Enhancement
+
+#### Memory
+
+```json
+{
+  "memory": {
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-memory"],
+    "description": "Persistent memory across sessions"
+  }
+}
+```
+
+#### Sequential Thinking
+
+```json
+{
+  "sequential-thinking": {
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+    "description": "Chain-of-thought reasoning"
+  }
+}
+```
+
+#### Context7
+
+```json
+{
+  "context7": {
+    "command": "npx",
+    "args": ["-y", "@context7/mcp-server"],
+    "description": "Live documentation lookup"
+  }
+}
+```
+
+### Research & Search
+
+#### Exa Web Search
+
+```json
+{
+  "exa-web-search": {
+    "command": "npx",
+    "args": ["-y", "exa-mcp-server"],
+    "env": {
+      "EXA_API_KEY": "YOUR_EXA_API_KEY_HERE"
+    },
+    "description": "Web search, research, and data ingestion via Exa API — recommended for research-first development workflow"
+  }
+}
+```
+
+**Setup:** Get an API key from [exa.ai](https://exa.ai)
+
+### UI Components
+
+#### Magic UI
+
+```json
+{
+  "magic": {
+    "command": "npx",
+    "args": ["-y", "@magicuidesign/mcp@latest"],
+    "description": "Magic UI components"
+  }
+}
+```
+
+## Installation
+
+MCP servers are configured in `~/.claude.json` (not `settings.json`):
+
+```json
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_..."
+      }
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    }
+  }
+}
+```
+
+## Context Window Management
+
+<Warning>
+**Critical:** Each MCP tool description consumes tokens from your 200k window, potentially reducing it to ~70k.
+</Warning>
+
+### Best Practices
+
+- **Keep under 10 MCPs enabled** per project
+- **Keep under 80 tools active** total
+- Disable unused MCPs per project using `disabledMcpServers`
+
+### Disabling MCPs Per Project
+
+Create `.claude/settings.json` in your project:
+
+```json
+{
+  "disabledMcpServers": ["supabase", "railway", "vercel"]
+}
+```
+
+This disables those MCPs for this project only, preserving context window space.
+
+## Security Notes
+
+<Warning>
+**Never commit API keys to version control.** Always use environment variables or a secret manager.
+</Warning>
+
+- Replace all `YOUR_*_HERE` placeholders with actual values
+- Use environment variables for sensitive keys
+- Add `.claude.json` to `.gitignore` if it contains secrets
+- Rotate any exposed secrets immediately
+
+## Related Resources
+
+- [Settings Configuration](/reference/settings)
+- [Troubleshooting](/reference/troubleshooting)
+- [GitHub: MCP Specification](https://github.com/anthropics/model-context-protocol)

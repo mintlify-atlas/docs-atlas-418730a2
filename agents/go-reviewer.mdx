@@ -1,0 +1,291 @@
+---
+title: Go Reviewer Agent
+description: Expert Go code reviewer for idiomatic Go and best practices
+---
+
+## Overview
+
+The **go-reviewer** agent is a senior Go code reviewer ensuring high standards of idiomatic Go and best practices.
+
+<ParamField path="name" type="string" default="go-reviewer">
+  Agent identifier
+</ParamField>
+
+<ParamField path="model" type="string" default="sonnet">
+  Uses Claude Sonnet for comprehensive Go code review
+</ParamField>
+
+<ParamField path="tools" type="array">
+  Available tools: `Read`, `Grep`, `Glob`, `Bash`
+</ParamField>
+
+## When to Use
+
+<Check>After writing or modifying Go code</Check>
+<Check>Before committing Go changes</Check>
+<Check>During pull request review</Check>
+<Check>After refactoring Go code</Check>
+
+<Info>The go-reviewer agent **MUST BE USED** for all Go code changes. It activates proactively for Go projects.</Info>
+
+## Core Responsibilities
+
+- Review Go code for idiomatic patterns
+- Enforce Go best practices
+- Check concurrency patterns
+- Verify error handling
+- Identify performance issues
+- Ensure security compliance
+
+## Diagnostic Commands
+
+```bash
+go vet ./...
+staticcheck ./...
+golangci-lint run
+go build -race ./...
+go test -race ./...
+govulncheck ./...
+```
+
+## Review Process
+
+When invoked:
+
+1. Run `git diff -- '*.go'` to see recent Go file changes
+2. Run `go vet ./...` and `staticcheck ./...` if available
+3. Focus on modified `.go` files
+4. Begin review immediately
+
+## Review Priorities
+
+### CRITICAL — Security
+
+<Warning>These MUST be flagged:</Warning>
+
+- **SQL injection**: String concatenation in `database/sql` queries
+- **Command injection**: Unvalidated input in `os/exec`
+- **Path traversal**: User-controlled file paths without `filepath.Clean` + prefix check
+- **Race conditions**: Shared state without synchronization
+- **Unsafe package**: Use without justification
+- **Hardcoded secrets**: API keys, passwords in source
+- **Insecure TLS**: `InsecureSkipVerify: true`
+
+```go
+// BAD: SQL injection
+query := fmt.Sprintf("SELECT * FROM users WHERE email = '%s'", email)
+rows, err := db.Query(query)
+
+// GOOD: Parameterized query
+rows, err := db.Query("SELECT * FROM users WHERE email = $1", email)
+```
+
+```go
+// BAD: Command injection
+cmd := exec.Command("sh", "-c", "ls "+userInput)
+
+// GOOD: Use array arguments
+cmd := exec.Command("ls", userInput)
+```
+
+### CRITICAL — Error Handling
+
+<Warning>Common error handling mistakes:</Warning>
+
+- **Ignored errors**: Using `_` to discard errors
+- **Missing error wrapping**: `return err` without `fmt.Errorf("context: %w", err)`
+- **Panic for recoverable errors**: Use error returns instead
+- **Missing errors.Is/As**: Use `errors.Is(err, target)` not `err == target`
+
+```go
+// BAD: Ignoring errors
+file, _ := os.Open("config.json")
+
+// GOOD: Handle errors
+file, err := os.Open("config.json")
+if err != nil {
+    return fmt.Errorf("failed to open config: %w", err)
+}
+defer file.Close()
+```
+
+```go
+// BAD: No error wrapping
+func processUser(id int) error {
+    user, err := getUser(id)
+    if err != nil {
+        return err  // Lost context!
+    }
+    return nil
+}
+
+// GOOD: Wrap errors with context
+func processUser(id int) error {
+    user, err := getUser(id)
+    if err != nil {
+        return fmt.Errorf("process user %d: %w", id, err)
+    }
+    return nil
+}
+```
+
+### HIGH — Concurrency
+
+- **Goroutine leaks**: No cancellation mechanism (use `context.Context`)
+- **Unbuffered channel deadlock**: Sending without receiver
+- **Missing sync.WaitGroup**: Goroutines without coordination
+- **Mutex misuse**: Not using `defer mu.Unlock()`
+
+```go
+// BAD: Goroutine leak (no context)
+func fetchData() {
+    go func() {
+        for {
+            data := fetch()  // Runs forever!
+            process(data)
+        }
+    }()
+}
+
+// GOOD: Use context for cancellation
+func fetchData(ctx context.Context) {
+    go func() {
+        for {
+            select {
+            case <-ctx.Done():
+                return
+            default:
+                data := fetch()
+                process(data)
+            }
+        }
+    }()
+}
+```
+
+```go
+// BAD: Mutex without defer
+mu.Lock()
+data := processData()  // If this panics, lock never released!
+mu.Unlock()
+
+// GOOD: Always use defer
+mu.Lock()
+defer mu.Unlock()
+data := processData()
+```
+
+### HIGH — Code Quality
+
+- **Large functions**: Over 50 lines
+- **Deep nesting**: More than 4 levels
+- **Non-idiomatic**: `if/else` instead of early return
+- **Package-level variables**: Mutable global state
+- **Interface pollution**: Defining unused abstractions
+
+```go
+// BAD: Deep nesting
+func processRequest(req *Request) error {
+    if req != nil {
+        if req.Valid() {
+            if user := getUser(req.UserID); user != nil {
+                if user.Active {
+                    return process(user)
+                }
+            }
+        }
+    }
+    return errors.New("invalid request")
+}
+
+// GOOD: Early returns
+func processRequest(req *Request) error {
+    if req == nil {
+        return errors.New("request is nil")
+    }
+    if !req.Valid() {
+        return errors.New("invalid request")
+    }
+    user := getUser(req.UserID)
+    if user == nil {
+        return errors.New("user not found")
+    }
+    if !user.Active {
+        return errors.New("user inactive")
+    }
+    return process(user)
+}
+```
+
+### MEDIUM — Performance
+
+- **String concatenation in loops**: Use `strings.Builder`
+- **Missing slice pre-allocation**: `make([]T, 0, cap)`
+- **N+1 queries**: Database queries in loops
+- **Unnecessary allocations**: Objects in hot paths
+
+```go
+// BAD: String concatenation in loop
+var result string
+for _, item := range items {
+    result += item + ","  // Creates new string each iteration!
+}
+
+// GOOD: Use strings.Builder
+var builder strings.Builder
+for _, item := range items {
+    builder.WriteString(item)
+    builder.WriteString(",")
+}
+result := builder.String()
+```
+
+### MEDIUM — Best Practices
+
+- **Context first**: `ctx context.Context` should be first parameter
+- **Table-driven tests**: Tests should use table-driven pattern
+- **Error messages**: Lowercase, no punctuation
+- **Package naming**: Short, lowercase, no underscores
+- **Deferred call in loop**: Resource accumulation risk
+
+```go
+// BAD: Context not first parameter
+func fetchUser(id int, ctx context.Context) (*User, error)
+
+// GOOD: Context is first parameter
+func fetchUser(ctx context.Context, id int) (*User, error)
+```
+
+```go
+// BAD: Error messages with caps/punctuation
+return errors.New("Failed to connect.")
+
+// GOOD: Lowercase, no punctuation
+return errors.New("failed to connect")
+```
+
+## Approval Criteria
+
+<Check>**Approve**: No CRITICAL or HIGH issues</Check>
+<Warning>**Warning**: MEDIUM issues only</Warning>
+<Warning>**Block**: CRITICAL or HIGH issues found</Warning>
+
+## Usage Example
+
+```bash
+# Invoke go-reviewer directly
+ask go-reviewer "Review my recent Go changes"
+
+# Or let it activate automatically
+# (after writing Go code, it activates proactively)
+```
+
+## Success Criteria
+
+<Check>All CRITICAL issues identified</Check>
+<Check>Idiomatic Go patterns enforced</Check>
+<Check>Concurrency patterns safe</Check>
+<Check>Error handling comprehensive</Check>
+<Check>No security vulnerabilities</Check>
+
+<Tip>For detailed Go code examples and anti-patterns, see skill: `golang-patterns`.</Tip>

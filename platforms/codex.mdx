@@ -1,0 +1,472 @@
+---
+title: "Codex CLI Support"
+description: "First-class OpenAI Codex CLI support with reference configuration and ported skills"
+icon: "terminal"
+---
+
+Everything Claude Code provides **first-class Codex CLI support** with a reference configuration, Codex-specific AGENTS.md supplement, and 16 ported skills.
+
+## Overview
+
+Codex CLI is OpenAI's command-line AI coding assistant. ECC adapts its battle-tested workflows to work seamlessly with Codex's architecture.
+
+### What's Included
+
+| Component | Count | Details |
+|-----------|-------|----------|
+| **Config** | 1 | `.codex/config.toml` — model, permissions, MCP servers, persistent instructions |
+| **AGENTS.md** | 2 | Root (universal) + `.codex/AGENTS.md` (Codex-specific supplement) |
+| **Skills** | 16 | `.agents/skills/` — SKILL.md + agents/openai.yaml per skill |
+| **MCP Servers** | 4 | GitHub, Context7, Memory, Sequential Thinking (command-based) |
+| **Profiles** | 2 | `strict` (read-only sandbox) and `yolo` (full auto-approve) |
+
+## Installation
+
+### Quick Install
+
+```bash
+# Copy the reference config to your home directory
+cp .codex/config.toml ~/.codex/config.toml
+
+# Run Codex in the repo — AGENTS.md is auto-detected
+codex
+```
+
+### Manual Setup
+
+1. **Install Codex CLI**:
+
+```bash
+pip install openai-codex
+```
+
+2. **Copy configuration**:
+
+```bash
+cp .codex/config.toml ~/.codex/config.toml
+```
+
+3. **Edit config.toml** with your API key:
+
+```toml
+[auth]
+api_key = "sk-YOUR-OPENAI-API-KEY"
+```
+
+4. **Run in repository**:
+
+```bash
+cd /path/to/everything-claude-code
+codex
+```
+
+Codex automatically detects `AGENTS.md` at the repository root.
+
+## Configuration
+
+### config.toml Structure
+
+<CodeGroup>
+```toml Model Settings
+[model]
+name = "gpt-4.6-turbo"  # or gpt-4, gpt-4.6, etc.
+temperature = 0.7
+max_tokens = 10000
+```
+
+```toml Permissions & Sandbox
+[permissions]
+mode = "strict"  # or "yolo" for auto-approve
+
+[sandbox]
+allow_shell = false
+allow_file_write = false
+allow_network = false
+```
+
+```toml Persistent Instructions
+[persistent_instructions]
+instructions = """
+You are an expert software engineer using Everything Claude Code workflows.
+
+Core principles:
+1. Test-driven development (TDD) — write tests first
+2. 80%+ code coverage required
+3. Immutability — never mutate objects
+4. Security-first — validate all inputs
+5. Plan complex features before implementing
+"""
+```
+
+```toml MCP Servers
+[[mcp_servers]]
+name = "github"
+command = "npx"
+args = ["@modelcontextprotocol/server-github"]
+env = { GITHUB_TOKEN = "ghp_YOUR_TOKEN" }
+
+[[mcp_servers]]
+name = "memory"
+command = "npx"
+args = ["@modelcontextprotocol/server-memory"]
+```
+</CodeGroup>
+
+### Profiles
+
+Codex supports multiple profiles for different workflows:
+
+<Tabs>
+  <Tab title="strict (Default)">
+    **Read-only sandbox** — Maximum safety
+    
+    - Shell execution blocked
+    - File writes blocked
+    - Network access blocked
+    - User must approve each action
+    
+    Best for: Code review, exploration, learning
+  </Tab>
+  
+  <Tab title="yolo">
+    **Full auto-approve** — Maximum speed
+    
+    - All actions auto-approved
+    - Shell execution allowed
+    - File writes allowed
+    - Network access allowed
+    
+    Best for: Rapid prototyping, trusted environments
+    
+    <Warning>
+    Use `yolo` profile only in trusted environments. Actions execute without confirmation.
+    </Warning>
+  </Tab>
+</Tabs>
+
+Switch profiles:
+
+```bash
+codex --profile strict
+codex --profile yolo
+```
+
+## 16 Ported Skills
+
+Skills at `.agents/skills/` are auto-loaded by Codex:
+
+<CardGroup cols={2}>
+  <Card title="tdd-workflow" icon="flask">
+    Test-driven development with 80%+ coverage requirement
+  </Card>
+  <Card title="security-review" icon="shield">
+    Comprehensive security checklist (OWASP Top 10)
+  </Card>
+  <Card title="coding-standards" icon="code">
+    Universal coding standards (immutability, file organization)
+  </Card>
+  <Card title="frontend-patterns" icon="react">
+    React, Next.js, and modern frontend patterns
+  </Card>
+  <Card title="frontend-slides" icon="presentation">
+    HTML presentations, PPTX conversion, visual style exploration
+  </Card>
+  <Card title="article-writing" icon="pen">
+    Long-form writing from notes and voice references
+  </Card>
+  <Card title="content-engine" icon="megaphone">
+    Platform-native social content and repurposing
+  </Card>
+  <Card title="market-research" icon="chart-line">
+    Source-attributed market and competitor research
+  </Card>
+  <Card title="investor-materials" icon="file-invoice-dollar">
+    Decks, memos, models, and one-pagers
+  </Card>
+  <Card title="investor-outreach" icon="envelope">
+    Personalized outreach, follow-ups, and intro blurbs
+  </Card>
+  <Card title="backend-patterns" icon="server">
+    API design, database, caching patterns
+  </Card>
+  <Card title="e2e-testing" icon="vial">
+    Playwright E2E tests and Page Object Model
+  </Card>
+  <Card title="eval-harness" icon="clipboard-check">
+    Evaluation-driven development
+  </Card>
+  <Card title="strategic-compact" icon="compress">
+    Context management and compaction strategy
+  </Card>
+  <Card title="api-design" icon="network-wired">
+    REST API design patterns, pagination, error responses
+  </Card>
+  <Card title="verification-loop" icon="check-circle">
+    Build, test, lint, typecheck, security verification
+  </Card>
+</CardGroup>
+
+### Skill Format
+
+Each skill has two files:
+
+<CodeGroup>
+```markdown SKILL.md
+---
+name: tdd-workflow
+description: Test-driven development methodology
+model: gpt-4.6-turbo
+temperature: 0.7
+---
+
+# TDD Workflow
+
+## Process
+
+1. **RED** — Write a failing test
+2. **GREEN** — Write minimal code to pass
+3. **REFACTOR** — Improve code quality
+4. **VERIFY** — Check 80%+ coverage
+
+## Example
+
+```typescript
+// 1. RED - Write failing test
+test('authenticates user', () => {
+  const result = authenticateUser('user@example.com', 'password');
+  expect(result.success).toBe(true);
+});
+
+// 2. GREEN - Minimal implementation
+function authenticateUser(email: string, password: string) {
+  return { success: true };
+}
+
+// 3. REFACTOR - Add real logic
+function authenticateUser(email: string, password: string) {
+  const user = db.findByEmail(email);
+  if (!user || !bcrypt.compare(password, user.passwordHash)) {
+    return { success: false, error: 'Invalid credentials' };
+  }
+  return { success: true, user };
+}
+```
+```
+
+```yaml agents/openai.yaml
+name: tdd-workflow
+model: gpt-4.6-turbo
+temperature: 0.7
+max_tokens: 10000
+instructions: |
+  You are a TDD expert. Enforce test-driven development:
+  1. Tests before implementation
+  2. Minimal code to pass tests
+  3. Refactor for quality
+  4. Verify 80%+ coverage
+```
+</CodeGroup>
+
+## Key Limitation: No Hooks Yet
+
+<Warning>
+Codex CLI does **not yet support hooks** ([GitHub Issue #2109](https://github.com/openai/codex/issues/2109), 430+ upvotes).
+</Warning>
+
+Security enforcement is instruction-based via:
+
+1. **persistent_instructions** in config.toml
+2. **Sandbox permission system** (block shell/file/network)
+3. **Skill-embedded security rules**
+
+### Workaround: Instruction-Based Security
+
+```toml config.toml
+[persistent_instructions]
+instructions = """
+SECURITY RULES (CRITICAL - NEVER OVERRIDE):
+
+1. No hardcoded secrets (API keys, passwords, tokens)
+2. All user inputs must be validated
+3. Use parameterized queries (no SQL injection)
+4. Sanitize HTML output (no XSS)
+5. Enable CSRF protection
+6. Rate limiting on all endpoints
+7. Error messages must not leak sensitive data
+
+Before ANY commit:
+- security-review skill must be invoked
+- All CRITICAL/HIGH issues must be fixed
+- No exceptions
+"""
+```
+
+## Usage Examples
+
+### Starting a Feature
+
+```bash
+codex
+
+# Codex auto-loads AGENTS.md from repo root
+> "Plan authentication with OAuth using the planner workflow"
+# → Uses planner skill to create blueprint
+
+> "Implement with TDD"
+# → Uses tdd-workflow skill to enforce write-tests-first
+
+> "Security review"
+# → Uses security-review skill to audit changes
+```
+
+### TDD Workflow
+
+```bash
+> "Add password reset feature using TDD"
+
+# Codex follows TDD workflow:
+1. Writes failing test
+2. Implements minimal code
+3. Refactors for quality
+4. Verifies coverage
+```
+
+### Security Audit
+
+```bash
+> "Review authentication code for security issues"
+
+# Codex uses security-review skill:
+# - Checks for SQL injection
+# - Verifies input validation
+# - Audits authentication logic
+# - Reports findings with severity
+```
+
+## MCP Server Configuration
+
+<CodeGroup>
+```toml GitHub MCP
+[[mcp_servers]]
+name = "github"
+command = "npx"
+args = ["@modelcontextprotocol/server-github"]
+env = { GITHUB_TOKEN = "ghp_YOUR_TOKEN" }
+```
+
+```toml Context7 MCP
+[[mcp_servers]]
+name = "context7"
+command = "npx"
+args = ["@context7/mcp-server"]
+```
+
+```toml Memory MCP
+[[mcp_servers]]
+name = "memory"
+command = "npx"
+args = ["@modelcontextprotocol/server-memory"]
+```
+
+```toml Sequential Thinking
+[[mcp_servers]]
+name = "sequential-thinking"
+command = "npx"
+args = ["@modelcontextprotocol/server-sequential-thinking"]
+```
+</CodeGroup>
+
+## Feature Comparison
+
+| Feature | Claude Code | Codex CLI |
+|---------|-------------|----------|
+| **Agents** | 13 agents | Shared (AGENTS.md) |
+| **Commands** | 33 commands | Instruction-based |
+| **Skills** | 50+ skills | **16 ported skills** |
+| **Hook Events** | 8 types | **None yet** ⚠️ |
+| **Rules** | 29 rules | **Instruction-based** |
+| **Custom Tools** | Via hooks | N/A |
+| **MCP Servers** | 14 servers | **4 servers** |
+| **Config Format** | settings.json | **config.toml** |
+| **Context File** | CLAUDE.md + AGENTS.md | **AGENTS.md** |
+| **Secret Detection** | Hook-based | **Sandbox-based** |
+| **Profiles** | None | **2 profiles** (strict/yolo) |
+
+<Info>
+**Codex Advantages**: Profiles for different workflows, instruction-based security, OpenAI model access
+</Info>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Profiles" icon="sliders">
+    Switch between `strict` and `yolo` based on task
+  </Card>
+  <Card title="Embed Security" icon="shield">
+    Add security rules to persistent_instructions
+  </Card>
+  <Card title="Leverage AGENTS.md" icon="file">
+    Keep project context in AGENTS.md at repo root
+  </Card>
+  <Card title="Test Skills" icon="flask">
+    Invoke skills explicitly to verify behavior
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Skills not loading">
+    1. Check `.agents/skills/` exists in repo
+    2. Verify each skill has SKILL.md and agents/openai.yaml
+    3. Ensure YAML frontmatter is valid
+    4. Run `codex --debug` to see skill loading logs
+  </Accordion>
+
+  <Accordion title="AGENTS.md not detected">
+    1. Place AGENTS.md at repository root (not in subdirectory)
+    2. Ensure file is named exactly `AGENTS.md` (case-sensitive)
+    3. Run Codex from repository root directory
+    4. Check Codex logs for context loading
+  </Accordion>
+
+  <Accordion title="MCP servers failing">
+    1. Verify MCP server packages are installed globally
+    2. Check environment variables (API keys, tokens)
+    3. Test MCP server independently: `npx @modelcontextprotocol/server-github`
+    4. Review Codex logs for connection errors
+  </Accordion>
+
+  <Accordion title="Permissions blocked">
+    1. Check current profile: `codex --profile`
+    2. Switch to `yolo` if you need auto-approve
+    3. Verify sandbox settings in config.toml
+    4. Use `--allow-shell`, `--allow-write` flags for one-off overrides
+  </Accordion>
+</AccordionGroup>
+
+## Roadmap
+
+Features coming to Codex CLI support:
+
+- **Hooks support** — Waiting on [GitHub Issue #2109](https://github.com/openai/codex/issues/2109)
+- **More skills** — Additional 20+ skills from ECC library
+- **Custom tools** — Once hooks are available
+- **Enhanced MCP configs** — More servers (Supabase, Vercel, Railway)
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Skills Library" icon="brain" href="/skills/overview">
+    Browse all 16 Codex-compatible skills
+  </Card>
+  <Card title="AGENTS.md Guide" icon="file" href="/concepts/agents">
+    Learn how to customize AGENTS.md
+  </Card>
+  <Card title="MCP Servers" icon="server" href="/guides/mcp-setup">
+    Configure additional MCP servers
+  </Card>
+  <Card title="Security Guide" icon="shield" href="/guides/security-best-practices">
+    Instruction-based security patterns
+  </Card>
+</CardGroup>

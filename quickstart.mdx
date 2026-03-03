@@ -1,80 +1,363 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quick Start
+description: Get up and running with Everything Claude Code in under 2 minutes
 ---
 
-## Get started in three steps
+# Quick Start
 
-Get your documentation site running locally and make your first customization.
+Get Everything Claude Code installed and ready to use in under 2 minutes.
 
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+<Steps>
+  <Step title="Install the Plugin">
+    The easiest way to use Everything Claude Code is to install it as a Claude Code plugin.
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+    <CodeGroup>
+    ```bash Commands
+    # Add marketplace
+    /plugin marketplace add affaan-m/everything-claude-code
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+    # Install plugin
+    /plugin install everything-claude-code@everything-claude-code
+    ```
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    ```json Manual (settings.json)
+    {
+      "extraKnownMarketplaces": {
+        "everything-claude-code": {
+          "source": {
+            "source": "github",
+            "repo": "affaan-m/everything-claude-code"
+          }
+        }
+      },
+      "enabledPlugins": {
+        "everything-claude-code@everything-claude-code": true
+      }
+    }
+    ```
+    </CodeGroup>
+    
+    This gives you instant access to:
+    - **13 specialized agents** (planner, architect, tdd-guide, code-reviewer, etc.)
+    - **33 slash commands** (`/plan`, `/tdd`, `/code-review`, `/build-fix`, etc.)
+    - **56+ skills** (coding standards, TDD workflow, security review, etc.)
+    - **Automated hooks** (memory persistence, strategic compaction, security warnings)
+  </Step>
+  
+  <Step title="Install Rules (Required)">
+    <Warning>
+    Claude Code plugins cannot distribute `rules` automatically ([upstream limitation](https://code.claude.com/docs/en/plugins-reference)). You need to install rules manually.
+    </Warning>
+    
+    Clone the repository first:
+    
+    ```bash
+    git clone https://github.com/affaan-m/everything-claude-code.git
+    cd everything-claude-code
+    ```
+    
+    <Tabs>
+      <Tab title="Automated (Recommended)">
+        Use the installer script to handle common + language rules safely:
+        
+        <CodeGroup>
+        ```bash TypeScript
+        ./install.sh typescript
+        ```
+        
+        ```bash Python
+        ./install.sh python
+        ```
+        
+        ```bash Go
+        ./install.sh golang
+        ```
+        
+        ```bash Multiple Languages
+        ./install.sh typescript python golang
+        ```
+        
+        ```bash Cursor IDE
+        ./install.sh --target cursor typescript
+        ```
+        </CodeGroup>
+        
+        The installer copies rules to `~/.claude/rules/` maintaining the directory structure:
+        - `common/` - Language-agnostic principles (always installed)
+        - `typescript/`, `python/`, `golang/`, etc. - Language-specific rules
+      </Tab>
+      
+      <Tab title="Manual">
+        For manual installation, copy rules maintaining the directory structure:
+        
+        <CodeGroup>
+        ```bash User-level (all projects)
+        # Common rules (always install)
+        mkdir -p ~/.claude/rules
+        cp -r rules/common/* ~/.claude/rules/
+        
+        # Language-specific rules (pick your stack)
+        cp -r rules/typescript/* ~/.claude/rules/
+        cp -r rules/python/* ~/.claude/rules/
+        cp -r rules/golang/* ~/.claude/rules/
+        ```
+        
+        ```bash Project-level (current project only)
+        # Common rules (always install)
+        mkdir -p .claude/rules
+        cp -r rules/common/* .claude/rules/
+        
+        # Language-specific rules (pick your stack)
+        cp -r rules/typescript/* .claude/rules/
+        ```
+        </CodeGroup>
+      </Tab>
+    </Tabs>
+    
+    <Info>
+    Rules are always-follow guidelines that ensure consistent code quality, security, and best practices across your projects.
+    </Info>
+  </Step>
+  
+  <Step title="Start Using Commands">
+    Try your first command to verify installation:
+    
+    <CodeGroup>
+    ```bash Plugin Install (Namespaced)
+    # Plan a new feature
+    /everything-claude-code:plan "Add user authentication"
+    
+    # Run TDD workflow
+    /everything-claude-code:tdd
+    
+    # Review code changes
+    /everything-claude-code:code-review
+    
+    # Check available commands
+    /plugin list everything-claude-code@everything-claude-code
+    ```
+    
+    ```bash Manual Install (Shorter Form)
+    # Plan a new feature
+    /plan "Add user authentication"
+    
+    # Run TDD workflow
+    /tdd
+    
+    # Review code changes
+    /code-review
+    ```
+    </CodeGroup>
+    
+    <Note>
+    Plugin installs use the namespaced form (`/everything-claude-code:plan`) while manual installs use the shorter form (`/plan`).
+    </Note>
+  </Step>
+  
+  <Step title="Configure Package Manager (Optional)">
+    The plugin automatically detects your preferred package manager (npm, pnpm, yarn, bun) with the following priority:
+    
+    1. Environment variable: `CLAUDE_PACKAGE_MANAGER`
+    2. Project config: `.claude/package-manager.json`
+    3. `package.json`: `packageManager` field
+    4. Lock file detection
+    5. Global config: `~/.claude/package-manager.json`
+    6. Fallback: First available
+    
+    To set your preferred package manager:
+    
+    <CodeGroup>
+    ```bash Environment Variable
+    export CLAUDE_PACKAGE_MANAGER=pnpm
+    ```
+    
+    ```bash Global Config
+    node scripts/setup-package-manager.js --global pnpm
+    ```
+    
+    ```bash Project Config
+    node scripts/setup-package-manager.js --project bun
+    ```
+    
+    ```bash Detect Current
+    node scripts/setup-package-manager.js --detect
+    ```
+    
+    ```bash Claude Code Command
+    /setup-pm
+    ```
+    </CodeGroup>
+  </Step>
+</Steps>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+## ✨ That's It!
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+You now have access to:
+- **13 specialized agents** for planning, architecture, TDD, code review, security, and more
+- **56+ skills** covering coding standards, backend/frontend patterns, security, testing, and continuous learning
+- **33 commands** for instant execution of common workflows
+- **Automated hooks** for memory persistence, strategic compaction, and security warnings
 
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
+## First Steps
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Try a Command" icon="terminal">
+    Start with `/plan "Add user authentication"` to see the planner agent in action.
+  </Card>
+  
+  <Card title="Review Available Commands" icon="list">
+    Use `/plugin list everything-claude-code@everything-claude-code` to see all available commands.
+  </Card>
+  
+  <Card title="Learn About Agents" icon="robot">
+    Check out the [Agents Concept](/concepts/agents) to understand when to use each agent.
+  </Card>
+  
+  <Card title="Optimize Token Usage" icon="gauge">
+    Review [Token Optimization](/features/token-optimization) to reduce costs without sacrificing quality.
+  </Card>
 </CardGroup>
 
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+## Common First Commands
+
+| Command | What It Does | When to Use |
+|---------|--------------|-------------|
+| `/plan "feature"` | Creates implementation plan | Starting a new feature |
+| `/tdd` | Enforces test-driven development | Writing new code or fixing bugs |
+| `/code-review` | Reviews code for quality & security | After writing/modifying code |
+| `/build-fix` | Fixes build and type errors | When build fails |
+| `/e2e` | Generates E2E tests | Testing critical user flows |
+| `/orchestrate` | Multi-agent workflow | Complex tasks requiring multiple agents |
+
+## Example Workflow
+
+Here's a typical workflow for adding a new feature:
+
+<Steps>
+  <Step title="Plan the Feature">
+    ```bash
+    /everything-claude-code:plan "Add OAuth authentication with Google and GitHub"
+    ```
+    The planner agent creates a detailed implementation blueprint.
+  </Step>
+  
+  <Step title="Implement with TDD">
+    ```bash
+    /everything-claude-code:tdd
+    ```
+    The tdd-guide agent enforces write-tests-first workflow.
+  </Step>
+  
+  <Step title="Review the Code">
+    ```bash
+    /everything-claude-code:code-review
+    ```
+    The code-reviewer agent checks quality, security, and maintainability.
+  </Step>
+  
+  <Step title="Fix Any Build Errors">
+    ```bash
+    /everything-claude-code:build-fix
+    ```
+    The build-error-resolver agent fixes TypeScript errors and build issues.
+  </Step>
+  
+  <Step title="Add E2E Tests">
+    ```bash
+    /everything-claude-code:e2e
+    ```
+    The e2e-runner agent generates Playwright tests for critical flows.
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Installation Guide" icon="download" href="/get-started/installation">
+    Detailed installation options and platform-specific notes
+  </Card>
+  
+  <Card title="Key Concepts" icon="lightbulb" href="/concepts/agents">
+    Learn about agents, skills, hooks, and rules
+  </Card>
+  
+  <Card title="Token Optimization" icon="gauge" href="/features/token-optimization">
+    Reduce costs without sacrificing quality
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Commands not found / plugin not loading">
+    Verify the plugin is enabled in `~/.claude/settings.json`:
+    
+    ```json
+    {
+      "enabledPlugins": {
+        "everything-claude-code@everything-claude-code": true
+      }
+    }
+    ```
+    
+    Restart Claude Code after enabling the plugin.
+  </Accordion>
+  
+  <Accordion title="Hooks aren't working / 'Duplicate hooks file' errors">
+    **Do NOT add a `"hooks"` field to `.claude-plugin/plugin.json`.**
+    
+    Claude Code v2.1+ automatically loads `hooks/hooks.json` from installed plugins. Explicitly declaring it causes duplicate detection errors.
+    
+    See issues [#29](https://github.com/affaan-m/everything-claude-code/issues/29), [#52](https://github.com/affaan-m/everything-claude-code/issues/52), [#103](https://github.com/affaan-m/everything-claude-code/issues/103).
+  </Accordion>
+  
+  <Accordion title="Context window shrinking / running out of context">
+    Too many MCP servers eat your context. Each MCP tool description consumes tokens from your 200k window, potentially reducing it to ~70k.
+    
+    **Fix:** Disable unused MCPs per project in `.claude/settings.json`:
+    
+    ```json
+    {
+      "disabledMcpServers": ["supabase", "railway", "vercel"]
+    }
+    ```
+    
+    Keep under 10 MCPs enabled and under 80 tools active.
+  </Accordion>
+  
+  <Accordion title="Rules not being followed">
+    Verify rules are installed in the correct location:
+    
+    ```bash
+    # Check user-level rules
+    ls -la ~/.claude/rules/
+    
+    # Check project-level rules
+    ls -la .claude/rules/
+    ```
+    
+    Rules should maintain the directory structure:
+    - `common/` - Language-agnostic principles
+    - `typescript/`, `python/`, `golang/`, etc. - Language-specific rules
+  </Accordion>
+</AccordionGroup>
+
+## Getting Help
+
+<CardGroup cols={2}>
+  <Card title="GitHub Issues" icon="github" href="https://github.com/affaan-m/everything-claude-code/issues">
+    Report bugs or request features
+  </Card>
+  
+  <Card title="Shorthand Guide" icon="book" href="https://x.com/affaanmustafa/status/2012378465664745795">
+    Setup, foundations, and philosophy
+  </Card>
+  
+  <Card title="Longform Guide" icon="book-open" href="https://x.com/affaanmustafa/status/2014040193557471352">
+    Token optimization, memory persistence, evals, parallelization
+  </Card>
+  
+  <Card title="Follow @affaanmustafa" icon="twitter" href="https://x.com/affaanmustafa">
+    Get updates and tips
+  </Card>
+</CardGroup>

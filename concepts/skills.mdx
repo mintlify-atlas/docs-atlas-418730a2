@@ -1,0 +1,445 @@
+---
+title: Skills
+description: Workflow definitions and domain knowledge libraries that agents and commands reference
+---
+
+Skills are self-contained packages of domain knowledge, patterns, and workflows that agents and commands reference when performing tasks. They provide deep, actionable reference material for specific development domains.
+
+## What Are Skills?
+
+Skills are markdown files (typically `SKILL.md`) with YAML frontmatter containing:
+
+- **Workflow definitions** - Step-by-step methodologies
+- **Best practices** - Patterns and anti-patterns
+- **Code examples** - Real implementations from the codebase
+- **Reference material** - Framework-specific knowledge
+
+## Skill Structure
+
+Here's an example from the **tdd-workflow** skill:
+
+```markdown ~/workspace/source/skills/tdd-workflow/SKILL.md
+---
+name: tdd-workflow
+description: Use this skill when writing new features, fixing bugs, or refactoring code. Enforces test-driven development with 80%+ coverage.
+origin: ECC
+---
+
+# Test-Driven Development Workflow
+
+## When to Activate
+
+- Writing new features or functionality
+- Fixing bugs or issues
+- Refactoring existing code
+
+## Core Principles
+
+### 1. Tests BEFORE Code
+ALWAYS write tests first, then implement code to make tests pass.
+
+### 2. Coverage Requirements
+- Minimum 80% coverage (unit + integration + E2E)
+- All edge cases covered
+- Error scenarios tested
+
+## TDD Workflow Steps
+
+### Step 1: Write Failing Test (RED)
+```typescript
+describe('calculateLiquidityScore', () => {
+  it('should return high score for liquid market', () => {
+    const score = calculateLiquidityScore(liquidMarket)
+    expect(score).toBeGreaterThan(80)
+  })
+})
+```
+
+### Step 2: Run Test - Verify FAIL
+### Step 3: Implement Minimal Code (GREEN)
+### Step 4: Run Test - Verify PASS
+### Step 5: Refactor (IMPROVE)
+### Step 6: Verify Coverage
+```
+
+<Note>
+Skills differ from **agents** (which execute tasks) and **rules** (which enforce standards). Skills are **reference material** that agents consult during execution.
+</Note>
+
+## Available Skills (50+)
+
+ECC provides over 50 skills across multiple categories:
+
+### Core Development Skills
+
+<CardGroup cols={2}>
+  <Card title="tdd-workflow" icon="vial">
+    **Purpose:** Test-driven development methodology
+    
+    **When to use:** Writing features, fixing bugs, refactoring
+    
+    **Contents:**
+    - RED → GREEN → REFACTOR cycle
+    - Edge case testing strategies
+    - Mocking patterns for external dependencies
+    - Coverage verification
+  </Card>
+  
+  <Card title="security-review" icon="shield">
+    **Purpose:** Comprehensive security checklist
+    
+    **When to use:** Before commits, security-sensitive code
+    
+    **Contents:**
+    - OWASP Top 10 checks
+    - Secret scanning patterns
+    - SQL injection prevention
+    - XSS and CSRF protection
+  </Card>
+  
+  <Card title="coding-standards" icon="code">
+    **Purpose:** Universal coding standards
+    
+    **When to use:** All development tasks
+    
+    **Contents:**
+    - Immutability patterns
+    - File organization guidelines
+    - Error handling best practices
+    - Input validation strategies
+  </Card>
+  
+  <Card title="verification-loop" icon="check-double">
+    **Purpose:** Continuous verification (build, test, lint, security)
+    
+    **When to use:** CI/CD setup, quality gates
+    
+    **Contents:**
+    - Multi-stage verification pipeline
+    - Checkpoint-based testing
+    - Automated quality gates
+  </Card>
+</CardGroup>
+
+### Backend Development
+
+<CardGroup cols={2}>
+  <Card title="backend-patterns" icon="server">
+    **Purpose:** API design, database optimization, caching
+    
+    **Real examples from source:**
+    - Repository pattern with Supabase
+    - Service layer architecture
+    - N+1 query prevention
+    - Redis caching strategies
+  </Card>
+  
+  <Card title="api-design" icon="route">
+    **Purpose:** REST API design patterns
+    
+    **Contents:**
+    - Resource-based URL structure
+    - Pagination and filtering
+    - Error response format
+    - Versioning strategies
+  </Card>
+  
+  <Card title="database-migrations" icon="database">
+    **Purpose:** Migration patterns (Prisma, Drizzle, Django, Go)
+    
+    **Contents:**
+    - Zero-downtime migrations
+    - Rollback strategies
+    - Data migration patterns
+  </Card>
+  
+  <Card title="deployment-patterns" icon="rocket">
+    **Purpose:** CI/CD, Docker, health checks, rollbacks
+    
+    **Contents:**
+    - Blue-green deployments
+    - Health check endpoints
+    - Automated rollbacks
+  </Card>
+</CardGroup>
+
+### Frontend Development
+
+<CardGroup cols={2}>
+  <Card title="frontend-patterns" icon="react">
+    **Purpose:** React, Next.js patterns and best practices
+    
+    **Real examples:**
+    - Server Components vs Client Components
+    - State management patterns
+    - Data fetching strategies
+    - Performance optimization
+  </Card>
+  
+  <Card title="e2e-testing" icon="browser">
+    **Purpose:** Playwright E2E patterns and Page Object Model
+    
+    **Contents:**
+    - Page object pattern
+    - Test isolation strategies
+    - Visual regression testing
+    - CI integration
+  </Card>
+  
+  <Card title="frontend-slides" icon="presentation">
+    **Purpose:** HTML presentation builder with PPTX conversion
+    
+    **Contents:**
+    - Zero-dependency slide decks
+    - PPTX conversion guidance
+    - Viewport-fit rules
+  </Card>
+</CardGroup>
+
+### Language-Specific Skills
+
+<Tabs>
+  <Tab title="TypeScript">
+    - **coding-standards** - ESLint, Prettier, tsconfig best practices
+    - **frontend-patterns** - React, Next.js, Server Components
+    - **backend-patterns** - Express, Next.js API routes, tRPC
+  </Tab>
+  
+  <Tab title="Python">
+    - **django-patterns** - Models, views, serializers, middleware
+    - **django-security** - Security best practices
+    - **django-tdd** - pytest, factory_boy, fixtures
+    - **django-verification** - Verification loops for Django
+  </Tab>
+  
+  <Tab title="Go">
+    - **golang-patterns** - Idioms, error handling, concurrency
+    - **golang-testing** - Table-driven tests, benchmarks, coverage
+  </Tab>
+  
+  <Tab title="C++">
+    - **cpp-coding-standards** - C++ Core Guidelines compliance
+    - **cpp-testing** - GoogleTest, CMake/CTest patterns
+  </Tab>
+  
+  <Tab title="Java">
+    - **springboot-patterns** - Spring Boot, JPA, dependency injection
+    - **springboot-security** - Spring Security configuration
+    - **springboot-tdd** - JUnit, Mockito, test containers
+  </Tab>
+</Tabs>
+
+### Advanced Skills
+
+<CardGroup cols={2}>
+  <Card title="continuous-learning-v2" icon="brain">
+    **Purpose:** Instinct-based learning with confidence scoring
+    
+    **Features:**
+    - Auto-extract patterns from sessions
+    - Import/export instincts
+    - Evolution clustering
+    - Confidence-based filtering
+  </Card>
+  
+  <Card title="strategic-compact" icon="compress">
+    **Purpose:** Manual compaction suggestions at logical intervals
+    
+    **Features:**
+    - When to compact (after research, milestones)
+    - When NOT to compact (mid-implementation)
+    - Token optimization strategies
+  </Card>
+  
+  <Card title="iterative-retrieval" icon="arrows-rotate">
+    **Purpose:** Progressive context refinement for subagents
+    
+    **Features:**
+    - Multi-round context building
+    - Relevance scoring
+    - Context window optimization
+  </Card>
+  
+  <Card title="security-scan" icon="shield-halved">
+    **Purpose:** AgentShield security auditor integration
+    
+    **Features:**
+    - 102 static analysis rules
+    - Opus 4.6 adversarial reasoning
+    - Auto-fix safe issues
+  </Card>
+</CardGroup>
+
+## How Skills Work
+
+### Skills vs. Agents vs. Rules
+
+| Component | Purpose | When Used |
+|-----------|---------|----------|
+| **Skills** | Reference material and workflows | Consulted during task execution |
+| **Agents** | Specialized executors | Perform delegated tasks |
+| **Rules** | Standards and constraints | Always enforced |
+
+### Example: TDD Workflow
+
+<Steps>
+  <Step title="User Request">
+    User: "Add market liquidity scoring"
+  </Step>
+  
+  <Step title="Command Execution">
+    `/tdd` command invokes the **tdd-guide** agent
+  </Step>
+  
+  <Step title="Agent Consults Skill">
+    The **tdd-guide** agent references the **tdd-workflow** skill
+  </Step>
+  
+  <Step title="Skill Provides Methodology">
+    Skill defines:
+    - Write failing test first (RED)
+    - Implement minimal code (GREEN)
+    - Refactor while keeping tests green (REFACTOR)
+  </Step>
+  
+  <Step title="Agent Executes">
+    Agent follows the workflow defined in the skill
+  </Step>
+</Steps>
+
+## Real Code Examples from Skills
+
+Skills include actual code examples extracted from the ECC codebase:
+
+### Repository Pattern (from backend-patterns)
+
+```typescript
+// Abstract data access logic
+interface MarketRepository {
+  findAll(filters?: MarketFilters): Promise<Market[]>
+  findById(id: string): Promise<Market | null>
+  create(data: CreateMarketDto): Promise<Market>
+  update(id: string, data: UpdateMarketDto): Promise<Market>
+  delete(id: string): Promise<void>
+}
+
+class SupabaseMarketRepository implements MarketRepository {
+  async findAll(filters?: MarketFilters): Promise<Market[]> {
+    let query = supabase.from('markets').select('*')
+    
+    if (filters?.status) {
+      query = query.eq('status', filters.status)
+    }
+    
+    const { data, error } = await query
+    if (error) throw new Error(error.message)
+    
+    return data
+  }
+}
+```
+
+### Test Organization (from tdd-workflow)
+
+```typescript
+describe('Semantic Search', () => {
+  it('returns relevant markets for query', async () => {
+    // Test implementation
+  })
+  
+  it('handles empty query gracefully', async () => {
+    // Edge case
+  })
+  
+  it('falls back to substring search when Redis unavailable', async () => {
+    // Fallback behavior
+  })
+  
+  it('sorts results by similarity score', async () => {
+    // Sorting logic
+  })
+})
+```
+
+## Creating Custom Skills
+
+You can create project-specific skills:
+
+```markdown ~/.claude/skills/my-skill/SKILL.md
+---
+name: my-skill
+description: When to use this skill and what problems it solves
+origin: My Project
+---
+
+# Skill Title
+
+## When to Activate
+
+- Scenario 1
+- Scenario 2
+
+## Methodology
+
+### Step 1: ...
+### Step 2: ...
+
+## Code Examples
+
+```language
+// Real code from your project
+```
+
+## Anti-Patterns to Avoid
+
+- ❌ Anti-pattern 1
+- ❌ Anti-pattern 2
+```
+
+<Warning>
+Skills should be **actionable** and **specific**. Avoid vague advice like "write good code." Include real code examples, concrete steps, and clear decision criteria.
+</Warning>
+
+## Skill Best Practices
+
+<AccordionGroup>
+  <Accordion title="Include Real Examples">
+    Extract actual code from your codebase. Real examples are more valuable than pseudocode.
+  </Accordion>
+  
+  <Accordion title="Define When to Use">
+    Clearly state the scenarios where this skill applies. This helps agents know when to reference it.
+  </Accordion>
+  
+  <Accordion title="Provide Decision Criteria">
+    When multiple approaches exist, give specific criteria for choosing between them.
+  </Accordion>
+  
+  <Accordion title="Link to Related Skills">
+    Reference other skills that complement this one (e.g., tdd-workflow → security-review).
+  </Accordion>
+  
+  <Accordion title="Keep Skills Focused">
+    One skill, one domain. Don't create mega-skills that try to cover everything.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Explore Commands" icon="terminal" href="/concepts/commands">
+    Learn how commands invoke agents that use skills
+  </Card>
+  
+  <Card title="Skills Reference" icon="list" href="/skills/overview">
+    Full catalog of all 50+ skills
+  </Card>
+  
+  <Card title="TDD Workflow" icon="vial" href="/skills/tdd-workflow">
+    Deep dive into test-driven development
+  </Card>
+  
+  <Card title="Backend Patterns" icon="server" href="/skills/backend-patterns">
+    API design and database optimization
+  </Card>
+</CardGroup>

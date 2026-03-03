@@ -1,0 +1,242 @@
+---
+title: Go Build Resolver Agent
+description: Go build and compilation error resolution specialist
+---
+
+## Overview
+
+The **go-build-resolver** agent is an expert Go build error resolution specialist. Its mission is to fix Go build errors, `go vet` issues, and linter warnings with **minimal, surgical changes**.
+
+<ParamField path="name" type="string" default="go-build-resolver">
+  Agent identifier
+</ParamField>
+
+<ParamField path="model" type="string" default="sonnet">
+  Uses Claude Sonnet for efficient Go error resolution
+</ParamField>
+
+<ParamField path="tools" type="array">
+  Available tools: `Read`, `Write`, `Edit`, `Bash`, `Grep`, `Glob`
+</ParamField>
+
+## When to Use
+
+<Check>Go build fails with compilation errors</Check>
+<Check>`go vet` reports issues</Check>
+<Check>Linter warnings (staticcheck, golangci-lint)</Check>
+<Check>Module dependency problems</Check>
+
+<Info>The go-build-resolver agent activates **PROACTIVELY** when Go builds fail.</Info>
+
+## Core Responsibilities
+
+1. Diagnose Go compilation errors
+2. Fix `go vet` warnings
+3. Resolve `staticcheck` / `golangci-lint` issues
+4. Handle module dependency problems
+5. Fix type errors and interface mismatches
+
+## Diagnostic Commands
+
+Run these in order:
+
+```bash
+go build ./...
+go vet ./...
+staticcheck ./... 2>/dev/null || echo "staticcheck not installed"
+golangci-lint run 2>/dev/null || echo "golangci-lint not installed"
+go mod verify
+go mod tidy -v
+```
+
+## Resolution Workflow
+
+```text
+1. go build ./...     → Parse error message
+2. Read affected file → Understand context
+3. Apply minimal fix  → Only what's needed
+4. go build ./...     → Verify fix
+5. go vet ./...       → Check for warnings
+6. go test ./...      → Ensure nothing broke
+```
+
+## Common Fix Patterns
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `undefined: X` | Missing import, typo, unexported | Add import or fix casing |
+| `cannot use X as type Y` | Type mismatch, pointer/value | Type conversion or dereference |
+| `X does not implement Y` | Missing method | Implement method with correct receiver |
+| `import cycle not allowed` | Circular dependency | Extract shared types to new package |
+| `cannot find package` | Missing dependency | `go get pkg@version` or `go mod tidy` |
+| `missing return` | Incomplete control flow | Add return statement |
+| `declared but not used` | Unused var/import | Remove or use blank identifier |
+| `multiple-value in single-value context` | Unhandled return | `result, err := func()` |
+| `cannot assign to struct field in map` | Map value mutation | Use pointer map or copy-modify-reassign |
+| `invalid type assertion` | Assert on non-interface | Only assert from `interface{}` |
+
+## Examples
+
+### Fix: Undefined Variable
+
+```go
+// ERROR: undefined: UserService
+func GetUser(id int) (*User, error) {
+    return UserService.FindByID(id)
+}
+
+// FIX: Add import
+import "myproject/internal/service"
+
+func GetUser(id int) (*User, error) {
+    return service.UserService.FindByID(id)
+}
+```
+
+### Fix: Type Mismatch
+
+```go
+// ERROR: cannot use userId (type int64) as type int
+var userId int64 = 123
+user := getUser(userId)
+
+// FIX: Convert type
+var userId int64 = 123
+user := getUser(int(userId))
+```
+
+### Fix: Interface Not Implemented
+
+```go
+// ERROR: *UserService does not implement Repository (missing method Update)
+type UserService struct{}
+
+func (s *UserService) Create(user *User) error { /* ... */ }
+func (s *UserService) Delete(id int) error { /* ... */ }
+
+// FIX: Add missing method
+func (s *UserService) Update(user *User) error {
+    // Implementation
+    return nil
+}
+```
+
+### Fix: Import Cycle
+
+```go
+// ERROR: import cycle not allowed
+// package A imports B
+// package B imports A
+
+// FIX: Extract shared types to new package
+// Create package "types" with shared interfaces/structs
+// Both A and B import "types" instead of each other
+```
+
+### Fix: Missing Dependency
+
+```bash
+# ERROR: cannot find package "github.com/user/pkg"
+
+# FIX: Install dependency
+go get github.com/user/pkg@latest
+# OR
+go mod tidy
+```
+
+### Fix: Unused Variable
+
+```go
+// ERROR: declared but not used: result
+func processData() error {
+    result, err := fetchData()
+    if err != nil {
+        return err
+    }
+    return nil
+}
+
+// FIX: Use blank identifier or use the variable
+func processData() error {
+    _, err := fetchData()
+    if err != nil {
+        return err
+    }
+    return nil
+}
+```
+
+## Module Troubleshooting
+
+```bash
+# Check why a module is included
+go mod why -m package
+
+# Check local replaces
+grep "replace" go.mod
+
+# Pin specific version
+go get package@v1.2.3
+
+# Fix checksum issues
+go clean -modcache && go mod download
+```
+
+## Key Principles
+
+<CardGroup cols={2}>
+  <Card title="Surgical Fixes Only" icon="scalpel">
+    Don't refactor, just fix the error
+  </Card>
+  <Card title="Never Suppress" icon="ban">
+    Don't add `//nolint` without explicit approval
+  </Card>
+  <Card title="Preserve Signatures" icon="signature">
+    Never change function signatures unless necessary
+  </Card>
+  <Card title="Tidy After Changes" icon="broom">
+    Always run `go mod tidy` after adding/removing imports
+  </Card>
+  <Card title="Fix Root Cause" icon="magnifying-glass">
+    Don't suppress symptoms, fix the underlying issue
+  </Card>
+</CardGroup>
+
+## Stop Conditions
+
+Stop and report if:
+- Same error persists after 3 fix attempts
+- Fix introduces more errors than it resolves
+- Error requires architectural changes beyond scope
+
+## Output Format
+
+```text
+[FIXED] internal/handler/user.go:42
+Error: undefined: UserService
+Fix: Added import "project/internal/service"
+Remaining errors: 3
+```
+
+Final: `Build Status: SUCCESS/FAILED | Errors Fixed: N | Files Modified: list`
+
+## Usage Example
+
+```bash
+# Invoke go-build-resolver directly
+ask go-build-resolver "Fix all Go build errors"
+
+# Or let it activate automatically
+go build ./...  # Fails with errors
+# → go-build-resolver activates and fixes errors
+```
+
+## Success Criteria
+
+<Check>`go build ./...` exits with code 0</Check>
+<Check>`go vet ./...` reports no issues</Check>
+<Check>No new errors introduced</Check>
+<Check>Minimal lines changed</Check>
+<Check>Tests still passing</Check>
+
+<Tip>For detailed Go error patterns and code examples, see skill: `golang-patterns`.</Tip>

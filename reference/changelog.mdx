@@ -1,0 +1,283 @@
+---
+title: Changelog
+description: Version history and release notes for Everything Claude Code
+---
+
+## v1.7.0 — Cross-Platform Expansion & Presentation Builder (Feb 2026)
+
+### Features
+
+#### Codex CLI Support
+- Direct `AGENTS.md`-based Codex support
+- Installer targeting for Codex (`./install.sh --target codex`)
+- Codex-specific documentation in `.codex/`
+- Reference configuration at `.codex/config.toml`
+
+#### Frontend Slides Skill
+- Zero-dependency HTML presentation builder
+- PPTX conversion guidance
+- Strict viewport-fit rules
+- Visual style exploration workflows
+- See `skills/frontend-slides/`
+
+#### New Business & Content Skills (5)
+- `article-writing` — Long-form writing in supplied voice without generic AI tone
+- `content-engine` — Multi-platform social content and repurposing workflows
+- `market-research` — Source-attributed market, competitor, and investor research
+- `investor-materials` — Pitch decks, one-pagers, memos, and financial models
+- `investor-outreach` — Personalized fundraising outreach and follow-up
+
+#### Broader Tool Coverage
+- Cursor, Codex, and OpenCode support tightened
+- Same repo ships cleanly across all major harnesses
+- Cross-platform installer improvements
+
+### Testing
+- **992 internal tests** — Expanded validation and regression coverage
+- Coverage across plugins, hooks, skills, and packaging
+
+---
+
+## v1.6.0 — Codex CLI, AgentShield & Marketplace (Feb 2026)
+
+### Features
+
+#### Codex CLI Support
+- New `/codex-setup` command generates `codex.md`
+- OpenAI Codex CLI compatibility
+- Reference configs in `.codex/`
+
+#### AgentShield Integration
+- `/security-scan` skill runs AgentShield directly from Claude Code
+- **1,282 tests** | **98% coverage** | **102 static analysis rules**
+- Scans: secrets detection, permissions, hooks, MCP configs, agent definitions
+- Output formats: terminal, JSON, Markdown, HTML
+- GitHub Action available
+
+#### GitHub Marketplace
+- **ECC Tools GitHub App** live at [github.com/marketplace/ecc-tools](https://github.com/marketplace/ecc-tools)
+- Tiers: Free, Pro, Enterprise
+- Automated skill generation from commit history
+- Team collaboration features
+
+#### New Skills (7)
+- `search-first` — Research-before-coding workflow
+- `swift-actor-persistence` — Thread-safe Swift data persistence with actors
+- `swift-protocol-di-testing` — Protocol-based DI for testable Swift code
+- `regex-vs-llm-structured-text` — Decision framework: regex vs LLM for text parsing
+- `content-hash-cache-pattern` — SHA-256 content hash caching for file processing
+- `cost-aware-llm-pipeline` — LLM cost optimization, model routing, budget tracking
+- `skill-stocktake` — Audit skills and commands for quality
+
+### Community
+- **30+ community PRs merged**
+- Contributions from **30 contributors** across **6 languages**
+
+### Testing
+- **978 internal tests** — Validation suite across agents, skills, commands, hooks, and rules
+
+---
+
+## v1.4.1 — Bug Fix (Feb 2026)
+
+### Bug Fixes
+
+#### Fixed: Instinct Import Content Loss
+- `parse_instinct_file()` was silently dropping all content after frontmatter
+- Action, Evidence, Examples sections were lost during `/instinct-import`
+- **Fixed by:** @ericcai0814 (community contributor)
+- **Issues:** [#148](https://github.com/affaan-m/everything-claude-code/issues/148), [#161](https://github.com/affaan-m/everything-claude-code/pull/161)
+
+---
+
+## v1.4.0 — Multi-Language Rules, Installation Wizard & PM2 (Feb 2026)
+
+### Features
+
+#### Interactive Installation Wizard
+- New `configure-ecc` skill provides guided setup
+- Merge/overwrite detection
+- Path verification and cross-reference checking
+- Optional optimization of installed files
+- See `skills/configure-ecc/`
+
+#### PM2 & Multi-Agent Orchestration
+- **6 new commands** for managing complex multi-service workflows:
+  - `/pm2` — PM2 service lifecycle management
+  - `/multi-plan` — Multi-agent task decomposition
+  - `/multi-execute` — Orchestrated multi-agent workflows
+  - `/multi-backend` — Backend multi-service orchestration
+  - `/multi-frontend` — Frontend multi-service orchestration
+  - `/multi-workflow` — General multi-service workflows
+
+#### Multi-Language Rules Architecture
+- Rules restructured from flat files into:
+  - `common/` — Language-agnostic principles
+  - `typescript/` — TypeScript/JavaScript specific
+  - `python/` — Python specific
+  - `golang/` — Go specific
+- Install only the languages you need
+- Language-specific rules extend common rules
+
+#### Chinese (zh-CN) Translations
+- Complete translation of all agents, commands, skills, and rules
+- 80+ files translated
+- Maintained by community contributors
+
+#### GitHub Sponsors Support
+- Sponsor the project via [GitHub Sponsors](https://github.com/sponsors/affaan-m)
+- Tiers: Supporter, Builder, Pro, Team, Business, Enterprise
+
+### Documentation
+- Enhanced CONTRIBUTING.md with detailed PR templates
+- Per-contribution-type guidelines
+
+---
+
+## v1.3.0 — OpenCode Plugin Support (Feb 2026)
+
+### Features
+
+#### Full OpenCode Integration
+- **12 agents** compatible with OpenCode
+- **24 commands** ported to OpenCode
+- **16 skills** with OpenCode metadata
+- Hook support via OpenCode's plugin system (20+ event types)
+- `.opencode/opencode.json` configuration
+
+#### Custom Tools (3)
+- `run-tests` — Execute test suites
+- `check-coverage` — Analyze test coverage
+- `security-audit` — Run security scans
+
+#### LLM Documentation
+- `llms.txt` for comprehensive OpenCode docs
+- Optimized for LLM consumption
+
+---
+
+## v1.2.0 — Unified Commands & Skills (Feb 2026)
+
+### Features
+
+#### Python/Django Support
+- `django-patterns` — Django architecture, REST API with DRF, ORM
+- `django-security` — Django security best practices
+- `django-tdd` — Django testing with pytest-django
+- `django-verification` — Django verification loops
+
+#### Java Spring Boot Skills
+- `springboot-patterns` — Spring Boot architecture, REST API, layered services
+- `springboot-security` — Spring Security: authn/authz, CSRF, secrets
+- `springboot-tdd` — Spring Boot TDD with JUnit 5, Mockito
+- `springboot-verification` — Spring Boot verification: build, static analysis, tests
+
+#### Session Management
+- `/sessions` command for session history
+- View past sessions
+- Resume previous contexts
+
+#### Continuous Learning v2
+- Instinct-based learning with confidence scoring
+- Commands:
+  - `/instinct-status` — View learned instincts
+  - `/instinct-import` — Import instincts
+  - `/instinct-export` — Export instincts
+  - `/evolve` — Cluster instincts into skills
+- See `skills/continuous-learning-v2/`
+
+---
+
+## v1.1.0 — Cross-Platform Hooks (Jan 2026)
+
+### Features
+
+#### Node.js Hooks Rewrite
+- All hooks rewritten in Node.js for cross-platform compatibility
+- Supports Windows, macOS, Linux
+- Removed bash dependencies
+
+#### Package Manager Detection
+- Automatic detection of npm, pnpm, yarn, bun
+- Priority: env var > project config > package.json > lock file > global config
+- `/setup-pm` command for interactive configuration
+- See `scripts/setup-package-manager.js`
+
+#### Cross-Platform Scripts
+- `scripts/lib/utils.js` — Cross-platform utilities
+- `scripts/lib/package-manager.js` — Package manager detection
+- All hook scripts use Node.js
+
+---
+
+## v1.0.0 — Initial Release (Jan 2026)
+
+### Features
+
+#### Core Components
+- **13 agents** — Specialized subagents for delegation
+- **33 commands** — Slash commands for quick workflows
+- **40+ skills** — Domain knowledge and workflow definitions
+- **29 rules** — Always-follow guidelines (common + language-specific)
+- **Hooks system** — Event-driven automations
+
+#### Agents
+- `planner` — Implementation planning
+- `architect` — System design decisions
+- `tdd-guide` — Test-driven development
+- `code-reviewer` — Quality and security review
+- `security-reviewer` — Vulnerability analysis
+- `build-error-resolver` — Fix build errors
+- `e2e-runner` — Playwright E2E testing
+- `refactor-cleaner` — Dead code cleanup
+- `doc-updater` — Documentation sync
+- `go-reviewer` — Go code review
+- `go-build-resolver` — Go build error resolution
+- `python-reviewer` — Python code review
+- `database-reviewer` — Database/Supabase review
+
+#### Skills (40+)
+- **Coding Standards:** `coding-standards`, language-specific patterns
+- **Frontend:** `frontend-patterns` (React, Next.js)
+- **Backend:** `backend-patterns` (API, database, caching)
+- **Testing:** `tdd-workflow`, `e2e-testing`, language-specific testing
+- **Security:** `security-review`
+- **Database:** `postgres-patterns`, `clickhouse-io`, `jpa-patterns`
+- **Workflows:** `continuous-learning`, `eval-harness`, `verification-loop`, `strategic-compact`
+- **Go:** `golang-patterns`, `golang-testing`
+- **C++:** `cpp-coding-standards`, `cpp-testing`
+- **More:** See full list in README
+
+#### MCP Servers (14)
+- GitHub, Supabase, Vercel, Railway
+- Cloudflare (docs, builds, bindings, observability)
+- ClickHouse, Firecrawl, Exa Web Search
+- Memory, Sequential Thinking, Context7
+- Magic UI, Filesystem
+
+#### Hooks
+- **PreToolUse:** Dev server blocker, tmux reminder, git push reminder
+- **PostToolUse:** Auto-format (Prettier), TypeScript check, console.log warning
+- **Lifecycle:** Session start/end, pre-compact, pattern extraction
+
+#### Commands (33)
+- `/plan`, `/tdd`, `/code-review`, `/build-fix`, `/e2e`
+- `/refactor-clean`, `/learn`, `/checkpoint`, `/verify`
+- `/go-review`, `/go-test`, `/go-build`
+- `/python-review`
+- `/skill-create`, `/instinct-*`, `/evolve`
+- `/orchestrate`, `/sessions`, `/eval`, `/test-coverage`
+- `/update-docs`, `/update-codemaps`
+- And more — see full list in README
+
+---
+
+## Release Notes
+
+Full release history and detailed changelogs available at:
+
+[github.com/affaan-m/everything-claude-code/releases](https://github.com/affaan-m/everything-claude-code/releases)
+
+## Upgrading
+
+See [Migration Guide](/reference/migration) for upgrade instructions between versions.

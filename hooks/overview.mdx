@@ -1,0 +1,150 @@
+---
+title: Hook System Overview
+description: Event-driven automations that enforce code quality and catch mistakes early
+---
+
+Hooks are event-driven automations that fire before or after Claude Code tool executions. They enforce code quality, catch mistakes early, and automate repetitive checks.
+
+## How Hooks Work
+
+```
+User request → Claude picks a tool → PreToolUse hook runs → Tool executes → PostToolUse hook runs
+```
+
+<Steps>
+  <Step title="PreToolUse hooks">
+    Run before the tool executes. They can **block** (exit code 2) or **warn** (stderr without blocking).
+  </Step>
+  <Step title="PostToolUse hooks">
+    Run after the tool completes. They can analyze output but cannot block.
+  </Step>
+  <Step title="Stop hooks">
+    Run after each Claude response.
+  </Step>
+  <Step title="SessionStart/SessionEnd hooks">
+    Run at session lifecycle boundaries.
+  </Step>
+  <Step title="PreCompact hooks">
+    Run before context compaction, useful for saving state.
+  </Step>
+</Steps>
+
+## Hook Types
+
+### PreToolUse Hooks
+
+| Hook | Matcher | Behavior | Exit Code |
+|------|---------|----------|--------|
+| **Dev server blocker** | `Bash` | Blocks `npm run dev` etc. outside tmux — ensures log access | 2 (blocks) |
+| **Tmux reminder** | `Bash` | Suggests tmux for long-running commands (npm test, cargo build, docker) | 0 (warns) |
+| **Git push reminder** | `Bash` | Reminds to review changes before `git push` | 0 (warns) |
+| **Doc file warning** | `Write` | Warns about non-standard `.md`/`.txt` files | 0 (warns) |
+| **Strategic compact** | `Edit\|Write` | Suggests manual `/compact` at logical intervals (every ~50 tool calls) | 0 (warns) |
+
+### PostToolUse Hooks
+
+| Hook | Matcher | What It Does |
+|------|---------|-------------|
+| **PR logger** | `Bash` | Logs PR URL and review command after `gh pr create` |
+| **Build analysis** | `Bash` | Background analysis after build commands (async, non-blocking) |
+| **Prettier format** | `Edit` | Auto-formats JS/TS files with Prettier after edits |
+| **TypeScript check** | `Edit` | Runs `tsc --noEmit` after editing `.ts`/`.tsx` files |
+| **console.log warning** | `Edit` | Warns about `console.log` statements in edited files |
+
+### Lifecycle Hooks
+
+| Hook | Event | What It Does |
+|------|-------|-------------|
+| **Session start** | `SessionStart` | Loads previous context and detects package manager |
+| **Pre-compact** | `PreCompact` | Saves state before context compaction |
+| **Console.log audit** | `Stop` | Checks all modified files for `console.log` after each response |
+| **Session end** | `SessionEnd` | Persists session state for next session |
+| **Pattern extraction** | `SessionEnd` | Evaluates session for extractable patterns (continuous learning) |
+
+## Hook Configuration
+
+Hooks are defined in `hooks.json` in your plugin directory. Here's the complete configuration:
+
+```json hooks.json
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node script.js"
+          }
+        ],
+        "description": "Hook description"
+      }
+    ],
+    "PostToolUse": [...],
+    "SessionStart": [...],
+    "SessionEnd": [...],
+    "PreCompact": [...],
+    "Stop": [...]
+  }
+}
+```
+
+## Hook Input Schema
+
+Hooks receive tool information as JSON on stdin:
+
+```typescript
+interface HookInput {
+  tool_name: string;          // "Bash", "Edit", "Write", "Read", etc.
+  tool_input: {
+    command?: string;         // Bash: the command being run
+    file_path?: string;       // Edit/Write/Read: target file
+    old_string?: string;      // Edit: text being replaced
+    new_string?: string;      // Edit: replacement text
+    content?: string;         // Write: file content
+  };
+  tool_output?: {             // PostToolUse only
+    output?: string;          // Command/tool output
+  };
+}
+```
+
+## Exit Codes
+
+- `0` — Success (continue execution)
+- `2` — Block the tool call (PreToolUse only)
+- Other non-zero — Error (logged but does not block)
+
+## Async Hooks
+
+For hooks that should not block the main flow (e.g., background analysis):
+
+```json
+{
+  "type": "command",
+  "command": "node my-slow-hook.js",
+  "async": true,
+  "timeout": 30
+}
+```
+
+Async hooks run in the background and cannot block tool execution.
+
+## Cross-Platform Notes
+
+All hooks in this plugin use Node.js (`node -e` or `node script.js`) for maximum compatibility across Windows, macOS, and Linux. Avoid bash-specific syntax in hooks.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Memory Persistence" icon="floppy-disk" href="/hooks/memory-persistence">
+    Learn about session lifecycle hooks
+  </Card>
+  <Card title="Strategic Compact" icon="compress" href="/hooks/strategic-compact">
+    Understand compaction suggestions
+  </Card>
+  <Card title="Custom Hooks" icon="code" href="/hooks/custom-hooks">
+    Create your own hooks
+  </Card>
+</CardGroup>

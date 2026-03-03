@@ -1,0 +1,142 @@
+---
+title: Settings Configuration
+description: Configure Claude Code settings for token optimization and performance
+---
+
+## Overview
+
+The `settings.json` file controls Claude Code's behavior, model selection, token limits, and environment variables. Proper configuration significantly reduces costs without sacrificing quality.
+
+## File Location
+
+```bash
+~/.claude/settings.json
+```
+
+## Token Optimization Settings
+
+### Recommended Configuration
+
+```json
+{
+  "model": "sonnet",
+  "env": {
+    "MAX_THINKING_TOKENS": "10000",
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "haiku"
+  }
+}
+```
+
+### Setting Details
+
+| Setting | Default | Recommended | Impact |
+|---------|---------|-------------|--------|
+| `model` | opus | **sonnet** | ~60% cost reduction; handles 80%+ of coding tasks |
+| `MAX_THINKING_TOKENS` | 31,999 | **10,000** | ~70% reduction in hidden thinking cost per request |
+| `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` | 95 | **50** | Compacts earlier — better quality in long sessions |
+| `CLAUDE_CODE_SUBAGENT_MODEL` | sonnet | **haiku** | Reduces cost for simple delegated tasks |
+
+## Model Selection
+
+Switch models based on task complexity:
+
+```bash
+/model sonnet    # Default for most tasks
+/model opus      # Complex architecture, debugging, deep reasoning
+/model haiku     # Simple tasks, documentation
+```
+
+## Plugin Configuration
+
+### Installing Plugins
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "everything-claude-code": {
+      "source": {
+        "source": "github",
+        "repo": "affaan-m/everything-claude-code"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "everything-claude-code@everything-claude-code": true
+  }
+}
+```
+
+## MCP Server Management
+
+### Disabling Unused MCP Servers
+
+Each MCP tool description consumes tokens from your 200k context window, potentially reducing it to ~70k.
+
+**Project-level disable** (`.claude/settings.json`):
+
+```json
+{
+  "disabledMcpServers": ["supabase", "railway", "vercel"]
+}
+```
+
+**Best practices:**
+- Keep under 10 MCPs enabled per project
+- Keep under 80 tools active total
+- Disable unused MCPs in project config
+
+## Context Window Management
+
+### Strategic Compaction
+
+**When to compact:**
+- After research/exploration, before implementation
+- After completing a milestone, before starting the next
+- After debugging, before continuing feature work
+- After a failed approach, before trying a new one
+
+**When NOT to compact:**
+- Mid-implementation (you'll lose variable names, file paths, partial state)
+
+### Daily Workflow Commands
+
+| Command | When to Use |
+|---------|-------------|
+| `/model sonnet` | Default for most tasks |
+| `/model opus` | Complex architecture, debugging, deep reasoning |
+| `/clear` | Between unrelated tasks (free, instant reset) |
+| `/compact` | At logical task breakpoints (research done, milestone complete) |
+| `/cost` | Monitor token spending during session |
+
+## Agent Teams Cost Warning
+
+Agent Teams spawns multiple context windows. Each teammate consumes tokens independently. Only use for tasks where parallelism provides clear value (multi-module work, parallel reviews). For simple sequential tasks, subagents are more token-efficient.
+
+## Environment Variables
+
+### Package Manager Detection
+
+```json
+{
+  "env": {
+    "CLAUDE_PACKAGE_MANAGER": "pnpm"
+  }
+}
+```
+
+Supported values: `npm`, `pnpm`, `yarn`, `bun`
+
+## Hooks Configuration
+
+<Warning>
+**For Claude Code v2.1+:** Do NOT add a `"hooks"` field to `.claude-plugin/plugin.json`. Claude Code automatically loads `hooks/hooks.json` from installed plugins. Explicitly declaring it causes duplicate detection errors.
+</Warning>
+
+See [Hooks Reference](/reference/hooks) for hook configuration details.
+
+## Related Resources
+
+- [MCP Servers](/reference/mcp-servers)
+- [Package Managers](/reference/package-managers)
+- [Troubleshooting](/reference/troubleshooting)

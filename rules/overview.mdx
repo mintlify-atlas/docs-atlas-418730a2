@@ -1,0 +1,169 @@
+---
+title: Rules System Overview
+description: Language-agnostic and language-specific guidelines for code quality
+---
+
+Rules are organized into a **common** layer plus **language-specific** directories. They define standards, conventions, and checklists that apply to your codebase.
+
+## Structure
+
+```
+rules/
+├── common/          # Language-agnostic principles (always install)
+│   ├── coding-style.md
+│   ├── git-workflow.md
+│   ├── testing.md
+│   ├── performance.md
+│   ├── patterns.md
+│   ├── hooks.md
+│   ├── agents.md
+│   └── security.md
+├── typescript/      # TypeScript/JavaScript specific
+├── python/          # Python specific
+├── golang/          # Go specific
+└── swift/           # Swift specific
+```
+
+<Info>
+  **common/** contains universal principles — no language-specific code examples.
+  
+  **Language directories** extend the common rules with framework-specific patterns, tools, and code examples.
+</Info>
+
+## Installation
+
+### Option 1: Install Script (Recommended)
+
+```bash
+# Install common + one or more language-specific rule sets
+./install.sh typescript
+./install.sh python
+./install.sh golang
+./install.sh swift
+
+# Install multiple languages at once
+./install.sh typescript python
+```
+
+### Option 2: Manual Installation
+
+<Warning>
+  Copy entire directories — do NOT flatten with `/*`.
+  
+  Common and language-specific directories contain files with the same names. Flattening them into one directory causes language-specific files to overwrite common rules, and breaks the relative `../common/` references used by language-specific files.
+</Warning>
+
+```bash
+# Install common rules (required for all projects)
+cp -r rules/common ~/.claude/rules/common
+
+# Install language-specific rules based on your project's tech stack
+cp -r rules/typescript ~/.claude/rules/typescript
+cp -r rules/python ~/.claude/rules/python
+cp -r rules/golang ~/.claude/rules/golang
+cp -r rules/swift ~/.claude/rules/swift
+```
+
+## Rules vs Skills
+
+<CardGroup cols={2}>
+  <Card title="Rules" icon="list-check">
+    Define standards, conventions, and checklists that apply broadly (e.g., "80% test coverage", "no hardcoded secrets")
+  </Card>
+  <Card title="Skills" icon="book">
+    Provide deep, actionable reference material for specific tasks (e.g., `python-patterns`, `golang-testing`)
+  </Card>
+</CardGroup>
+
+Language-specific rule files reference relevant skills where appropriate. Rules tell you *what* to do; skills tell you *how* to do it.
+
+## Rule Priority
+
+When language-specific rules and common rules conflict, **language-specific rules take precedence** (specific overrides general).
+
+<Steps>
+  <Step title="Common defaults">
+    `rules/common/` defines universal defaults applicable to all projects
+  </Step>
+  <Step title="Language overrides">
+    `rules/golang/`, `rules/python/`, `rules/typescript/`, etc. override those defaults where language idioms differ
+  </Step>
+</Steps>
+
+### Example
+
+`common/coding-style.md` recommends immutability as a default principle. A language-specific `golang/coding-style.md` can override this:
+
+> Idiomatic Go uses pointer receivers for struct mutation — see [common/coding-style.md](../common/coding-style.md) for the general principle, but Go-idiomatic mutation is preferred here.
+
+### Override Markers
+
+Rules in `rules/common/` that may be overridden by language-specific files are marked with:
+
+<Note>
+  **Language note**: This rule may be overridden by language-specific rules for languages where this pattern is not idiomatic.
+</Note>
+
+## Adding a New Language
+
+To add support for a new language (e.g., `rust/`):
+
+<Steps>
+  <Step title="Create directory">
+    Create a `rules/rust/` directory
+  </Step>
+  <Step title="Add rule files">
+    Add files that extend the common rules:
+    - `coding-style.md` — formatting tools, idioms, error handling patterns
+    - `testing.md` — test framework, coverage tools, test organization
+    - `patterns.md` — language-specific design patterns
+    - `hooks.md` — PostToolUse hooks for formatters, linters, type checkers
+    - `security.md` — secret management, security scanning tools
+  </Step>
+  <Step title="Reference common rules">
+    Each file should start with:
+    ```markdown
+    > This file extends [common/xxx.md](../common/xxx.md) with <Language> specific content.
+    ```
+  </Step>
+  <Step title="Link to skills">
+    Reference existing skills if available, or create new ones under `skills/`
+  </Step>
+</Steps>
+
+## Common Rules Categories
+
+<CardGroup cols={2}>
+  <Card title="Coding Style" icon="code" href="/rules/common-rules#coding-style">
+    Immutability, file organization, error handling
+  </Card>
+  <Card title="Testing" icon="flask" href="/rules/common-rules#testing">
+    TDD workflow, 80% coverage requirement
+  </Card>
+  <Card title="Security" icon="shield" href="/rules/common-rules#security">
+    Secret management, security checklist
+  </Card>
+  <Card title="Patterns" icon="shapes" href="/rules/common-rules#patterns">
+    Repository pattern, API response format
+  </Card>
+  <Card title="Git Workflow" icon="code-branch" href="/rules/common-rules#git-workflow">
+    Commit format, PR workflow
+  </Card>
+  <Card title="Hooks" icon="webhook" href="/rules/common-rules#hooks">
+    Hook types, TodoWrite best practices
+  </Card>
+</CardGroup>
+
+## Language-Specific Rules
+
+<CardGroup cols={3}>
+  <Card title="TypeScript" icon="js" href="/rules/typescript-rules">
+    Zod validation, Prettier, console.log warnings
+  </Card>
+  <Card title="Python" icon="python" href="/rules/python-rules">
+    PEP 8, black/ruff, pytest patterns
+  </Card>
+  <Card title="Go" icon="golang" href="/rules/golang-rules">
+    gofmt, error wrapping, table-driven tests
+  </Card>
+</CardGroup>

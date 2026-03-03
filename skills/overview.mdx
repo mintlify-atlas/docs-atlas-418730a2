@@ -1,0 +1,126 @@
+---
+title: 'Skills Overview'
+description: '50+ specialized skills for development workflows, testing, security, and architecture'
+---
+
+Everything Claude Code comes with 50+ pre-built skills that provide specialized workflows, patterns, and best practices for common development tasks.
+
+## What are Skills?
+
+Skills are reusable workflow definitions that guide Claude through specific development tasks. Unlike agents (which are autonomous) or commands (which are single actions), skills provide step-by-step guidance for complex workflows.
+
+## Skill Categories
+
+### Development Workflows
+
+Core development patterns and methodologies:
+
+- **[TDD Workflow](/skills/tdd-workflow)** - Test-driven development with 80%+ coverage
+- **[Verification Loop](/skills/verification-loop)** - Comprehensive quality gates before PR
+- **[Eval Harness](/skills/eval-harness)** - Eval-driven development framework
+- **[Coding Standards](/skills/coding-standards)** - Universal best practices for TypeScript/JavaScript
+
+### Security & Quality
+
+Security-first development and code review:
+
+- **[Security Review](/skills/security-review)** - Comprehensive security checklist
+- **[Security Scan](/skills/security-scan)** - AgentShield configuration auditing
+
+### Architecture & Design
+
+API design and system architecture patterns:
+
+- **[API Design](/skills/api-design)** - REST API conventions and best practices
+- **[Frontend Patterns](/skills/frontend-patterns)** - React, Next.js, state management
+- **[Backend Patterns](/skills/backend-patterns)** - Repository pattern, caching, middleware
+
+### Testing
+
+Comprehensive testing strategies:
+
+- **[E2E Testing](/skills/e2e-testing)** - Playwright patterns and Page Object Model
+
+### Data Layer
+
+Database and migration patterns:
+
+- **[Database Migrations](/skills/database-migrations)** - Safe schema changes and zero-downtime deployments
+
+### Language-Specific Patterns
+
+Idiomatic patterns for different languages:
+
+#### Go
+- **[Go Patterns](/skills/golang-patterns)** - Idiomatic Go development
+- **[Go Testing](/skills/golang-testing)** - Table-driven tests, benchmarks, fuzzing
+
+#### Python
+- **[Python Patterns](/skills/python-patterns)** - Pythonic idioms and best practices
+- **[Django Patterns](/skills/django-patterns)** - Django REST Framework and ORM patterns
+
+#### C++
+- **[C++ Coding Standards](/skills/cpp-coding-standards)** - C++ Core Guidelines compliance
+
+### Meta-Skills
+
+Learning and optimization:
+
+- **[Continuous Learning](/skills/continuous-learning-v2)** - Instinct-based learning system
+- **[Strategic Compact](/skills/strategic-compact)** - Context management strategy
+- **[Iterative Retrieval](/skills/iterative-retrieval)** - Progressive context refinement
+
+## How to Use Skills
+
+Skills are automatically available to Claude when the skill loader is configured. You can:
+
+1. **Activate implicitly** - Claude recognizes when a skill applies to your request
+2. **Request explicitly** - "Use the TDD workflow skill for this feature"
+3. **Reference in CLAUDE.md** - Add skill guidelines to project instructions
+
+## Skill Activation Triggers
+
+Each skill defines when it should activate:
+
+```markdown
+## When to Activate
+- Writing new features or functionality
+- Fixing bugs or issues
+- Refactoring existing code
+```
+
+## Creating Custom Skills
+
+You can create project-specific skills in `.claude/skills/`:
+
+```markdown
+---
+name: my-custom-skill
+description: Custom workflow for our project
+origin: Project
+---
+
+# My Custom Skill
+
+## When to Activate
+- Specific to our project needs
+
+## Workflow Steps
+1. Step one
+2. Step two
+```
+
+## Skill vs Agent vs Command
+
+| Type | Purpose | Example |
+|------|---------|--------|
+| **Skill** | Multi-step workflow guidance | TDD Workflow (write tests → implement → refactor) |
+| **Agent** | Autonomous task execution | Build Error Resolver (analyzes errors, fixes them) |
+| **Command** | Single action | /verify (runs verification checks) |
+
+## Next Steps
+
+Explore individual skills:
+- Start with [TDD Workflow](/skills/tdd-workflow) for test-driven development
+- Review [Security Review](/skills/security-review) before production deployments
+- Check [Coding Standards](/skills/coding-standards) for code quality guidelines

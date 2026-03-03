@@ -1,0 +1,616 @@
+---
+title: Commands
+description: Slash commands for quick execution of common development workflows
+---
+
+Commands are slash commands (like `/plan` or `/tdd`) that provide quick access to common development workflows. They invoke specialized agents and reference relevant skills to accomplish specific tasks.
+
+## What Are Commands?
+
+Commands are markdown files with YAML frontmatter that define:
+
+- **Description** - What the command does
+- **Agent invocation** - Which agent(s) to use
+- **Skill references** - Which skills provide methodology
+- **Usage examples** - How to use the command effectively
+
+## Command Structure
+
+Here's an example from the `/tdd` command:
+
+```markdown ~/workspace/source/commands/tdd.md
+---
+description: Enforce test-driven development workflow. Scaffold interfaces, generate tests FIRST, then implement minimal code to pass. Ensure 80%+ coverage.
+---
+
+# TDD Command
+
+This command invokes the **tdd-guide** agent to enforce test-driven development methodology.
+
+## What This Command Does
+
+1. **Scaffold Interfaces** - Define types/interfaces first
+2. **Generate Tests First** - Write failing tests (RED)
+3. **Implement Minimal Code** - Write just enough to pass (GREEN)
+4. **Refactor** - Improve code while keeping tests green (REFACTOR)
+5. **Verify Coverage** - Ensure 80%+ test coverage
+
+## When to Use
+
+Use `/tdd` when:
+- Implementing new features
+- Fixing bugs (write test that reproduces bug first)
+- Refactoring existing code
+```
+
+## Available Commands (33)
+
+ECC provides 33 slash commands across six categories:
+
+### Development Commands
+
+<CardGroup cols={2}>
+  <Card title="/plan" icon="map">
+    **Agent:** planner
+    
+    **Purpose:** Create implementation plan before writing code
+    
+    **Usage:**
+    ```
+    /plan "Add Stripe subscription billing"
+    ```
+    
+    **Output:**
+    - Requirements restatement
+    - Step-by-step implementation phases
+    - Risk identification
+    - Dependency mapping
+    - **WAITS for confirmation before proceeding**
+  </Card>
+  
+  <Card title="/tdd" icon="vial">
+    **Agent:** tdd-guide
+    
+    **Purpose:** Enforce test-driven development workflow
+    
+    **Usage:**
+    ```
+    /tdd "Calculate market liquidity score"
+    ```
+    
+    **Workflow:**
+    1. Define interfaces
+    2. Write failing tests (RED)
+    3. Implement minimal code (GREEN)
+    4. Refactor (REFACTOR)
+    5. Verify 80%+ coverage
+  </Card>
+  
+  <Card title="/code-review" icon="magnifying-glass">
+    **Agent:** code-reviewer
+    
+    **Purpose:** Review code for quality, security, maintainability
+    
+    **Usage:**
+    ```
+    /code-review
+    ```
+    
+    **Checks:**
+    - Code quality issues
+    - Security vulnerabilities
+    - Performance concerns
+    - Maintainability problems
+    - **Severity ratings:** CRITICAL, HIGH, MEDIUM, LOW
+  </Card>
+  
+  <Card title="/build-fix" icon="wrench">
+    **Agent:** build-error-resolver
+    
+    **Purpose:** Fix build and type errors incrementally
+    
+    **Usage:**
+    ```
+    /build-fix
+    ```
+    
+    **Process:**
+    - Run build command
+    - Analyze errors
+    - Fix highest-priority errors first
+    - Verify after each fix
+  </Card>
+  
+  <Card title="/e2e" icon="browser">
+    **Agent:** e2e-runner
+    
+    **Purpose:** Generate Playwright E2E tests for critical flows
+    
+    **Usage:**
+    ```
+    /e2e "User signup and first market creation"
+    ```
+    
+    **Output:**
+    - Page object classes
+    - Test scenarios
+    - Assertions for critical steps
+  </Card>
+  
+  <Card title="/refactor-clean" icon="broom">
+    **Agent:** refactor-cleaner
+    
+    **Purpose:** Remove dead code and clean up technical debt
+    
+    **Usage:**
+    ```
+    /refactor-clean
+    ```
+    
+    **Actions:**
+    - Identify unused code
+    - Remove dead imports
+    - Clean up commented code
+    - Simplify complex logic
+  </Card>
+</CardGroup>
+
+### Testing & Verification
+
+<CardGroup cols={2}>
+  <Card title="/test-coverage" icon="chart-line">
+    **Purpose:** Analyze test coverage and identify gaps
+    
+    **Usage:**
+    ```
+    /test-coverage
+    ```
+    
+    **Output:**
+    - Coverage percentages (unit, integration, E2E)
+    - Uncovered lines and branches
+    - Recommendations for additional tests
+  </Card>
+  
+  <Card title="/verify" icon="check-double">
+    **Purpose:** Run verification loop (build, test, lint, typecheck, security)
+    
+    **Usage:**
+    ```
+    /verify
+    ```
+    
+    **Stages:**
+    1. Build check
+    2. Test execution
+    3. Linting
+    4. Type checking
+    5. Security scan
+  </Card>
+  
+  <Card title="/checkpoint" icon="bookmark">
+    **Purpose:** Save verification state for later comparison
+    
+    **Usage:**
+    ```
+    /checkpoint "before-refactor"
+    ```
+    
+    **Use case:** Before major refactoring to ensure no regressions
+  </Card>
+  
+  <Card title="/eval" icon="graduation-cap">
+    **Purpose:** Evaluate code against specific criteria
+    
+    **Usage:**
+    ```
+    /eval "Ensure all API endpoints have rate limiting"
+    ```
+    
+    **Output:** Pass/fail assessment with evidence
+  </Card>
+</CardGroup>
+
+### Learning & Evolution
+
+<CardGroup cols={2}>
+  <Card title="/learn" icon="brain">
+    **Purpose:** Extract patterns from current session
+    
+    **Usage:**
+    ```
+    /learn
+    ```
+    
+    **Output:** Patterns identified and saved to instincts
+  </Card>
+  
+  <Card title="/learn-eval" icon="brain">
+    **Purpose:** Extract and evaluate patterns before saving
+    
+    **Usage:**
+    ```
+    /learn-eval
+    ```
+    
+    **Process:**
+    1. Extract patterns from session
+    2. Evaluate quality and confidence
+    3. Ask user to confirm before saving
+  </Card>
+  
+  <Card title="/instinct-status" icon="list">
+    **Purpose:** View learned instincts with confidence scores
+    
+    **Usage:**
+    ```
+    /instinct-status
+    ```
+    
+    **Output:** All instincts sorted by confidence
+  </Card>
+  
+  <Card title="/instinct-import" icon="file-import">
+    **Purpose:** Import instincts from file or URL
+    
+    **Usage:**
+    ```
+    /instinct-import path/to/instincts.md
+    ```
+  </Card>
+  
+  <Card title="/instinct-export" icon="file-export">
+    **Purpose:** Export instincts for sharing
+    
+    **Usage:**
+    ```
+    /instinct-export
+    ```
+    
+    **Output:** Markdown file with all instincts
+  </Card>
+  
+  <Card title="/evolve" icon="chart-network">
+    **Purpose:** Cluster related instincts into skills
+    
+    **Usage:**
+    ```
+    /evolve
+    ```
+    
+    **Process:**
+    - Analyze instinct patterns
+    - Group related instincts
+    - Generate skill files
+  </Card>
+</CardGroup>
+
+### Language-Specific Commands
+
+<Tabs>
+  <Tab title="Go">
+    <CardGroup cols={2}>
+      <Card title="/go-review" icon="golang">
+        **Agent:** go-reviewer
+        
+        **Purpose:** Go code review with idiomatic Go patterns
+        
+        **Checks:**
+        - Proper error handling
+        - Goroutine leak prevention
+        - Interface design
+        - Testing patterns
+      </Card>
+      
+      <Card title="/go-test" icon="golang">
+        **Agent:** tdd-guide
+        
+        **Purpose:** Go TDD workflow with table-driven tests
+        
+        **Features:**
+        - Table-driven test generation
+        - Benchmark tests
+        - Coverage reports
+      </Card>
+      
+      <Card title="/go-build" icon="golang">
+        **Agent:** go-build-resolver
+        
+        **Purpose:** Fix Go build errors
+        
+        **Handles:**
+        - Import errors
+        - Type mismatches
+        - Missing dependencies
+      </Card>
+    </CardGroup>
+  </Tab>
+  
+  <Tab title="Python">
+    <CardGroup cols={1}>
+      <Card title="/python-review" icon="python">
+        **Agent:** python-reviewer
+        
+        **Purpose:** Python code review (PEP 8, type hints, security)
+        
+        **Checks:**
+        - PEP 8 compliance
+        - Type hint coverage
+        - Security vulnerabilities
+        - Pythonic idioms
+      </Card>
+    </CardGroup>
+  </Tab>
+</Tabs>
+
+### Orchestration
+
+<CardGroup cols={2}>
+  <Card title="/orchestrate" icon="diagram-project">
+    **Purpose:** Multi-agent coordination for complex workflows
+    
+    **Usage:**
+    ```
+    /orchestrate "Refactor authentication system"
+    ```
+    
+    **Process:**
+    - Decompose into subtasks
+    - Assign agents to subtasks
+    - Coordinate execution
+    - Synthesize results
+  </Card>
+  
+  <Card title="/multi-plan" icon="users">
+    **Purpose:** Multi-model collaborative planning
+    
+    **Usage:**
+    ```
+    /multi-plan "Add real-time notifications"
+    ```
+    
+    **Features:**
+    - Multiple planning perspectives
+    - Consensus building
+    - Risk triangulation
+  </Card>
+  
+  <Card title="/multi-execute" icon="users">
+    **Purpose:** Multi-model collaborative execution
+    
+    **Usage:**
+    ```
+    /multi-execute plan.md
+    ```
+    
+    **Process:**
+    - Parallel implementation
+    - Cross-validation
+    - Conflict resolution
+  </Card>
+  
+  <Card title="/pm2" icon="server">
+    **Purpose:** Auto-generate PM2 service commands
+    
+    **Usage:**
+    ```
+    /pm2
+    ```
+    
+    **Output:**
+    - PM2 ecosystem.config.js
+    - Start/stop/restart commands
+    - Log management
+  </Card>
+</CardGroup>
+
+### Documentation & Utilities
+
+<CardGroup cols={2}>
+  <Card title="/update-docs" icon="book">
+    **Agent:** doc-updater
+    
+    **Purpose:** Update documentation after code changes
+    
+    **Usage:**
+    ```
+    /update-docs
+    ```
+  </Card>
+  
+  <Card title="/update-codemaps" icon="map">
+    **Purpose:** Regenerate code architecture maps
+    
+    **Usage:**
+    ```
+    /update-codemaps
+    ```
+  </Card>
+  
+  <Card title="/setup-pm" icon="package">
+    **Purpose:** Configure package manager (npm, pnpm, yarn, bun)
+    
+    **Usage:**
+    ```
+    /setup-pm
+    ```
+    
+    **Interactive:** Prompts to select preferred package manager
+  </Card>
+  
+  <Card title="/skill-create" icon="file-plus">
+    **Purpose:** Generate skills from git history
+    
+    **Usage:**
+    ```
+    /skill-create
+    /skill-create --instincts  # Also generate instincts
+    ```
+  </Card>
+  
+  <Card title="/sessions" icon="clock">
+    **Purpose:** Manage session history
+    
+    **Usage:**
+    ```
+    /sessions
+    ```
+  </Card>
+  
+  <Card title="/projects" icon="folder">
+    **Purpose:** List known projects and instinct stats
+    
+    **Usage:**
+    ```
+    /projects
+    ```
+  </Card>
+  
+  <Card title="/promote" icon="arrow-up">
+    **Purpose:** Promote project instincts to global scope
+    
+    **Usage:**
+    ```
+    /promote pattern-name
+    ```
+  </Card>
+</CardGroup>
+
+## Common Workflows
+
+### Starting a New Feature
+
+```bash
+# 1. Create implementation plan
+/plan "Add OAuth authentication"
+
+# 2. Confirm plan, then implement with TDD
+/tdd
+
+# 3. Review code quality
+/code-review
+
+# 4. Run verification loop
+/verify
+```
+
+### Fixing a Bug
+
+```bash
+# 1. Write failing test that reproduces bug
+/tdd "Fix race condition in market resolver"
+
+# 2. Implement fix
+# (Agent guides through TDD process)
+
+# 3. Verify no regressions
+/test-coverage
+```
+
+### Preparing for Production
+
+```bash
+# 1. Security audit
+/code-review  # Includes security checks
+
+# 2. E2E tests for critical flows
+/e2e "User signup and first trade"
+
+# 3. Full verification
+/verify
+
+# 4. Coverage check
+/test-coverage
+```
+
+### Refactoring
+
+```bash
+# 1. Save checkpoint
+/checkpoint "before-refactor"
+
+# 2. Plan refactoring
+/plan "Extract market resolution logic"
+
+# 3. Execute refactoring with TDD
+/tdd
+
+# 4. Verify no regressions
+/verify
+```
+
+## Command Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use /plan Before Large Changes">
+    Always plan complex features before implementation. The planner agent will identify risks and dependencies.
+  </Accordion>
+  
+  <Accordion title="/tdd for All New Code">
+    Use `/tdd` instead of writing code directly. Test-driven development catches edge cases early.
+  </Accordion>
+  
+  <Accordion title="/code-review After Writing Code">
+    Run code review immediately after writing/modifying code. Don't wait until PR time.
+  </Accordion>
+  
+  <Accordion title="Chain Commands Sequentially">
+    `/plan` → `/tdd` → `/code-review` → `/verify` is a common sequence for features.
+  </Accordion>
+  
+  <Accordion title="Use Language-Specific Commands">
+    `/go-review`, `/python-review` provide language-specific checks beyond generic code review.
+  </Accordion>
+</AccordionGroup>
+
+## Creating Custom Commands
+
+You can create project-specific commands:
+
+```markdown ~/.claude/commands/my-command.md
+---
+description: What this command does and when to use it
+---
+
+# My Command
+
+This command invokes the **agent-name** agent to accomplish [task].
+
+## Usage
+
+```
+/my-command [arguments]
+```
+
+## What This Command Does
+
+1. Step 1
+2. Step 2
+3. Step 3
+```
+
+<Note>
+Commands with namespaced plugin syntax: `/everything-claude-code:plan`
+
+Commands from manual install: `/plan`
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Explore Hooks" icon="webhook" href="/concepts/hooks">
+    Learn about event-driven automations
+  </Card>
+  
+  <Card title="Commands Reference" icon="list" href="/commands/overview">
+    Full catalog of all 33 commands
+  </Card>
+  
+  <Card title="TDD Command" icon="vial" href="/commands/tdd">
+    Deep dive into test-driven development command
+  </Card>
+  
+  <Card title="Plan Command" icon="map" href="/commands/plan">
+    Learn about implementation planning
+  </Card>
+</CardGroup>

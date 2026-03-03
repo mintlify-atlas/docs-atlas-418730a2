@@ -1,0 +1,347 @@
+---
+title: Token Optimization
+description: Reduce Claude Code costs by 60-70% with strategic model selection, thinking token limits, and compaction strategies
+icon: coins
+---
+
+Claude Code usage can be expensive if you don't manage token consumption. These settings significantly reduce costs without sacrificing quality.
+
+## Quick Wins
+
+Add to `~/.claude/settings.json`:
+
+```json
+{
+  "model": "sonnet",
+  "env": {
+    "MAX_THINKING_TOKENS": "10000",
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "haiku"
+  }
+}
+```
+
+## Model Selection
+
+<Card title="Sonnet for Daily Development" icon="bolt">
+  Use **Sonnet** as your default model. It handles 80%+ of coding tasks and costs ~60% less than Opus.
+</Card>
+
+| Setting | Default | Recommended | Impact |
+|---------|---------|-------------|--------|
+| `model` | opus | **sonnet** | ~60% cost reduction |
+| Task Coverage | - | 80%+ | Most coding tasks |
+
+### When to Switch to Opus
+
+```bash
+/model opus
+```
+
+Use Opus only for:
+- Complex architectural decisions
+- Deep debugging sessions
+- Multi-system refactoring
+- First-principles problem solving
+
+Switch back after the complex task:
+```bash
+/model sonnet
+```
+
+## Thinking Token Limits
+
+Claude's "thinking" happens behind the scenes and consumes tokens you don't see.
+
+<Warning>
+  **Hidden Cost:** Extended thinking defaults to 31,999 tokens per request. At scale, this is your largest cost driver.
+</Warning>
+
+### Reduce Thinking Tokens
+
+```json
+{
+  "env": {
+    "MAX_THINKING_TOKENS": "10000"
+  }
+}
+```
+
+**Impact:** ~70% reduction in hidden thinking cost per request.
+
+Most coding tasks don't need 32k thinking tokens. 10k is sufficient for:
+- Code review
+- Bug fixes
+- Feature implementation
+- Refactoring
+
+Only raise the limit for:
+- Large-scale architecture decisions
+- Complex debugging across many files
+
+## Auto-Compaction Strategy
+
+Context windows fill up during long sessions. Claude auto-compacts at 95% by default, but this is too late.
+
+### Compact Earlier
+
+```json
+{
+  "env": {
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50"
+  }
+}
+```
+
+**Why 50%?**
+- Better quality in long sessions
+- Prevents context degradation
+- More aggressive cleanup of irrelevant context
+
+<Note>
+  Compaction at 95% means you've already filled 190k of your 200k window. Compacting at 50% gives Claude more room to work.
+</Note>
+
+## Manual Compaction
+
+Use `/compact` at logical breakpoints instead of relying on auto-compaction.
+
+### When to Compact
+
+<Steps>
+  <Step title="After Research Phase">
+    You've explored the codebase, found what you need. Compact before implementing.
+    
+    ```bash
+    /compact
+    ```
+  </Step>
+  
+  <Step title="After Milestone Completion">
+    Feature is done, tests pass. Compact before starting the next feature.
+  </Step>
+  
+  <Step title="After Debugging">
+    Bug is fixed. Compact to clear investigation context before continuing.
+  </Step>
+  
+  <Step title="After Failed Approach">
+    Dead end reached. Compact to clear failed attempt before trying new approach.
+  </Step>
+</Steps>
+
+### When NOT to Compact
+
+<Warning>
+  **Don't compact mid-implementation.** You'll lose:
+  - Variable names and function signatures
+  - File paths you're working with
+  - Partial state and context
+</Warning>
+
+## Context Window Management
+
+Each MCP tool description consumes tokens from your 200k window.
+
+<Note>
+  **Critical:** Too many MCPs can reduce your effective window from 200k to ~70k.
+</Note>
+
+### MCP Best Practices
+
+```json
+// In project .claude/settings.json
+{
+  "disabledMcpServers": ["supabase", "railway", "vercel"]
+}
+```
+
+**Limits:**
+- Keep under **10 MCPs** enabled per project
+- Keep under **80 tools** active total
+- Disable unused MCPs in project config
+
+### Check Active Tools
+
+```bash
+/mcp list
+```
+
+Disable any you're not actively using.
+
+## Subagent Model Selection
+
+Subagents handle delegated tasks. Use Haiku for routine work.
+
+```json
+{
+  "env": {
+    "CLAUDE_CODE_SUBAGENT_MODEL": "haiku"
+  }
+}
+```
+
+**Haiku is sufficient for:**
+- Code review (code-reviewer agent)
+- Build error resolution (build-error-resolver agent)
+- Documentation updates (doc-updater agent)
+- Test generation (tdd-guide agent for simple cases)
+
+**Use Sonnet/Opus subagents for:**
+- Complex architecture (architect agent)
+- Security audits (security-reviewer agent)
+- Multi-file refactoring
+
+## Daily Workflow Commands
+
+| Command | When to Use | Cost Impact |
+|---------|-------------|-------------|
+| `/model sonnet` | Default for most tasks | 60% cheaper than Opus |
+| `/model opus` | Complex architecture, deep debugging | Full cost, use sparingly |
+| `/clear` | Between unrelated tasks | **Free** instant reset |
+| `/compact` | Logical task breakpoints | Reduces context, improves quality |
+| `/cost` | Monitor spending | Visibility into token usage |
+
+### Example Workflow
+
+<Steps>
+  <Step title="Start Session">
+    ```bash
+    /model sonnet
+    ```
+    Default model for daily work.
+  </Step>
+  
+  <Step title="Implement Feature">
+    Use agents and commands normally. Sonnet handles most tasks.
+  </Step>
+  
+  <Step title="Hit Complex Problem">
+    ```bash
+    /model opus
+    ```
+    Switch to Opus for deep architectural decisions.
+  </Step>
+  
+  <Step title="Complete Complex Task">
+    ```bash
+    /model sonnet
+    /compact
+    ```
+    Switch back to Sonnet and compact to clear context.
+  </Step>
+  
+  <Step title="New Unrelated Task">
+    ```bash
+    /clear
+    ```
+    Free instant reset between unrelated tasks.
+  </Step>
+</Steps>
+
+## Agent Teams Warning
+
+<Warning>
+  **Agent Teams = Multiple Context Windows.** Each teammate consumes tokens independently.
+</Warning>
+
+Only use Agent Teams when:
+- Parallelism provides clear value (multi-module work)
+- Parallel reviews (security + code quality)
+
+For sequential tasks, use subagents instead:
+- `/plan` → planner agent (single context)
+- `/code-review` → code-reviewer agent (single context)
+
+## Cost Monitoring
+
+### Check Current Usage
+
+```bash
+/cost
+```
+
+Shows token consumption for current session.
+
+### Track Over Time
+
+Monitor your Claude Code dashboard:
+- Daily usage trends
+- Per-project costs
+- Model distribution (Opus vs Sonnet)
+
+<Tip>
+  Target: 80%+ Sonnet usage, &lt;20% Opus usage for optimal cost/performance.
+</Tip>
+
+## Strategic Compaction Skill
+
+ECC includes a `strategic-compact` skill that suggests `/compact` at logical breakpoints.
+
+See `skills/strategic-compact/SKILL.md` for the full decision guide.
+
+### Compaction Decision Tree
+
+```
+Completed research/exploration?
+  → YES: /compact (clear research context)
+  → NO: Continue
+
+Milestone complete (feature done, tests pass)?
+  → YES: /compact (clear before next feature)
+  → NO: Continue
+
+Debugging complete?
+  → YES: /compact (clear investigation context)
+  → NO: Continue
+
+Failed approach, trying new direction?
+  → YES: /compact (clear failed attempt)
+  → NO: Continue
+
+Mid-implementation?
+  → NO COMPACTION (preserve working context)
+```
+
+## Summary: Optimal Settings
+
+<CodeGroup>
+```json User-Level (~/.claude/settings.json)
+{
+  "model": "sonnet",
+  "env": {
+    "MAX_THINKING_TOKENS": "10000",
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "haiku"
+  }
+}
+```
+
+```json Project-Level (.claude/settings.json)
+{
+  "disabledMcpServers": [
+    "supabase",
+    "railway",
+    "vercel"
+  ]
+}
+```
+</CodeGroup>
+
+## Cost Reduction Checklist
+
+- [ ] Default model set to **sonnet**
+- [ ] `MAX_THINKING_TOKENS` reduced to **10000**
+- [ ] Auto-compact threshold at **50%**
+- [ ] Subagent model set to **haiku**
+- [ ] Unused MCPs disabled per project
+- [ ] Total MCPs under **10**
+- [ ] Total tools under **80**
+- [ ] Using `/clear` between unrelated tasks
+- [ ] Using `/compact` at logical breakpoints
+- [ ] Using `/cost` to monitor spending
+- [ ] Opus usage &lt;20% of total
+
+<Check>
+  **Expected Savings:** 60-70% cost reduction with these optimizations applied.
+</Check>

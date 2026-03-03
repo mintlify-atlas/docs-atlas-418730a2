@@ -1,0 +1,303 @@
+---
+title: Creating Custom Hooks
+description: Write your own hooks to enforce project-specific rules and automation
+---
+
+Hooks are shell commands that receive tool input as JSON on stdin and must output JSON on stdout. You can create custom hooks to enforce project-specific rules and automate repetitive checks.
+
+## Basic Hook Structure
+
+```javascript my-hook.js
+let data = '';
+process.stdin.on('data', chunk => data += chunk);
+process.stdin.on('end', () => {
+  const input = JSON.parse(data);
+
+  // Access tool info
+  const toolName = input.tool_name;        // "Edit", "Bash", "Write", etc.
+  const toolInput = input.tool_input;      // Tool-specific parameters
+  const toolOutput = input.tool_output;    // Only available in PostToolUse
+
+  // Warn (non-blocking): write to stderr
+  console.error('[Hook] Warning message shown to Claude');
+
+  // Block (PreToolUse only): exit with code 2
+  // process.exit(2);
+
+  // Always output the original data to stdout
+  console.log(data);
+});
+```
+
+## Exit Codes
+
+<ParamField path="0" type="success">
+  Success — continue execution
+</ParamField>
+
+<ParamField path="2" type="block">
+  Block the tool call (PreToolUse only)
+</ParamField>
+
+<ParamField path="other" type="error">
+  Error — logged but does not block
+</ParamField>
+
+## Hook Input Schema
+
+```typescript
+interface HookInput {
+  tool_name: string;          // "Bash", "Edit", "Write", "Read", etc.
+  tool_input: {
+    command?: string;         // Bash: the command being run
+    file_path?: string;       // Edit/Write/Read: target file
+    old_string?: string;      // Edit: text being replaced
+    new_string?: string;      // Edit: replacement text
+    content?: string;         // Write: file content
+  };
+  tool_output?: {             // PostToolUse only
+    output?: string;          // Command/tool output
+  };
+}
+```
+
+## Common Hook Recipes
+
+### Warn About TODO Comments
+
+<CodeGroup>
+```json hooks.json
+{
+  "matcher": "Edit",
+  "hooks": [{
+    "type": "command",
+    "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const ns=i.tool_input?.new_string||'';if(/TODO|FIXME|HACK/.test(ns)){console.error('[Hook] New TODO/FIXME added - consider creating an issue')}console.log(d)})\""
+  }],
+  "description": "Warn when adding TODO/FIXME comments"
+}
+```
+
+```javascript todo-warn.js
+let data = '';
+process.stdin.on('data', chunk => data += chunk);
+process.stdin.on('end', () => {
+  const input = JSON.parse(data);
+  const newString = input.tool_input?.new_string || '';
+  
+  if (/TODO|FIXME|HACK/.test(newString)) {
+    console.error('[Hook] New TODO/FIXME added - consider creating an issue');
+  }
+  
+  console.log(data);
+});
+```
+</CodeGroup>
+
+### Block Large File Creation
+
+<CodeGroup>
+```json hooks.json
+{
+  "matcher": "Write",
+  "hooks": [{
+    "type": "command",
+    "command": "node block-large-files.js"
+  }],
+  "description": "Block creation of files larger than 800 lines"
+}
+```
+
+```javascript block-large-files.js
+let data = '';
+process.stdin.on('data', chunk => data += chunk);
+process.stdin.on('end', () => {
+  const input = JSON.parse(data);
+  const content = input.tool_input?.content || '';
+  const lines = content.split('\n').length;
+  
+  if (lines > 800) {
+    console.error(`[Hook] BLOCKED: File exceeds 800 lines (${lines} lines)`);
+    console.error('[Hook] Split into smaller, focused modules');
+    process.exit(2);  // Block the write
+  }
+  
+  console.log(data);
+});
+```
+</CodeGroup>
+
+### Auto-Format Python Files with Ruff
+
+<CodeGroup>
+```json hooks.json
+{
+  "matcher": "Edit",
+  "hooks": [{
+    "type": "command",
+    "command": "node format-python.js"
+  }],
+  "description": "Auto-format Python files with ruff after edits"
+}
+```
+
+```javascript format-python.js
+const { execFileSync } = require('child_process');
+
+let data = '';
+process.stdin.on('data', chunk => data += chunk);
+process.stdin.on('end', () => {
+  const input = JSON.parse(data);
+  const filePath = input.tool_input?.file_path || '';
+  
+  if (/\.py$/.test(filePath)) {
+    try {
+      execFileSync('ruff', ['format', filePath], { stdio: 'pipe' });
+      console.error('[Hook] Formatted Python file with ruff');
+    } catch (e) {
+      console.error('[Hook] ruff format failed:', e.message);
+    }
+  }
+  
+  console.log(data);
+});
+```
+</CodeGroup>
+
+### Require Test Files Alongside New Source Files
+
+<CodeGroup>
+```json hooks.json
+{
+  "matcher": "Write",
+  "hooks": [{
+    "type": "command",
+    "command": "node require-tests.js"
+  }],
+  "description": "Remind to create tests when adding new source files"
+}
+```
+
+```javascript require-tests.js
+const fs = require('fs');
+
+let data = '';
+process.stdin.on('data', chunk => data += chunk);
+process.stdin.on('end', () => {
+  const input = JSON.parse(data);
+  const filePath = input.tool_input?.file_path || '';
+  
+  // Check if it's a source file (not a test file)
+  if (/src\/.*\.(ts|js)$/.test(filePath) && !/\.test\.|\.spec\./.test(filePath)) {
+    const testPath = filePath.replace(/\.(ts|js)$/, '.test.$1');
+    
+    if (!fs.existsSync(testPath)) {
+      console.error(`[Hook] No test file found for: ${filePath}`);
+      console.error(`[Hook] Expected: ${testPath}`);
+      console.error('[Hook] Consider writing tests first (/tdd)');
+    }
+  }
+  
+  console.log(data);
+});
+```
+</CodeGroup>
+
+## Async Hooks
+
+For hooks that should not block the main flow (e.g., background analysis):
+
+```json
+{
+  "type": "command",
+  "command": "node my-slow-hook.js",
+  "async": true,
+  "timeout": 30
+}
+```
+
+<Info>
+  Async hooks run in the background. They cannot block tool execution.
+</Info>
+
+### Example: Background Build Analysis
+
+```javascript build-analysis.js
+const { exec } = require('child_process');
+
+let data = '';
+process.stdin.on('data', chunk => data += chunk);
+process.stdin.on('end', () => {
+  const input = JSON.parse(data);
+  const command = input.tool_input?.command || '';
+  
+  // Check if it's a build command
+  if (/(npm run build|pnpm build|yarn build)/.test(command)) {
+    console.error('[Hook] Build completed - async analysis running in background');
+    
+    // Run analysis in background (async hook)
+    exec('node analyze-bundle.js', (error, stdout, stderr) => {
+      if (error) {
+        console.error('[Hook] Analysis failed:', error.message);
+      } else {
+        console.error('[Hook] Bundle analysis complete');
+      }
+    });
+  }
+  
+  console.log(data);
+});
+```
+
+## Customizing Hooks
+
+### Disabling a Hook
+
+Remove or comment out the hook entry in `hooks.json`. If installed as a plugin, override in your `~/.claude/settings.json`:
+
+```json ~/.claude/settings.json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [],
+        "description": "Override: allow all .md file creation"
+      }
+    ]
+  }
+}
+```
+
+### Environment Variables
+
+Use environment variables for hook configuration:
+
+```javascript
+const threshold = parseInt(process.env.MAX_FILE_LINES || '800', 10);
+const enableCheck = process.env.ENABLE_TEST_CHECK === 'true';
+```
+
+## Cross-Platform Notes
+
+<Warning>
+  All hooks should use Node.js (`node -e` or `node script.js`) for maximum compatibility across Windows, macOS, and Linux. Avoid bash-specific syntax in hooks.
+</Warning>
+
+### File Path Handling
+
+```javascript
+const path = require('path');
+
+// WRONG: Unix-specific paths
+if (filePath.includes('src/')) { ... }
+
+// CORRECT: Cross-platform path handling
+if (filePath.includes(path.join('src', ''))) { ... }
+// OR use regex that matches both separators
+if (/[\\/]src[\\/]/.test(filePath)) { ... }
+```
+
+## Related
+
+- [Hook Overview](/hooks/overview) — Complete hook system reference
+- [Common Rules: Hooks](/rules/common-rules#hooks) — Hook architecture guidelines

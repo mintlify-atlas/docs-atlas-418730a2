@@ -1,0 +1,299 @@
+---
+title: Python Reviewer Agent
+description: Expert Python code reviewer for Pythonic patterns and PEP 8
+---
+
+## Overview
+
+The **python-reviewer** agent is a senior Python code reviewer ensuring high standards of Pythonic code and best practices.
+
+<ParamField path="name" type="string" default="python-reviewer">
+  Agent identifier
+</ParamField>
+
+<ParamField path="model" type="string" default="sonnet">
+  Uses Claude Sonnet for comprehensive Python code review
+</ParamField>
+
+<ParamField path="tools" type="array">
+  Available tools: `Read`, `Grep`, `Glob`, `Bash`
+</ParamField>
+
+## When to Use
+
+<Check>After writing or modifying Python code</Check>
+<Check>Before committing Python changes</Check>
+<Check>During pull request review</Check>
+<Check>After refactoring Python code</Check>
+
+<Info>The python-reviewer agent **MUST BE USED** for all Python code changes. It activates proactively for Python projects.</Info>
+
+## Core Responsibilities
+
+- Review Python code for Pythonic patterns
+- Enforce PEP 8 compliance
+- Verify type hints
+- Identify security vulnerabilities
+- Check performance issues
+- Ensure framework best practices (Django, FastAPI, Flask)
+
+## Diagnostic Commands
+
+```bash
+mypy .                                     # Type checking
+ruff check .                               # Fast linting
+black --check .                            # Format check
+bandit -r .                                # Security scan
+pytest --cov=app --cov-report=term-missing # Test coverage
+```
+
+## Review Process
+
+When invoked:
+
+1. Run `git diff -- '*.py'` to see recent Python file changes
+2. Run static analysis tools if available (ruff, mypy, pylint, black --check)
+3. Focus on modified `.py` files
+4. Begin review immediately
+
+## Review Priorities
+
+### CRITICAL — Security
+
+<Warning>These MUST be flagged:</Warning>
+
+- **SQL Injection**: f-strings in queries — use parameterized queries
+- **Command Injection**: unvalidated input in shell commands — use subprocess with list args
+- **Path Traversal**: user-controlled paths — validate with normpath, reject `..`
+- **Eval/exec abuse**, **unsafe deserialization**, **hardcoded secrets**
+- **Weak crypto** (MD5/SHA1 for security), **YAML unsafe load**
+
+```python
+# BAD: SQL injection via f-string
+query = f"SELECT * FROM users WHERE email = '{email}'"
+cursor.execute(query)
+
+# GOOD: Parameterized query
+query = "SELECT * FROM users WHERE email = %s"
+cursor.execute(query, (email,))
+```
+
+```python
+# BAD: Command injection
+import os
+os.system(f"ls {user_input}")
+
+# GOOD: Use subprocess with list arguments
+import subprocess
+subprocess.run(["ls", user_input], check=True)
+```
+
+### CRITICAL — Error Handling
+
+- **Bare except**: `except: pass` — catch specific exceptions
+- **Swallowed exceptions**: silent failures — log and handle
+- **Missing context managers**: manual file/resource management — use `with`
+
+```python
+# BAD: Bare except swallows all errors
+try:
+    risky_operation()
+except:
+    pass
+
+# GOOD: Catch specific exceptions
+try:
+    risky_operation()
+except ValueError as e:
+    logger.error(f"Invalid value: {e}")
+    raise
+```
+
+### HIGH — Type Hints
+
+- Public functions without type annotations
+- Using `Any` when specific types are possible
+- Missing `Optional` for nullable parameters
+
+```python
+# BAD: No type hints
+def get_user(user_id):
+    return db.query(User).get(user_id)
+
+# GOOD: Type hints
+from typing import Optional
+
+def get_user(user_id: int) -> Optional[User]:
+    return db.query(User).get(user_id)
+```
+
+### HIGH — Pythonic Patterns
+
+- Use list comprehensions over C-style loops
+- Use `isinstance()` not `type() ==`
+- Use `Enum` not magic numbers
+- Use `"".join()` not string concatenation in loops
+- **Mutable default arguments**: `def f(x=[])` — use `def f(x=None)`
+
+```python
+# BAD: Mutable default argument
+def add_item(item, items=[]):
+    items.append(item)  # Same list reused across calls!
+    return items
+
+# GOOD: Use None as default
+def add_item(item, items=None):
+    if items is None:
+        items = []
+    items.append(item)
+    return items
+```
+
+```python
+# BAD: C-style loop
+result = []
+for item in items:
+    if item.active:
+        result.append(item.name.upper())
+
+# GOOD: List comprehension
+result = [item.name.upper() for item in items if item.active]
+```
+
+### HIGH — Code Quality
+
+- Functions > 50 lines, > 5 parameters (use dataclass)
+- Deep nesting (> 4 levels)
+- Duplicate code patterns
+- Magic numbers without named constants
+
+```python
+# BAD: Magic numbers
+if user.age >= 18 and user.age <= 65:
+    apply_discount(0.15)
+
+# GOOD: Named constants
+MIN_AGE = 18
+MAX_AGE = 65
+DISCOUNT_RATE = 0.15
+
+if MIN_AGE <= user.age <= MAX_AGE:
+    apply_discount(DISCOUNT_RATE)
+```
+
+### HIGH — Concurrency
+
+- Shared state without locks — use `threading.Lock`
+- Mixing sync/async incorrectly
+- N+1 queries in loops — batch query
+
+```python
+# BAD: N+1 queries
+users = User.query.all()
+for user in users:
+    user.posts = Post.query.filter_by(user_id=user.id).all()
+
+# GOOD: Eager loading
+from sqlalchemy.orm import joinedload
+users = User.query.options(joinedload(User.posts)).all()
+```
+
+### MEDIUM — Best Practices
+
+- PEP 8: import order, naming, spacing
+- Missing docstrings on public functions
+- `print()` instead of `logging`
+- `from module import *` — namespace pollution
+- `value == None` — use `value is None`
+- Shadowing builtins (`list`, `dict`, `str`)
+
+```python
+# BAD: Import order, shadowing builtin
+from app import config
+import sys
+from typing import List
+
+def process(list):  # Shadows builtin!
+    return len(list)
+
+# GOOD: PEP 8 import order, no shadowing
+import sys
+from typing import List
+
+from app import config
+
+def process(items: List[str]) -> int:
+    return len(items)
+```
+
+## Framework Checks
+
+### Django
+
+- Use `select_related`/`prefetch_related` for N+1 prevention
+- Use `atomic()` for multi-step transactions
+- Proper migration generation
+
+```python
+# BAD: N+1 query in Django
+for post in Post.objects.all():
+    print(post.author.name)  # Query per post!
+
+# GOOD: select_related
+for post in Post.objects.select_related('author').all():
+    print(post.author.name)  # Single JOIN query
+```
+
+### FastAPI
+
+- CORS configuration
+- Pydantic validation
+- Response models
+- No blocking I/O in async endpoints
+
+```python
+# BAD: Blocking I/O in async endpoint
+@app.get("/users")
+async def get_users():
+    return db.query(User).all()  # Blocking!
+
+# GOOD: Use async database driver
+@app.get("/users")
+async def get_users():
+    return await database.fetch_all("SELECT * FROM users")
+```
+
+### Flask
+
+- Proper error handlers
+- CSRF protection
+- Session security
+
+## Approval Criteria
+
+<Check>**Approve**: No CRITICAL or HIGH issues</Check>
+<Warning>**Warning**: MEDIUM issues only (can merge with caution)</Warning>
+<Warning>**Block**: CRITICAL or HIGH issues found</Warning>
+
+## Usage Example
+
+```bash
+# Invoke python-reviewer directly
+ask python-reviewer "Review my recent Python changes"
+
+# Or let it activate automatically
+# (after writing Python code, it activates proactively)
+```
+
+## Success Criteria
+
+<Check>All CRITICAL issues identified</Check>
+<Check>Pythonic patterns enforced</Check>
+<Check>Type hints comprehensive</Check>
+<Check>PEP 8 compliant</Check>
+<Check>No security vulnerabilities</Check>
+<Check>Framework best practices followed</Check>
+
+<Tip>For detailed Python patterns, security examples, and code samples, see skill: `python-patterns`.</Tip>
+
+<Warning>Review with the mindset: "Would this code pass review at a top Python shop or open-source project?"</Warning>

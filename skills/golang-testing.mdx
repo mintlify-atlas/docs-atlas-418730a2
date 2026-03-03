@@ -1,0 +1,317 @@
+---
+title: 'Go Testing'
+description: 'Go testing patterns including table-driven tests, benchmarks, and fuzzing with TDD methodology'
+---
+
+Comprehensive Go testing patterns for writing reliable, maintainable tests following TDD methodology.
+
+## When to Activate
+
+- Writing new Go functions or methods
+- Adding test coverage to existing code
+- Creating benchmarks for performance-critical code
+- Implementing fuzz tests for input validation
+- Following TDD workflow in Go projects
+
+## TDD Workflow for Go
+
+### The RED-GREEN-REFACTOR Cycle
+
+```
+RED     → Write a failing test first
+GREEN   → Write minimal code to pass the test
+REFACTOR → Improve code while keeping tests green
+REPEAT  → Continue with next requirement
+```
+
+### Step-by-Step TDD in Go
+
+<Steps>
+
+### Define the interface/signature
+
+```go
+// calculator.go
+package calculator
+
+func Add(a, b int) int {
+    panic("not implemented") // Placeholder
+}
+```
+
+### Write failing test (RED)
+
+```go
+// calculator_test.go
+package calculator
+
+import "testing"
+
+func TestAdd(t *testing.T) {
+    got := Add(2, 3)
+    want := 5
+    if got != want {
+        t.Errorf("Add(2, 3) = %d; want %d", got, want)
+    }
+}
+```
+
+### Run test - verify FAIL
+
+```bash
+$ go test
+--- FAIL: TestAdd (0.00s)
+panic: not implemented
+```
+
+### Implement minimal code (GREEN)
+
+```go
+func Add(a, b int) int {
+    return a + b
+}
+```
+
+### Run test - verify PASS
+
+```bash
+$ go test
+PASS
+```
+
+### Refactor if needed
+
+Verify tests still pass after improvements
+
+</Steps>
+
+## Table-Driven Tests
+
+The standard pattern for Go tests:
+
+```go
+func TestAdd(t *testing.T) {
+    tests := []struct {
+        name     string
+        a, b     int
+        expected int
+    }{
+        {"positive numbers", 2, 3, 5},
+        {"negative numbers", -1, -2, -3},
+        {"zero values", 0, 0, 0},
+        {"mixed signs", -1, 1, 0},
+        {"large numbers", 1000000, 2000000, 3000000},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            got := Add(tt.a, tt.b)
+            if got != tt.expected {
+                t.Errorf("Add(%d, %d) = %d; want %d",
+                    tt.a, tt.b, got, tt.expected)
+            }
+        })
+    }
+}
+```
+
+### With Error Cases
+
+```go
+func TestParseConfig(t *testing.T) {
+    tests := []struct {
+        name    string
+        input   string
+        want    *Config
+        wantErr bool
+    }{
+        {
+            name:  "valid config",
+            input: `{"host": "localhost", "port": 8080}`,
+            want:  &Config{Host: "localhost", Port: 8080},
+        },
+        {
+            name:    "invalid JSON",
+            input:   `{invalid}`,
+            wantErr: true,
+        },
+        {
+            name:    "empty input",
+            input:   "",
+            wantErr: true,
+        },
+        {
+            name:  "minimal config",
+            input: `{}`,
+            want:  &Config{},
+        },
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            got, err := ParseConfig(tt.input)
+
+            if tt.wantErr {
+                if err == nil {
+                    t.Error("expected error, got nil")
+                }
+                return
+            }
+
+            if err != nil {
+                t.Fatalf("unexpected error: %v", err)
+            }
+
+            if !reflect.DeepEqual(got, tt.want) {
+                t.Errorf("got %+v; want %+v", got, tt.want)
+            }
+        })
+    }
+}
+```
+
+## Benchmarks
+
+### Basic Benchmarks
+
+```go
+func BenchmarkProcess(b *testing.B) {
+    data := generateTestData(1000)
+    b.ResetTimer() // Don't count setup time
+
+    for i := 0; i < b.N; i++ {
+        Process(data)
+    }
+}
+
+// Run: go test -bench=BenchmarkProcess -benchmem
+// Output: BenchmarkProcess-8   10000   105234 ns/op   4096 B/op   10 allocs/op
+```
+
+### Benchmark with Different Sizes
+
+```go
+func BenchmarkSort(b *testing.B) {
+    sizes := []int{100, 1000, 10000, 100000}
+
+    for _, size := range sizes {
+        b.Run(fmt.Sprintf("size=%d", size), func(b *testing.B) {
+            data := generateRandomSlice(size)
+            b.ResetTimer()
+
+            for i := 0; i < b.N; i++ {
+                // Make a copy to avoid sorting already sorted data
+                tmp := make([]int, len(data))
+                copy(tmp, data)
+                sort.Ints(tmp)
+            }
+        })
+    }
+}
+```
+
+## Fuzzing (Go 1.18+)
+
+```go
+func FuzzParseJSON(f *testing.F) {
+    // Add seed corpus
+    f.Add(`{"name": "test"}`)
+    f.Add(`{"count": 123}`)
+    f.Add(`[]`)
+    f.Add(`""`)
+
+    f.Fuzz(func(t *testing.T, input string) {
+        var result map[string]interface{}
+        err := json.Unmarshal([]byte(input), &result)
+
+        if err != nil {
+            // Invalid JSON is expected for random input
+            return
+        }
+
+        // If parsing succeeded, re-encoding should work
+        _, err = json.Marshal(result)
+        if err != nil {
+            t.Errorf("Marshal failed after successful Unmarshal: %v", err)
+        }
+    })
+}
+
+// Run: go test -fuzz=FuzzParseJSON -fuzztime=30s
+```
+
+## Test Coverage
+
+```bash
+# Basic coverage
+go test -cover ./...
+
+# Generate coverage profile
+go test -coverprofile=coverage.out ./...
+
+# View coverage in browser
+go tool cover -html=coverage.out
+
+# View coverage by function
+go tool cover -func=coverage.out
+
+# Coverage with race detection
+go test -race -coverprofile=coverage.out ./...
+```
+
+### Coverage Targets
+
+| Code Type | Target |
+|-----------|--------|
+| Critical business logic | 100% |
+| Public APIs | 90%+ |
+| General code | 80%+ |
+| Generated code | Exclude |
+
+## HTTP Handler Testing
+
+```go
+func TestHealthHandler(t *testing.T) {
+    // Create request
+    req := httptest.NewRequest(http.MethodGet, "/health", nil)
+    w := httptest.NewRecorder()
+
+    // Call handler
+    HealthHandler(w, req)
+
+    // Check response
+    resp := w.Result()
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        t.Errorf("got status %d; want %d", resp.StatusCode, http.StatusOK)
+    }
+
+    body, _ := io.ReadAll(resp.Body)
+    if string(body) != "OK" {
+        t.Errorf("got body %q; want %q", body, "OK")
+    }
+}
+```
+
+## Best Practices
+
+**DO:**
+- Write tests FIRST (TDD)
+- Use table-driven tests for comprehensive coverage
+- Test behavior, not implementation
+- Use `t.Helper()` in helper functions
+- Use `t.Parallel()` for independent tests
+- Clean up resources with `t.Cleanup()`
+- Use meaningful test names that describe the scenario
+
+**DON'T:**
+- Test private functions directly (test through public API)
+- Use `time.Sleep()` in tests (use channels or conditions)
+- Ignore flaky tests (fix or remove them)
+- Mock everything (prefer integration tests when possible)
+- Skip error path testing
+
+<Warning>
+Tests are documentation. They show how your code is meant to be used. Write them clearly and keep them up to date.
+</Warning>

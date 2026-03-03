@@ -1,0 +1,255 @@
+---
+title: Introduction
+description: Everything Claude Code - The performance optimization system for AI agent harnesses from an Anthropic hackathon winner
+---
+
+# Everything Claude Code
+
+**The performance optimization system for AI agent harnesses. From an Anthropic hackathon winner.**
+
+Not just configs. A complete system: skills, instincts, memory optimization, continuous learning, security scanning, and research-first development. Production-ready agents, hooks, commands, rules, and MCP configurations evolved over 10+ months of intensive daily use building real products.
+
+Works across **Claude Code**, **Cursor**, **Codex**, **OpenCode**, and other AI agent harnesses.
+
+<Note>
+This repo is the raw code only. The [Shorthand Guide](https://x.com/affaanmustafa/status/2012378465664745795) and [Longform Guide](https://x.com/affaanmustafa/status/2014040193557471352) explain everything.
+</Note>
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="13 Specialized Agents" icon="robot">
+    Production-ready agents for planning, architecture, TDD, code review, security, build fixing, E2E testing, refactoring, and documentation.
+  </Card>
+  
+  <Card title="56+ Skills" icon="sparkles">
+    Workflow definitions and domain knowledge covering coding standards, backend/frontend patterns, security, testing, continuous learning, and framework-specific best practices.
+  </Card>
+  
+  <Card title="33 Commands" icon="terminal">
+    Slash commands for quick execution: `/plan`, `/tdd`, `/code-review`, `/build-fix`, `/e2e`, `/security-scan`, `/orchestrate`, and more.
+  </Card>
+  
+  <Card title="Automated Hooks" icon="webhook">
+    Trigger-based automations for memory persistence, strategic compaction, security warnings, format-on-save, and session management.
+  </Card>
+  
+  <Card title="Multi-Language Rules" icon="book">
+    Always-follow guidelines organized into common (language-agnostic) + language-specific directories for TypeScript, Python, Go, Swift, Java, and C++.
+  </Card>
+  
+  <Card title="Cross-Platform" icon="check">
+    Full support for Windows, macOS, and Linux with automatic package manager detection (npm, pnpm, yarn, bun).
+  </Card>
+</CardGroup>
+
+## What's Inside
+
+### Agents
+
+14 specialized subagents handle delegated tasks with limited scope:
+
+- **planner** - Feature implementation planning
+- **architect** - System design decisions
+- **tdd-guide** - Test-driven development enforcement
+- **code-reviewer** - Quality and security review
+- **security-reviewer** - Vulnerability analysis
+- **build-error-resolver** - Build and type error fixing
+- **e2e-runner** - Playwright E2E testing
+- **refactor-cleaner** - Dead code cleanup
+- **doc-updater** - Documentation synchronization
+- **go-reviewer** - Go code review
+- **go-build-resolver** - Go build error resolution
+- **python-reviewer** - Python code review (PEP 8, type hints, security)
+- **database-reviewer** - Database/Supabase review
+- **chief-of-staff** - Multi-agent orchestration
+
+### Skills (56+)
+
+Workflow definitions invoked by commands or agents:
+
+**Core Skills:**
+- coding-standards, tdd-workflow, security-review, eval-harness, verification-loop
+- continuous-learning, continuous-learning-v2, strategic-compact, iterative-retrieval
+
+**Backend/Frontend:**
+- backend-patterns, frontend-patterns, frontend-slides, api-design, e2e-testing
+
+**Framework-Specific:**
+- django-patterns, django-security, django-tdd, django-verification
+- springboot-patterns, springboot-security, springboot-tdd, springboot-verification
+- golang-patterns, golang-testing, swift-actor-persistence, swift-protocol-di-testing
+
+**Business/Content:**
+- article-writing, content-engine, market-research, investor-materials, investor-outreach
+
+**Infrastructure:**
+- deployment-patterns, docker-patterns, database-migrations, postgres-patterns
+
+### Commands (33)
+
+Slash commands for instant execution:
+
+- `/plan` - Implementation planning
+- `/tdd` - Test-driven development
+- `/code-review` - Quality review
+- `/build-fix` - Fix build errors
+- `/e2e` - E2E test generation
+- `/refactor-clean` - Dead code removal
+- `/orchestrate` - Multi-agent workflow
+- `/learn` - Extract patterns mid-session
+- `/checkpoint` - Save verification state
+- `/verify` - Run verification loop
+- `/eval` - Evaluate against criteria
+- `/update-docs` - Update documentation
+- `/test-coverage` - Analyze coverage
+- `/go-review`, `/go-test`, `/go-build` - Go workflows
+- `/python-review` - Python code review
+- `/multi-plan`, `/multi-execute`, `/multi-backend`, `/multi-frontend`, `/multi-workflow` - Multi-agent orchestration
+- `/pm2` - PM2 service management
+- `/sessions` - Session history
+- `/skill-create` - Generate skills from git
+- `/instinct-status`, `/instinct-import`, `/instinct-export`, `/evolve` - Continuous learning
+- `/setup-pm` - Configure package manager
+
+### Hooks
+
+Trigger-based automations:
+
+- **Session lifecycle** - Load/save context automatically
+- **Strategic compaction** - Suggest compaction at logical breakpoints
+- **Security warnings** - Detect hardcoded secrets, prevent credential commits
+- **Format-on-save** - Auto-format TypeScript/Python/Go files
+- **Dev server guards** - Block dev servers outside tmux
+- **Git push review** - Reminder before pushing changes
+
+### Rules
+
+Always-follow guidelines organized by language:
+
+**Common (9 rules):**
+- coding-style, git-workflow, testing, performance, patterns, hooks, agents, security
+
+**Language-Specific:**
+- TypeScript/JavaScript (7 rules)
+- Python (5 rules)
+- Go (4 rules)
+- Swift (3 rules)
+- Java (2 rules)
+
+## Get Started
+
+<CardGroup cols={3}>
+  <Card title="Quick Start" icon="rocket" href="/get-started/quickstart">
+    Get up and running in under 2 minutes
+  </Card>
+  
+  <Card title="Installation" icon="download" href="/get-started/installation">
+    Detailed installation options and platform-specific notes
+  </Card>
+  
+  <Card title="Key Concepts" icon="lightbulb" href="/concepts/agents">
+    Learn about agents, skills, hooks, and rules
+  </Card>
+</CardGroup>
+
+## Cross-Platform Support
+
+Everything Claude Code works across all major AI coding tools:
+
+| Feature | Claude Code | Cursor IDE | Codex CLI | OpenCode |
+|---------|------------|------------|-----------|----------|
+| **Agents** | ✅ 13 agents | Shared (AGENTS.md) | Shared (AGENTS.md) | ✅ 12 agents |
+| **Commands** | ✅ 33 commands | Shared | Instruction-based | ✅ 24 commands |
+| **Skills** | ✅ 50+ skills | Shared | 10 (native format) | ✅ 37 skills |
+| **Hook Events** | 8 types | 15 types | None yet | 11 types |
+| **Rules** | 29 (common + lang) | 29 (YAML frontmatter) | Instruction-based | 13 instructions |
+| **Custom Tools** | Via hooks | Via hooks | N/A | ✅ 6 native tools |
+| **MCP Servers** | ✅ 14 servers | Shared (mcp.json) | 4 (command-based) | ✅ Full |
+
+## Why Everything Claude Code?
+
+<AccordionGroup>
+  <Accordion title="Battle-Tested">
+    Evolved over 10+ months of intensive daily use building real products. Won the Anthropic x Forum Ventures hackathon in Sep 2025 building [zenith.chat](https://zenith.chat).
+  </Accordion>
+  
+  <Accordion title="Production-Ready">
+    Not theoretical configs - these are the actual agents, skills, hooks, and rules used to ship production applications. Every component has been refined through real-world use.
+  </Accordion>
+  
+  <Accordion title="Comprehensive System">
+    Not just prompts or configs. A complete system with memory optimization, continuous learning, security scanning, verification loops, and multi-agent orchestration.
+  </Accordion>
+  
+  <Accordion title="Research-First">
+    Includes search-first workflow, iterative retrieval patterns, and eval harness for verification. Learn from your sessions with continuous learning v2.
+  </Accordion>
+  
+  <Accordion title="Community-Driven">
+    30+ contributors, 50K+ stars, 6K+ forks, 6 languages supported. Active development with regular updates and new features.
+  </Accordion>
+</AccordionGroup>
+
+## What's New
+
+### v1.7.0 — Cross-Platform Expansion & Presentation Builder (Feb 2026)
+
+- **Codex app + CLI support** — Direct `AGENTS.md`-based Codex support, installer targeting, and Codex docs
+- **`frontend-slides` skill** — Zero-dependency HTML presentation builder with PPTX conversion guidance
+- **5 new generic business/content skills** — `article-writing`, `content-engine`, `market-research`, `investor-materials`, `investor-outreach`
+- **Broader tool coverage** — Cursor, Codex, and OpenCode support tightened
+- **992 internal tests** — Expanded validation and regression coverage
+
+### v1.6.0 — Codex CLI, AgentShield & Marketplace (Feb 2026)
+
+- **Codex CLI support** — New `/codex-setup` command generates `codex.md`
+- **7 new skills** — `search-first`, `swift-actor-persistence`, `swift-protocol-di-testing`, and more
+- **AgentShield integration** — `/security-scan` skill runs AgentShield directly
+- **GitHub Marketplace** — ECC Tools GitHub App live with free/pro/enterprise tiers
+- **978 internal tests** — Expanded validation suite
+
+<Info>
+See the full changelog in [Releases](https://github.com/affaan-m/everything-claude-code/releases).
+</Info>
+
+## Requirements
+
+<Warning>
+**Minimum version: Claude Code CLI v2.1.0 or later**
+
+This plugin requires Claude Code CLI v2.1.0+ due to changes in how the plugin system handles hooks.
+
+Check your version:
+```bash
+claude --version
+```
+</Warning>
+
+## Next Steps
+
+<Steps>
+  <Step title="Quick Start">
+    Follow the [Quick Start Guide](/get-started/quickstart) to get up and running in under 2 minutes.
+  </Step>
+  
+  <Step title="Installation">
+    Review the [Installation Guide](/get-started/installation) for detailed installation options.
+  </Step>
+  
+  <Step title="Learn Concepts">
+    Understand the [Key Concepts](/concepts/agents) behind agents, skills, hooks, and rules.
+  </Step>
+  
+  <Step title="Explore Features">
+    Dive into specific features like [Continuous Learning](/features/continuous-learning) and [Token Optimization](/features/token-optimization).
+  </Step>
+</Steps>
+
+## Links
+
+- **Shorthand Guide (Start Here):** [The Shorthand Guide to Everything Claude Code](https://x.com/affaanmustafa/status/2012378465664745795)
+- **Longform Guide (Advanced):** [The Longform Guide to Everything Claude Code](https://x.com/affaanmustafa/status/2014040193557471352)
+- **GitHub:** [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code)
+- **Follow:** [@affaanmustafa](https://x.com/affaanmustafa)
+- **zenith.chat:** [zenith.chat](https://zenith.chat)

@@ -1,0 +1,255 @@
+---
+title: Refactor Cleaner Agent
+description: Dead code cleanup and consolidation specialist
+---
+
+## Overview
+
+The **refactor-cleaner** agent is an expert refactoring specialist focused on code cleanup and consolidation. Its mission is to identify and remove dead code, duplicates, and unused exports.
+
+<ParamField path="name" type="string" default="refactor-cleaner">
+  Agent identifier
+</ParamField>
+
+<ParamField path="model" type="string" default="sonnet">
+  Uses Claude Sonnet for safe refactoring
+</ParamField>
+
+<ParamField path="tools" type="array">
+  Available tools: `Read`, `Write`, `Edit`, `Bash`, `Grep`, `Glob`
+</ParamField>
+
+## When to Use
+
+<Check>Removing unused code and exports</Check>
+<Check>Consolidating duplicate code</Check>
+<Check>Cleaning up dependencies</Check>
+<Check>Code maintenance and hygiene</Check>
+
+<Info>The refactor-cleaner agent activates **PROACTIVELY** for removing unused code, duplicates, and refactoring.</Info>
+
+## Core Responsibilities
+
+1. **Dead Code Detection** — Find unused code, exports, dependencies
+2. **Duplicate Elimination** — Identify and consolidate duplicate code
+3. **Dependency Cleanup** — Remove unused packages and imports
+4. **Safe Refactoring** — Ensure changes don't break functionality
+
+## Detection Commands
+
+```bash
+npx knip                                    # Unused files, exports, dependencies
+npx depcheck                                # Unused npm dependencies
+npx ts-prune                                # Unused TypeScript exports
+npx eslint . --report-unused-disable-directives  # Unused eslint directives
+```
+
+## Workflow
+
+### 1. Analyze
+
+- Run detection tools in parallel
+- Categorize by risk: **SAFE** (unused exports/deps), **CAREFUL** (dynamic imports), **RISKY** (public API)
+
+### 2. Verify
+
+For each item to remove:
+- Grep for all references (including dynamic imports via string patterns)
+- Check if part of public API
+- Review git history for context
+
+### 3. Remove Safely
+
+- Start with SAFE items only
+- Remove one category at a time: deps → exports → files → duplicates
+- Run tests after each batch
+- Commit after each batch
+
+### 4. Consolidate Duplicates
+
+- Find duplicate components/utilities
+- Choose the best implementation (most complete, best tested)
+- Update all imports, delete duplicates
+- Verify tests pass
+
+## Safety Checklist
+
+### Before Removing
+
+- [ ] Detection tools confirm unused
+- [ ] Grep confirms no references (including dynamic)
+- [ ] Not part of public API
+- [ ] Tests pass after removal
+
+### After Each Batch
+
+- [ ] Build succeeds
+- [ ] Tests pass
+- [ ] Committed with descriptive message
+
+## Example: Remove Unused Exports
+
+```bash
+# Run ts-prune to find unused exports
+npx ts-prune
+
+# Output:
+src/utils/formatters.ts:42 - formatOldDate
+src/components/OldButton.tsx:10 - OldButton
+src/hooks/useDeprecated.ts:5 - useDeprecated
+```
+
+```typescript
+// Before: Unused export
+export function formatOldDate(date: Date): string {
+  return date.toLocaleDateString();
+}
+
+export function formatDate(date: Date): string {
+  return date.toISOString();
+}
+
+// After: Remove unused export
+export function formatDate(date: Date): string {
+  return date.toISOString();
+}
+```
+
+## Example: Remove Unused Dependencies
+
+```bash
+# Run depcheck to find unused npm packages
+npx depcheck
+
+# Output:
+Unused dependencies
+* lodash
+* moment
+* axios
+```
+
+```bash
+# Remove unused packages
+npm uninstall lodash moment axios
+```
+
+## Example: Consolidate Duplicates
+
+```typescript
+// Before: Duplicate formatCurrency functions
+
+// src/utils/currency.ts
+export function formatCurrency(amount: number): string {
+  return `$${amount.toFixed(2)}`;
+}
+
+// src/lib/formatters.ts
+export function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(value);
+}
+```
+
+```typescript
+// After: Keep better implementation, update imports
+
+// src/utils/currency.ts (consolidated)
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(amount);
+}
+
+// Delete src/lib/formatters.ts
+// Update all imports:
+// from './lib/formatters' → from './utils/currency'
+```
+
+## Key Principles
+
+<CardGroup cols={2}>
+  <Card title="Start Small" icon="seedling">
+    One category at a time
+  </Card>
+  <Card title="Test Often" icon="flask">
+    After every batch
+  </Card>
+  <Card title="Be Conservative" icon="shield">
+    When in doubt, don't remove
+  </Card>
+  <Card title="Document" icon="file-lines">
+    Descriptive commit messages per batch
+  </Card>
+</CardGroup>
+
+## Removal Priority
+
+1. **Unused dependencies** (safest)
+2. **Unused exports** (safe if not public API)
+3. **Unused files** (verify no dynamic imports)
+4. **Duplicate code** (choose best implementation)
+
+## Example Workflow
+
+```bash
+# Step 1: Analyze
+npx knip
+npx depcheck
+npx ts-prune
+
+# Step 2: Remove unused dependencies (SAFE)
+npm uninstall lodash moment
+npm test
+git add package.json package-lock.json
+git commit -m "chore: remove unused dependencies"
+
+# Step 3: Remove unused exports (SAFE)
+# Edit files to remove unused exports
+npm test
+git add .
+git commit -m "refactor: remove unused exports"
+
+# Step 4: Remove unused files (CAREFUL)
+# Verify with grep before deleting
+npm test
+git add .
+git commit -m "refactor: remove unused files"
+
+# Step 5: Consolidate duplicates (CAREFUL)
+# Choose best implementation, update imports
+npm test
+git add .
+git commit -m "refactor: consolidate duplicate formatters"
+```
+
+## When NOT to Use
+
+<Warning>Avoid refactoring in these scenarios:</Warning>
+
+- During active feature development
+- Right before production deployment
+- Without proper test coverage
+- On code you don't understand
+
+## Success Metrics
+
+<Check>All tests passing</Check>
+<Check>Build succeeds</Check>
+<Check>No regressions</Check>
+<Check>Bundle size reduced</Check>
+
+## Usage Example
+
+```bash
+# Invoke refactor-cleaner directly
+ask refactor-cleaner "Remove all dead code and unused dependencies"
+
+# Or let it activate automatically
+ask "Clean up unused code in this project"
+# → refactor-cleaner activates and analyzes
+```
+
+<Tip>Always commit after each category of removal. This makes it easy to revert if something breaks.</Tip>

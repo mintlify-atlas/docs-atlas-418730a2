@@ -1,0 +1,437 @@
+---
+title: Rules
+description: Always-follow guidelines for code quality, security, and standards
+---
+
+Rules are always-follow guidelines that define coding standards, conventions, and checklists. Unlike agents (which execute tasks) or skills (which provide reference material), rules are **always enforced** during development.
+
+## What Are Rules?
+
+Rules are markdown files that define:
+
+- **Coding standards** - Style, immutability, file organization
+- **Testing requirements** - TDD, coverage minimums, test types
+- **Security guidelines** - Secret management, input validation, OWASP checks
+- **Git workflow** - Commit format, PR process
+- **Performance practices** - Context management, model selection
+
+## Rules Architecture
+
+Rules are organized into **common** (language-agnostic) and **language-specific** directories:
+
+```
+rules/
+├── common/          # Universal principles (always install)
+│   ├── coding-style.md
+│   ├── git-workflow.md
+│   ├── testing.md
+│   ├── performance.md
+│   ├── patterns.md
+│   ├── hooks.md
+│   ├── agents.md
+│   └── security.md
+├── typescript/      # TypeScript/JavaScript specific
+├── python/          # Python specific
+├── golang/          # Go specific
+└── swift/           # Swift specific
+```
+
+<Note>
+**Common rules** apply to all projects. **Language rules** extend common rules with framework-specific patterns.
+</Note>
+
+## Common Rules
+
+These rules apply regardless of programming language:
+
+<AccordionGroup>
+  <Accordion title="coding-style.md">
+    ### Immutability (CRITICAL)
+    
+    ALWAYS create new objects, NEVER mutate existing ones:
+    
+    ```typescript
+    // ✅ Correct: Returns new object
+    const updated = { ...original, field: newValue }
+    
+    // ❌ Wrong: Mutates in place
+    original.field = newValue
+    ```
+    
+    ### File Organization
+    
+    MANY SMALL FILES > FEW LARGE FILES:
+    - High cohesion, low coupling
+    - 200-400 lines typical, 800 max
+    - Organize by feature/domain, not by type
+    
+    ### Error Handling
+    
+    ALWAYS handle errors comprehensively:
+    - Handle errors explicitly at every level
+    - Provide user-friendly messages in UI code
+    - Log detailed context server-side
+    - Never silently swallow errors
+    
+    ### Code Quality Checklist
+    
+    - ✅ Functions small (&lt;50 lines)
+    - ✅ Files focused (&lt;800 lines)
+    - ✅ No deep nesting (&gt;4 levels)
+    - ✅ Proper error handling
+    - ✅ No hardcoded values
+    - ✅ Readable, well-named identifiers
+  </Accordion>
+  
+  <Accordion title="testing.md">
+    ### Minimum Coverage: 80%
+    
+    All code must have 80%+ test coverage across:
+    
+    1. **Unit tests** - Individual functions, utilities, components
+    2. **Integration tests** - API endpoints, database operations
+    3. **E2E tests** - Critical user flows
+    
+    ### TDD Workflow (Mandatory)
+    
+    1. **Write test first (RED)** - Test should FAIL
+    2. **Write minimal implementation (GREEN)** - Test should PASS
+    3. **Refactor (IMPROVE)** - Verify coverage 80%+
+    
+    ### Edge Cases to Test
+    
+    - Null/undefined input
+    - Empty arrays/strings
+    - Invalid types
+    - Boundary values (min/max)
+    - Error paths (network failures, DB errors)
+    - Race conditions
+    - Large data (performance with 10k+ items)
+  </Accordion>
+  
+  <Accordion title="security.md">
+    ### Before ANY Commit
+    
+    - ✅ No hardcoded secrets (API keys, passwords, tokens)
+    - ✅ All user inputs validated
+    - ✅ SQL injection prevention (parameterized queries)
+    - ✅ XSS prevention (sanitized HTML)
+    - ✅ CSRF protection enabled
+    - ✅ Authentication/authorization verified
+    - ✅ Rate limiting on all endpoints
+    - ✅ Error messages don't leak sensitive data
+    
+    ### Secret Management
+    
+    **NEVER hardcode secrets.** Use environment variables or a secret manager.
+    
+    ```typescript
+    // ✅ Correct
+    const apiKey = process.env.OPENAI_API_KEY
+    if (!apiKey) throw new Error('OPENAI_API_KEY required')
+    
+    // ❌ Wrong
+    const apiKey = 'sk-1234567890abcdef'
+    ```
+    
+    ### If Security Issue Found
+    
+    STOP → use security-reviewer agent → fix CRITICAL issues → rotate exposed secrets → review codebase for similar issues.
+  </Accordion>
+  
+  <Accordion title="git-workflow.md">
+    ### Commit Format
+    
+    `<type>: <description>`
+    
+    **Types:** feat, fix, refactor, docs, test, chore, perf, ci
+    
+    **Examples:**
+    ```
+    feat: add stripe subscription billing
+    fix: race condition in market resolver
+    refactor: extract auth middleware
+    docs: update API documentation
+    test: add e2e tests for signup flow
+    ```
+    
+    ### PR Workflow
+    
+    1. Analyze full commit history (not just latest commit)
+    2. Draft comprehensive summary with bullet points
+    3. Include test plan
+    4. Push with `-u` flag for branch tracking
+  </Accordion>
+  
+  <Accordion title="performance.md">
+    ### Model Selection
+    
+    | Model | When to Use | Cost |
+    |-------|-------------|------|
+    | **Sonnet** | Most coding tasks (80%+) | Low |
+    | **Opus** | Deep reasoning (planning, architecture) | High |
+    | **Haiku** | Simple, repetitive tasks | Very Low |
+    
+    ### Context Management
+    
+    - Avoid last 20% of context window for large refactoring
+    - Use `/compact` at logical breakpoints (after research, before implementation)
+    - Use `/clear` between unrelated tasks (free, instant reset)
+    
+    ### Token Optimization
+    
+    ```json
+    // ~/.claude/settings.json
+    {
+      "model": "sonnet",
+      "env": {
+        "MAX_THINKING_TOKENS": "10000",
+        "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50"
+      }
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="patterns.md">
+    ### Repository Pattern
+    
+    Encapsulate data access behind standard interface:
+    
+    ```typescript
+    interface Repository<T> {
+      findAll(filters?: Filters): Promise<T[]>
+      findById(id: string): Promise<T | null>
+      create(data: CreateDto): Promise<T>
+      update(id: string, data: UpdateDto): Promise<T>
+      delete(id: string): Promise<void>
+    }
+    ```
+    
+    ### API Response Format
+    
+    Consistent envelope with success indicator, data payload, error message:
+    
+    ```typescript
+    {
+      success: boolean
+      data?: T
+      error?: string
+      pagination?: { total, offset, limit }
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="hooks.md">
+    ### Hook Types
+    
+    - **PreToolUse** - Can block (exit 2) or warn (stderr)
+    - **PostToolUse** - Analyze output, trigger followup actions
+    - **Stop** - After each response
+    - **SessionStart/SessionEnd** - Session lifecycle
+    - **PreCompact** - Before context compaction
+    
+    ### Hook Best Practices
+    
+    - Use exit code 2 sparingly (critical issues only)
+    - Keep hooks fast (&lt;100ms)
+    - Always output original data to stdout
+    - Use async for slow operations
+  </Accordion>
+  
+  <Accordion title="agents.md">
+    ### When to Delegate to Agents
+    
+    | Scenario | Agent |
+    |----------|-------|
+    | Complex feature request | planner |
+    | Code just written/modified | code-reviewer |
+    | New feature or bug fix | tdd-guide |
+    | Architectural decision | architect |
+    | Security-sensitive code | security-reviewer |
+    
+    ### Agent Orchestration
+    
+    - Use parallel execution for independent operations
+    - Launch multiple agents simultaneously when possible
+    - Sequential execution when agents depend on each other
+  </Accordion>
+</AccordionGroup>
+
+## Language-Specific Rules
+
+Language directories extend common rules with framework-specific patterns:
+
+<Tabs>
+  <Tab title="TypeScript">
+    ### coding-style.md Extensions
+    
+    - ESLint + Prettier configuration
+    - tsconfig.json strict mode
+    - Prefer interfaces over types for public APIs
+    - Use `const` assertions for readonly data
+    
+    ### testing.md Extensions
+    
+    - Jest for unit/integration tests
+    - Playwright for E2E tests
+    - React Testing Library for components
+    - Mock external dependencies (Supabase, Redis)
+    
+    ### hooks.md Extensions
+    
+    - PostToolUse: Prettier auto-format
+    - PostToolUse: `tsc --noEmit` type check
+    - PostToolUse: console.log warning
+  </Tab>
+  
+  <Tab title="Python">
+    ### coding-style.md Extensions
+    
+    - PEP 8 compliance
+    - Type hints required (mypy)
+    - Black for formatting
+    - Flake8 for linting
+    
+    ### testing.md Extensions
+    
+    - pytest for all tests
+    - factory_boy for fixtures
+    - pytest-cov for coverage
+    - Django TestCase for Django projects
+    
+    ### hooks.md Extensions
+    
+    - PostToolUse: Black auto-format
+    - PostToolUse: mypy type check
+    - PostToolUse: flake8 linting
+  </Tab>
+  
+  <Tab title="Go">
+    ### coding-style.md Extensions
+    
+    - gofmt for formatting (idiomatic Go)
+    - Effective Go conventions
+    - Pointer receivers for mutation
+    - Error handling (not exceptions)
+    
+    ### testing.md Extensions
+    
+    - Table-driven tests
+    - `go test -race` for race detection
+    - Benchmark tests for performance-critical code
+    - 80%+ coverage via `go test -cover`
+    
+    ### hooks.md Extensions
+    
+    - PostToolUse: gofmt auto-format
+    - PostToolUse: `go vet` static analysis
+    - PostToolUse: golangci-lint
+  </Tab>
+  
+  <Tab title="Swift">
+    ### coding-style.md Extensions
+    
+    - SwiftLint configuration
+    - Swift 6.2 strict concurrency
+    - Protocol-based dependency injection
+    - Actor-based persistence
+    
+    ### testing.md Extensions
+    
+    - XCTest for unit tests
+    - XCUITest for E2E tests
+    - Protocol mocks for testability
+    - SwiftTesting for Swift 6.2+
+  </Tab>
+</Tabs>
+
+## Rules vs. Skills vs. Agents
+
+| Component | Purpose | When Used |
+|-----------|---------|----------|
+| **Rules** | Standards and constraints | Always enforced |
+| **Skills** | Reference material and workflows | Consulted during execution |
+| **Agents** | Specialized executors | Perform delegated tasks |
+
+### Example
+
+- **Rule (testing.md):** "80% coverage required"
+- **Skill (tdd-workflow):** "How to achieve 80% coverage with RED → GREEN → REFACTOR"
+- **Agent (tdd-guide):** "Execute the TDD workflow to implement feature"
+
+## Installation
+
+Rules are not distributed via the plugin system. Install manually:
+
+### Option 1: Install Script (Recommended)
+
+```bash
+# Install common + language-specific rules
+./install.sh typescript
+./install.sh python golang
+```
+
+### Option 2: Manual Copy
+
+```bash
+# Install common rules (required)
+cp -r rules/common ~/.claude/rules/common
+
+# Install language-specific rules
+cp -r rules/typescript ~/.claude/rules/typescript
+cp -r rules/python ~/.claude/rules/python
+cp -r rules/golang ~/.claude/rules/golang
+```
+
+<Warning>
+**Do NOT flatten directories:** Copy entire directories (`common/`, `typescript/`, etc.) to preserve file structure. Language rules reference `../common/` files.
+</Warning>
+
+## Rule Priority
+
+When language-specific rules conflict with common rules, **language-specific rules take precedence**:
+
+- `rules/common/` defines universal defaults
+- `rules/golang/`, `rules/python/`, etc. override where language idioms differ
+
+### Example
+
+`common/coding-style.md` recommends immutability. `golang/coding-style.md` overrides:
+
+> Idiomatic Go uses pointer receivers for struct mutation — see [common/coding-style.md](../common/coding-style.md) for the general principle, but Go-idiomatic mutation is preferred here.
+
+## Adding a New Language
+
+To add rules for a new language (e.g., Rust):
+
+1. Create `rules/rust/` directory
+2. Add files that extend common rules:
+   - `coding-style.md` - Formatting, idioms, error handling
+   - `testing.md` - Test frameworks, coverage tools
+   - `patterns.md` - Language-specific design patterns
+   - `hooks.md` - PostToolUse hooks for formatters/linters
+   - `security.md` - Secret management, security tools
+3. Each file should start with:
+   ```markdown
+   > This file extends [common/xxx.md](../common/xxx.md) with Rust specific content.
+   ```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Common Rules" icon="globe" href="/rules/common-rules">
+    Deep dive into language-agnostic rules
+  </Card>
+  
+  <Card title="TypeScript Rules" icon="code" href="/rules/typescript-rules">
+    TypeScript/JavaScript specific guidelines
+  </Card>
+  
+  <Card title="Python Rules" icon="python" href="/rules/python-rules">
+    Python and Django specific rules
+  </Card>
+  
+  <Card title="Go Rules" icon="golang" href="/rules/golang-rules">
+    Go language specific conventions
+  </Card>
+</CardGroup>

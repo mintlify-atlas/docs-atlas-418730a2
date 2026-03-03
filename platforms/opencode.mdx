@@ -1,0 +1,547 @@
+---
+title: "OpenCode Support"
+description: "Full OpenCode plugin integration with 20+ event types and native custom tools"
+icon: "plug"
+---
+
+Everything Claude Code provides **full OpenCode support** including plugins, hooks, and native custom tools. OpenCode's plugin system is more sophisticated than Claude Code with 20+ event types.
+
+## Overview
+
+OpenCode is a next-generation AI coding assistant with a powerful plugin system. ECC leverages OpenCode's advanced capabilities to provide richer automation than Claude Code.
+
+### Feature Parity Table
+
+| Feature | Claude Code | OpenCode | Status |
+|---------|-------------|----------|--------|
+| **Agents** | ✅ 13 agents | ✅ 12 agents | **Claude Code leads** |
+| **Commands** | ✅ 33 commands | ✅ 24 commands | **Claude Code leads** |
+| **Skills** | ✅ 50+ skills | ✅ 37 skills | **Claude Code leads** |
+| **Hooks** | ✅ 8 event types | ✅ **11 events** | **OpenCode has more!** 🚀 |
+| **Rules** | ✅ 29 rules | ✅ 13 instructions | **Claude Code leads** |
+| **MCP Servers** | ✅ 14 servers | ✅ Full | **Full parity** |
+| **Custom Tools** | ✅ Via hooks | ✅ **6 native tools** | **OpenCode is better** 🚀 |
+
+<Info>
+**OpenCode Advantages**: More hook events (20+ vs 8), native custom tools, richer plugin API
+</Info>
+
+## Installation
+
+### Option 1: Use Directly
+
+```bash
+cd everything-claude-code
+opencode
+```
+
+OpenCode automatically detects `.opencode/opencode.json` configuration.
+
+### Option 2: Install as npm Package
+
+```bash
+npm install ecc-universal
+```
+
+Then add to your `opencode.json`:
+
+```json
+{
+  "plugin": ["ecc-universal"]
+}
+```
+
+### Prerequisites
+
+```bash
+# Install OpenCode
+npm install -g opencode
+
+# Verify installation
+opencode --version
+```
+
+## Hook Support via Plugins
+
+OpenCode's plugin system is **MORE sophisticated than Claude Code** with 20+ event types.
+
+### Event Mapping
+
+| Claude Code Hook | OpenCode Plugin Event |
+|-----------------|----------------------|
+| PreToolUse | `tool.execute.before` |
+| PostToolUse | `tool.execute.after` |
+| Stop | `session.idle` |
+| SessionStart | `session.created` |
+| SessionEnd | `session.deleted` |
+
+### Additional OpenCode Events
+
+OpenCode provides **exclusive events** not available in Claude Code:
+
+<AccordionGroup>
+  <Accordion title="File Events (5)">
+    - `file.created` — When a new file is created
+    - `file.edited` — After file modifications (like Cursor's afterFileEdit)
+    - `file.deleted` — When a file is deleted
+    - `file.watcher.created` — File system watcher detects new file
+    - `file.watcher.updated` — File system watcher detects changes
+  </Accordion>
+
+  <Accordion title="Session Events (4)">
+    - `session.created` — Session starts
+    - `session.deleted` — Session ends
+    - `session.idle` — User inactive
+    - `session.restored` — Session restored from save
+  </Accordion>
+
+  <Accordion title="Message Events (2)">
+    - `message.created` — New message sent
+    - `message.updated` — Message edited
+  </Accordion>
+
+  <Accordion title="LSP Events (2)">
+    - `lsp.client.diagnostics` — Language server diagnostics (errors, warnings)
+    - `lsp.client.connected` — Language server connection established
+  </Accordion>
+
+  <Accordion title="UI Events (2)">
+    - `tui.toast.show` — Show toast notification
+    - `tui.modal.open` — Open modal dialog
+  </Accordion>
+
+  <Accordion title="Tool Events (2)">
+    - `tool.execute.before` — Before tool execution
+    - `tool.execute.after` — After tool execution
+  </Accordion>
+
+  <Accordion title="MCP Events (2)">
+    - `mcp.tool.before` — Before MCP tool call
+    - `mcp.tool.after` — After MCP tool call
+  </Accordion>
+</AccordionGroup>
+
+### Hook Examples
+
+<CodeGroup>
+```javascript file.edited
+// Auto-format on file edit (like Cursor's afterFileEdit)
+plugin.on('file.edited', async ({ path }) => {
+  if (path.endsWith('.ts') || path.endsWith('.tsx')) {
+    await exec(`npx prettier --write ${path}`);
+    await exec(`npx tsc --noEmit`);
+  }
+});
+```
+
+```javascript lsp.client.diagnostics
+// Log TypeScript errors and warnings
+plugin.on('lsp.client.diagnostics', ({ diagnostics }) => {
+  const errors = diagnostics.filter(d => d.severity === 'error');
+  const warnings = diagnostics.filter(d => d.severity === 'warning');
+  
+  console.log(`Errors: ${errors.length}, Warnings: ${warnings.length}`);
+});
+```
+
+```javascript session.idle
+// Suggest compaction when idle
+plugin.on('session.idle', async ({ idleTime }) => {
+  if (idleTime > 300000) {  // 5 minutes
+    await showToast('Consider running /compact to free up context');
+  }
+});
+```
+
+```javascript tool.execute.before
+// Validate tool execution (like PreToolUse)
+plugin.on('tool.execute.before', ({ tool, input }) => {
+  if (tool === 'Write' && input.filePath.endsWith('.env')) {
+    throw new Error('Cannot write to .env files');
+  }
+});
+```
+</CodeGroup>
+
+## 6 Native Custom Tools
+
+OpenCode provides **native custom tools** that Claude Code only achieves via hooks:
+
+<CardGroup cols={2}>
+  <Card title="run-tests" icon="flask">
+    Execute test suite with coverage reporting
+    
+    ```bash
+    /run-tests --coverage --watch
+    ```
+  </Card>
+  
+  <Card title="check-coverage" icon="percentage">
+    Verify code coverage meets threshold (80%+)
+    
+    ```bash
+    /check-coverage --threshold 80
+    ```
+  </Card>
+  
+  <Card title="security-audit" icon="shield">
+    Run security audits (AgentShield, npm audit, etc.)
+    
+    ```bash
+    /security-audit --fix
+    ```
+  </Card>
+  
+  <Card title="format-code" icon="code">
+    Format code with Prettier/ESLint/etc.
+    
+    ```bash
+    /format-code --check
+    ```
+  </Card>
+  
+  <Card title="build-check" icon="hammer">
+    Run TypeScript/build checks without emitting
+    
+    ```bash
+    /build-check --strict
+    ```
+  </Card>
+  
+  <Card title="dependency-check" icon="box">
+    Check for outdated or vulnerable dependencies
+    
+    ```bash
+    /dependency-check --update
+    ```
+  </Card>
+</CardGroup>
+
+### Tool Configuration
+
+`.opencode/opencode.json`:
+
+```json
+{
+  "tools": [
+    {
+      "name": "run-tests",
+      "command": "npm test",
+      "args": ["--coverage"],
+      "description": "Run test suite with coverage"
+    },
+    {
+      "name": "security-audit",
+      "command": "npx",
+      "args": ["ecc-agentshield", "scan"],
+      "description": "Run AgentShield security audit"
+    }
+  ]
+}
+```
+
+## 24 Available Commands
+
+OpenCode supports a curated subset of ECC commands:
+
+<Tabs>
+  <Tab title="Core Workflow (8)">
+    - `/plan` — Create implementation plan
+    - `/tdd` — Enforce TDD workflow
+    - `/code-review` — Review code changes
+    - `/build-fix` — Fix build errors
+    - `/e2e` — Generate E2E tests
+    - `/refactor-clean` — Remove dead code
+    - `/orchestrate` — Multi-agent workflow
+    - `/verify` — Run verification loop
+  </Tab>
+  
+  <Tab title="Testing & Quality (4)">
+    - `/test-coverage` — Analyze coverage
+    - `/checkpoint` — Save verification state
+    - `/eval` — Evaluate against criteria
+    - `/update-docs` — Update documentation
+  </Tab>
+  
+  <Tab title="Continuous Learning (7)">
+    - `/learn` — Extract patterns from session
+    - `/learn-eval` — Extract and evaluate patterns
+    - `/instinct-status` — View learned instincts
+    - `/instinct-import` — Import instincts
+    - `/instinct-export` — Export instincts
+    - `/evolve` — Cluster instincts into skills
+    - `/promote` — Promote project instincts to global scope
+  </Tab>
+  
+  <Tab title="Language-Specific (3)">
+    - `/go-review` — Go code review
+    - `/go-test` — Go TDD workflow
+    - `/python-review` — Python code review (PEP 8, type hints, security)
+  </Tab>
+  
+  <Tab title="Utilities (2)">
+    - `/setup-pm` — Configure package manager
+    - `/sessions` — Manage session history
+  </Tab>
+</Tabs>
+
+## Configuration
+
+### opencode.json Structure
+
+<CodeGroup>
+```json Basic
+{
+  "plugin": ["ecc-universal"],
+  "model": "claude-sonnet-4.6",
+  "temperature": 0.7,
+  "maxTokens": 10000
+}
+```
+
+```json With Hooks
+{
+  "plugin": ["ecc-universal"],
+  "hooks": {
+    "file.edited": "scripts/hooks/auto-format.js",
+    "session.idle": "scripts/hooks/suggest-compact.js",
+    "tool.execute.before": "scripts/hooks/validate-tool.js"
+  }
+}
+```
+
+```json With Custom Tools
+{
+  "plugin": ["ecc-universal"],
+  "tools": [
+    {
+      "name": "run-tests",
+      "command": "npm test",
+      "description": "Run test suite"
+    },
+    {
+      "name": "security-audit",
+      "command": "npx ecc-agentshield scan",
+      "description": "Security audit"
+    }
+  ]
+}
+```
+
+```json With MCP Servers
+{
+  "plugin": ["ecc-universal"],
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "ghp_YOUR_TOKEN"
+      }
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-memory"]
+    }
+  }
+}
+```
+</CodeGroup>
+
+## Usage Examples
+
+### Starting a Feature
+
+```bash
+opencode
+
+> "Plan authentication with OAuth"
+# → Uses planner agent via plugin
+
+> "Implement with TDD"
+# → Uses tdd-workflow skill
+
+> "Run tests and check coverage"
+# → Uses run-tests custom tool
+> /check-coverage --threshold 80
+```
+
+### Auto-Formatting Workflow
+
+```javascript .opencode/hooks/file-edited.js
+// Automatically triggered on file save
+module.exports = async ({ path }) => {
+  if (path.match(/\.(ts|tsx|js|jsx)$/)) {
+    // Auto-format
+    await exec(`npx prettier --write ${path}`);
+    
+    // Type check
+    await exec(`npx tsc --noEmit`);
+    
+    // Lint
+    await exec(`npx eslint ${path} --fix`);
+  }
+};
+```
+
+### Security Audit on Commit
+
+```javascript .opencode/hooks/session-end.js
+// Run security audit before session ends
+module.exports = async () => {
+  console.log('Running security audit...');
+  
+  const result = await exec('npx ecc-agentshield scan --json');
+  const audit = JSON.parse(result);
+  
+  if (audit.criticalIssues > 0) {
+    throw new Error(`Security audit failed: ${audit.criticalIssues} critical issues`);
+  }
+};
+```
+
+## Documentation
+
+ECC provides comprehensive OpenCode documentation:
+
+<CardGroup cols={2}>
+  <Card title="Migration Guide" icon="book" href="#">
+    `.opencode/MIGRATION.md` — Migrate from Claude Code
+  </Card>
+  <Card title="Plugin README" icon="plug" href="#">
+    `.opencode/README.md` — OpenCode plugin details
+  </Card>
+  <Card title="Consolidated Rules" icon="list" href="#">
+    `.opencode/instructions/INSTRUCTIONS.md` — All rules in one file
+  </Card>
+  <Card title="LLM Documentation" icon="robot" href="#">
+    `llms.txt` — Complete OpenCode docs for LLMs
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Leverage Events" icon="bolt">
+    Use OpenCode's 20+ events for richer automation
+  </Card>
+  <Card title="Custom Tools" icon="wrench">
+    Define project-specific tools in opencode.json
+  </Card>
+  <Card title="Hook Chaining" icon="link">
+    Chain multiple hooks for complex workflows
+  </Card>
+  <Card title="LSP Integration" icon="code">
+    Use lsp.client.diagnostics for real-time feedback
+  </Card>
+</CardGroup>
+
+## Feature Comparison
+
+### OpenCode Exclusive Features
+
+<AccordionGroup>
+  <Accordion title="File Watcher Events">
+    OpenCode detects file changes via OS-level watchers, not just AI edits:
+    
+    ```javascript
+    plugin.on('file.watcher.updated', ({ path }) => {
+      console.log(`External change detected: ${path}`);
+    });
+    ```
+  </Accordion>
+  
+  <Accordion title="LSP Diagnostics">
+    Real-time TypeScript/ESLint errors without running commands:
+    
+    ```javascript
+    plugin.on('lsp.client.diagnostics', ({ diagnostics }) => {
+      const errors = diagnostics.filter(d => d.severity === 'error');
+      if (errors.length > 0) {
+        showToast(`${errors.length} errors detected`);
+      }
+    });
+    ```
+  </Accordion>
+  
+  <Accordion title="Native Custom Tools">
+    No need for hooks to add custom commands:
+    
+    ```json
+    {
+      "tools": [
+        { "name": "deploy", "command": "npm run deploy" }
+      ]
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="UI Events">
+    Programmatic UI control:
+    
+    ```javascript
+    plugin.on('tui.toast.show', ({ message, level }) => {
+      // Custom toast handling
+    });
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Plugin not loading">
+    1. Check `opencode.json` exists in project root
+    2. Verify plugin is in `"plugin"` array
+    3. Run `opencode --debug` to see plugin loading logs
+    4. Check for syntax errors in opencode.json
+  </Accordion>
+
+  <Accordion title="Hooks not firing">
+    1. Verify hook scripts exist and are executable
+    2. Check event names match OpenCode's API
+    3. Run `opencode --trace-hooks` to debug
+    4. Ensure hook scripts don't throw unhandled errors
+  </Accordion>
+
+  <Accordion title="Custom tools not working">
+    1. Check tool configuration in opencode.json
+    2. Verify command is executable from terminal
+    3. Test tool independently: `npm test`
+    4. Check OpenCode logs for execution errors
+  </Accordion>
+
+  <Accordion title="LSP events not firing">
+    1. Ensure language server is installed and running
+    2. Check `.opencode/lsp-config.json` configuration
+    3. Verify file types are supported by LSP
+    4. Run `opencode --lsp-debug` for diagnostics
+  </Accordion>
+</AccordionGroup>
+
+## Roadmap
+
+Features coming to OpenCode support:
+
+- **More agents** — Porting remaining 1 agent from Claude Code
+- **More commands** — Porting remaining 9 commands
+- **More skills** — Porting remaining 13 skills
+- **Enhanced LSP integration** — Code actions, refactoring support
+- **GitHub Copilot interop** — Use both tools simultaneously
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Commands" icon="terminal" href="/commands/overview">
+    Explore 24 available commands
+  </Card>
+  <Card title="Custom Tools" icon="wrench" href="#">
+    Learn to define custom tools
+  </Card>
+  <Card title="Hook Events" icon="bolt" href="#">
+    Browse 20+ hook events
+  </Card>
+  <Card title="Skills" icon="brain" href="/skills/overview">
+    See 37 ported skills
+  </Card>
+</CardGroup>

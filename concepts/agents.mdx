@@ -1,0 +1,315 @@
+---
+title: Agents
+description: Specialized subagents for delegated tasks with limited scope and focused expertise
+---
+
+Agents are specialized subagents that handle delegated tasks with a limited scope. Each agent is optimized for specific domain tasks, using only the tools it needs and operating with focused instructions.
+
+## What Are Agents?
+
+Agents are markdown files with YAML frontmatter that define:
+
+- **Name** - Unique identifier for the agent
+- **Description** - When and why to use this agent
+- **Tools** - Limited set of tools the agent can use
+- **Model** - Which AI model to use (opus, sonnet, haiku)
+- **Instructions** - Detailed behavior and methodology
+
+## Agent Structure
+
+Here's an example from the **planner** agent:
+
+```markdown ~/workspace/source/agents/planner.md
+---
+name: planner
+description: Expert planning specialist for complex features and refactoring. Use PROACTIVELY when users request feature implementation, architectural changes, or complex refactoring.
+tools: ["Read", "Grep", "Glob"]
+model: opus
+---
+
+You are an expert planning specialist focused on creating comprehensive, actionable implementation plans.
+
+## Your Role
+
+- Analyze requirements and create detailed implementation plans
+- Break down complex features into manageable steps
+- Identify dependencies and potential risks
+- Suggest optimal implementation order
+```
+
+<Note>
+Agents use **limited tool sets** to maintain focus. The planner only has read-only tools (Read, Grep, Glob) because planning shouldn't modify code.
+</Note>
+
+## Available Agents
+
+ECC provides 13 specialized agents across four categories:
+
+### Development Agents
+
+<CardGroup cols={2}>
+  <Card title="planner" icon="map">
+    **Purpose:** Implementation planning
+    
+    **When to use:** Complex features, refactoring, architectural changes
+    
+    **Model:** Opus (deep reasoning required)
+    
+    **Tools:** Read, Grep, Glob (read-only)
+  </Card>
+  
+  <Card title="architect" icon="building">
+    **Purpose:** System design and scalability decisions
+    
+    **When to use:** Architectural decisions, scaling strategies
+    
+    **Model:** Opus
+    
+    **Tools:** Read, Grep, Glob
+  </Card>
+  
+  <Card title="tdd-guide" icon="vial">
+    **Purpose:** Test-driven development enforcement
+    
+    **When to use:** New features, bug fixes, refactoring
+    
+    **Model:** Sonnet (cost-effective for structured workflows)
+    
+    **Tools:** Read, Write, Edit, Bash, Grep
+  </Card>
+  
+  <Card title="code-reviewer" icon="magnifying-glass">
+    **Purpose:** Code quality and maintainability review
+    
+    **When to use:** After writing/modifying code
+    
+    **Model:** Opus
+    
+    **Tools:** Read, Grep, Glob
+  </Card>
+  
+  <Card title="build-error-resolver" icon="wrench">
+    **Purpose:** Fix build and type errors
+    
+    **When to use:** Build failures, type errors
+    
+    **Model:** Sonnet
+    
+    **Tools:** Read, Edit, Bash
+  </Card>
+</CardGroup>
+
+### Specialized Agents
+
+<CardGroup cols={2}>
+  <Card title="security-reviewer" icon="shield">
+    **Purpose:** Vulnerability detection and security analysis
+    
+    **When to use:** Before commits, security-sensitive code
+    
+    **Model:** Opus
+  </Card>
+  
+  <Card title="e2e-runner" icon="browser">
+    **Purpose:** End-to-end Playwright testing
+    
+    **When to use:** Critical user flows
+    
+    **Model:** Sonnet
+  </Card>
+  
+  <Card title="refactor-cleaner" icon="broom">
+    **Purpose:** Dead code cleanup and refactoring
+    
+    **When to use:** Code maintenance, technical debt reduction
+    
+    **Model:** Sonnet
+  </Card>
+  
+  <Card title="doc-updater" icon="book">
+    **Purpose:** Documentation and codemap updates
+    
+    **When to use:** Updating docs after code changes
+    
+    **Model:** Sonnet
+  </Card>
+  
+  <Card title="database-reviewer" icon="database">
+    **Purpose:** PostgreSQL/Supabase specialist
+    
+    **When to use:** Schema design, query optimization
+    
+    **Model:** Opus
+  </Card>
+</CardGroup>
+
+### Language-Specific Agents
+
+<CardGroup cols={2}>
+  <Card title="go-reviewer" icon="golang">
+    **Purpose:** Go code review and best practices
+    
+    **When to use:** Go projects
+  </Card>
+  
+  <Card title="go-build-resolver" icon="golang">
+    **Purpose:** Fix Go build errors
+    
+    **When to use:** Go build failures
+  </Card>
+  
+  <Card title="python-reviewer" icon="python">
+    **Purpose:** Python code review (PEP 8, type hints)
+    
+    **When to use:** Python projects
+  </Card>
+</CardGroup>
+
+## When to Use Agents
+
+### Proactive Agent Use
+
+Use agents **proactively** without waiting for user prompts:
+
+| Scenario | Agent to Use |
+|----------|-------------|
+| User requests complex feature | **planner** |
+| Code just written/modified | **code-reviewer** |
+| Implementing new feature or bug fix | **tdd-guide** |
+| Making architectural decision | **architect** |
+| Writing security-sensitive code | **security-reviewer** |
+| Build fails | **build-error-resolver** |
+
+### Example Workflow
+
+```
+User: "Add Stripe subscription billing"
+
+1. AUTO-INVOKE planner agent
+   → Creates implementation plan
+   → Identifies 5 phases, 12 files to change
+   → Lists risks and mitigations
+
+2. User confirms plan
+
+3. AUTO-INVOKE tdd-guide agent
+   → Enforces write-tests-first
+   → Implements each phase with TDD
+
+4. After each file edit:
+   → AUTO-INVOKE code-reviewer agent
+   → Checks for quality issues
+   → Flags CRITICAL/HIGH concerns
+
+5. Before commit:
+   → AUTO-INVOKE security-reviewer agent
+   → Scans for secrets, SQL injection, XSS
+```
+
+## Agent Orchestration
+
+### Sequential Execution
+
+Use when agents depend on each other's output:
+
+```
+planner → tdd-guide → code-reviewer → security-reviewer
+```
+
+### Parallel Execution
+
+Use when operations are independent:
+
+```typescript
+// Launch multiple agents simultaneously
+const results = await Promise.all([
+  invokeAgent('go-reviewer', goFiles),
+  invokeAgent('python-reviewer', pythonFiles),
+  invokeAgent('security-reviewer', allFiles)
+])
+```
+
+<Warning>
+**Agent Teams** spawn multiple context windows. Each teammate consumes tokens independently. Only use for tasks where parallelism provides clear value (multi-module work, parallel reviews).
+</Warning>
+
+## Creating Custom Agents
+
+You can create your own agents for project-specific needs:
+
+```markdown ~/.claude/agents/my-agent.md
+---
+name: my-agent
+description: Custom agent for specific domain tasks
+tools: ["Read", "Grep"]
+model: sonnet
+---
+
+# Agent Instructions
+
+You are a specialist in...
+
+## Your Role
+
+- Specific task 1
+- Specific task 2
+
+## Methodology
+
+1. Step 1
+2. Step 2
+```
+
+### Agent Best Practices
+
+<AccordionGroup>
+  <Accordion title="Limit Tools">
+    Only grant tools the agent actually needs. Read-only agents should only have `Read`, `Grep`, `Glob`.
+  </Accordion>
+  
+  <Accordion title="Choose Right Model">
+    - **Opus:** Deep reasoning (planning, architecture, security)
+    - **Sonnet:** Structured workflows (TDD, build fixes, docs)
+    - **Haiku:** Simple, repetitive tasks (formatting, linting)
+  </Accordion>
+  
+  <Accordion title="Be Specific">
+    Agent instructions should be concrete and actionable. Avoid vague guidelines.
+  </Accordion>
+  
+  <Accordion title="Test Isolation">
+    Ensure agents work correctly with limited tool sets. Don't assume access to tools they don't have.
+  </Accordion>
+</AccordionGroup>
+
+## Agent vs. Main Conversation
+
+When should you delegate to an agent vs. handle in the main conversation?
+
+| Use Agent When | Use Main Conversation When |
+|----------------|---------------------------|
+| Task has clear scope and methodology | Exploratory or unclear requirements |
+| Specialized expertise needed | General coding tasks |
+| You want to limit tools/context | Full context needed |
+| Task is repeatable across projects | One-off, project-specific task |
+| You want parallel execution | Sequential dependencies |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Explore Skills" icon="book" href="/concepts/skills">
+    Learn how agents reference skills for domain knowledge
+  </Card>
+  
+  <Card title="Use Commands" icon="terminal" href="/concepts/commands">
+    Discover slash commands that invoke agents
+  </Card>
+  
+  <Card title="Agent Reference" icon="list" href="/agents/overview">
+    Full reference for all 13 agents
+  </Card>
+  
+  <Card title="Create Custom Agents" icon="plus" href="/guides/custom-agents">
+    Step-by-step guide to building your own agents
+  </Card>
+</CardGroup>

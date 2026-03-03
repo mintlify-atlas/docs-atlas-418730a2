@@ -1,0 +1,170 @@
+---
+title: Architecture Overview
+description: Understanding the Everything Claude Code framework architecture and core components
+---
+
+Everything Claude Code (ECC) is a production-ready AI coding plugin providing a complete system of specialized agents, skills, commands, hooks, and rules for software development.
+
+## Framework Architecture
+
+ECC is built on five interconnected components that work together to create a powerful development environment:
+
+<CardGroup cols={2}>
+  <Card title="Agents" icon="robot" href="/concepts/agents">
+    Specialized subagents for delegated tasks with limited scope
+  </Card>
+  <Card title="Skills" icon="book" href="/concepts/skills">
+    Workflow definitions and domain knowledge libraries
+  </Card>
+  <Card title="Commands" icon="terminal" href="/concepts/commands">
+    Slash commands for quick execution of common workflows
+  </Card>
+  <Card title="Hooks" icon="webhook" href="/concepts/hooks">
+    Event-driven automations that fire on tool executions
+  </Card>
+  <Card title="Rules" icon="scale-balanced" href="/concepts/rules">
+    Always-follow guidelines for code quality and standards
+  </Card>
+</CardGroup>
+
+## Core Principles
+
+ECC is designed around five fundamental principles:
+
+### 1. Agent-First Development
+
+Delegate domain-specific tasks to specialized agents rather than handling everything in the main conversation. This provides:
+
+- **Focused expertise** - Each agent is optimized for specific tasks
+- **Better context management** - Agents work with limited scope
+- **Parallel execution** - Independent agents can run simultaneously
+
+### 2. Test-Driven Development
+
+All code must be developed test-first with comprehensive coverage:
+
+- Write tests before implementation (RED → GREEN → REFACTOR)
+- 80%+ coverage requirement across unit, integration, and E2E tests
+- Edge cases and error scenarios must be tested
+
+### 3. Security-First Approach
+
+Security is never compromised:
+
+- No hardcoded secrets (API keys, passwords, tokens)
+- All user inputs validated at system boundaries
+- SQL injection and XSS prevention enforced
+- Authentication and authorization verified before commits
+
+### 4. Immutability
+
+Always create new objects, never mutate existing ones:
+
+```typescript
+// ✅ Correct: Returns new object
+const updated = { ...original, field: newValue }
+
+// ❌ Wrong: Mutates in place
+original.field = newValue
+```
+
+### 5. Plan Before Execute
+
+Complex features require planning before implementation:
+
+- Use the planner agent for architectural changes
+- Break down features into manageable phases
+- Identify dependencies and risks upfront
+- Enable incremental testing and delivery
+
+## Project Structure
+
+```
+everything-claude-code/
+├── agents/          # 13 specialized subagents
+├── skills/          # 50+ workflow skills and domain knowledge
+├── commands/        # 33 slash commands
+├── hooks/           # Trigger-based automations
+├── rules/           # Always-follow guidelines (common + per-language)
+├── scripts/         # Cross-platform Node.js utilities
+├── mcp-configs/     # 14 MCP server configurations
+└── tests/           # Test suite
+```
+
+## How Components Work Together
+
+<Steps>
+  <Step title="User Request">
+    You make a request: "Add user authentication with OAuth"
+  </Step>
+  
+  <Step title="Command Execution">
+    Execute `/plan "Add user authentication with OAuth"`
+  </Step>
+  
+  <Step title="Agent Delegation">
+    The **planner** agent analyzes requirements and creates an implementation plan
+  </Step>
+  
+  <Step title="Skills Referenced">
+    The agent references relevant skills like **security-review** and **backend-patterns**
+  </Step>
+  
+  <Step title="Implementation with TDD">
+    Use `/tdd` to implement the plan with test-driven development
+  </Step>
+  
+  <Step title="Hooks Fire">
+    **PostToolUse** hooks auto-format code and run type checks after edits
+  </Step>
+  
+  <Step title="Rules Enforced">
+    **Security rules** ensure no secrets are hardcoded before commit
+  </Step>
+  
+  <Step title="Code Review">
+    The **code-reviewer** agent reviews the implementation for quality issues
+  </Step>
+</Steps>
+
+## Success Metrics
+
+ECC measures success through five key metrics:
+
+- ✅ All tests pass with 80%+ coverage
+- ✅ No security vulnerabilities detected
+- ✅ Code is readable and maintainable
+- ✅ Performance meets requirements
+- ✅ User requirements are fully met
+
+## Cross-Platform Support
+
+ECC works across multiple AI coding tools:
+
+| Platform | Agents | Commands | Skills | Hooks | Rules |
+|----------|--------|----------|--------|-------|-------|
+| **Claude Code** | 13 | 33 | 50+ | 8 events | 29 |
+| **Cursor IDE** | Shared | Shared | Shared | 15 events | 29 |
+| **Codex CLI** | Shared | Instruction-based | 16 | Not yet | Instruction-based |
+| **OpenCode** | 12 | 24 | 37 | 11 events | 13 |
+
+<Note>
+All platforms share the same `AGENTS.md` file at the root, ensuring consistent behavior across tools.
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Understand Agents" icon="robot" href="/concepts/agents">
+    Learn how specialized agents handle delegated tasks
+  </Card>
+  <Card title="Explore Skills" icon="book" href="/concepts/skills">
+    Discover workflow definitions and domain knowledge
+  </Card>
+  <Card title="Use Commands" icon="terminal" href="/concepts/commands">
+    Quick reference for slash commands
+  </Card>
+  <Card title="Configure Hooks" icon="webhook" href="/concepts/hooks">
+    Set up event-driven automations
+  </Card>
+</CardGroup>

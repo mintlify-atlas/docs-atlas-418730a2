@@ -1,0 +1,802 @@
+---
+title: Installation
+description: Detailed installation guide for Everything Claude Code with multiple installation options
+---
+
+# Installation
+
+Everything Claude Code can be installed as a plugin (recommended) or manually for full control over what's installed.
+
+## Requirements
+
+<Warning>
+**Minimum version: Claude Code CLI v2.1.0 or later**
+
+This plugin requires Claude Code CLI v2.1.0+ due to changes in how the plugin system handles hooks.
+
+Check your version:
+```bash
+claude --version
+```
+</Warning>
+
+### Platform Support
+
+Everything Claude Code provides **full cross-platform support**:
+
+- ✅ **Windows** - All hooks and scripts rewritten in Node.js for compatibility
+- ✅ **macOS** - Native support
+- ✅ **Linux** - Native support
+
+All hooks and scripts have been rewritten in Node.js for maximum compatibility across platforms.
+
+### Package Manager Support
+
+The plugin automatically detects your preferred package manager:
+
+- **npm** - Node Package Manager
+- **pnpm** - Performant npm
+- **yarn** - Yarn Package Manager
+- **bun** - Bun Runtime & Package Manager
+
+Detection priority:
+1. Environment variable: `CLAUDE_PACKAGE_MANAGER`
+2. Project config: `.claude/package-manager.json`
+3. `package.json`: `packageManager` field
+4. Lock file: `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `bun.lockb`
+5. Global config: `~/.claude/package-manager.json`
+6. Fallback: First available package manager
+
+## Option 1: Install as Plugin (Recommended)
+
+The easiest way to use Everything Claude Code - install as a Claude Code plugin.
+
+<Steps>
+  <Step title="Add Marketplace">
+    Add the Everything Claude Code marketplace to your Claude Code settings:
+    
+    <CodeGroup>
+    ```bash Command
+    /plugin marketplace add affaan-m/everything-claude-code
+    ```
+    
+    ```json Manual (settings.json)
+    {
+      "extraKnownMarketplaces": {
+        "everything-claude-code": {
+          "source": {
+            "source": "github",
+            "repo": "affaan-m/everything-claude-code"
+          }
+        }
+      }
+    }
+    ```
+    </CodeGroup>
+  </Step>
+  
+  <Step title="Install Plugin">
+    Install the plugin:
+    
+    <CodeGroup>
+    ```bash Command
+    /plugin install everything-claude-code@everything-claude-code
+    ```
+    
+    ```json Manual (settings.json)
+    {
+      "extraKnownMarketplaces": {
+        "everything-claude-code": {
+          "source": {
+            "source": "github",
+            "repo": "affaan-m/everything-claude-code"
+          }
+        }
+      },
+      "enabledPlugins": {
+        "everything-claude-code@everything-claude-code": true
+      }
+    }
+    ```
+    </CodeGroup>
+    
+    This installs:
+    - **13 specialized agents** (planner, architect, tdd-guide, code-reviewer, etc.)
+    - **33 slash commands** (`/plan`, `/tdd`, `/code-review`, etc.)
+    - **56+ skills** (coding standards, TDD workflow, security review, etc.)
+    - **Automated hooks** (memory persistence, strategic compaction, security warnings)
+  </Step>
+  
+  <Step title="Install Rules (Required)">
+    <Warning>
+    Claude Code plugins cannot distribute `rules` automatically ([upstream limitation](https://code.claude.com/docs/en/plugins-reference)). You need to install rules manually.
+    </Warning>
+    
+    Clone the repository:
+    
+    ```bash
+    git clone https://github.com/affaan-m/everything-claude-code.git
+    cd everything-claude-code
+    ```
+    
+    Use the installer script (recommended):
+    
+    <CodeGroup>
+    ```bash TypeScript
+    ./install.sh typescript
+    ```
+    
+    ```bash Python
+    ./install.sh python
+    ```
+    
+    ```bash Go
+    ./install.sh golang
+    ```
+    
+    ```bash Multiple Languages
+    ./install.sh typescript python golang
+    ```
+    
+    ```bash Custom Destination
+    CLAUDE_RULES_DIR=/custom/path ./install.sh typescript
+    ```
+    </CodeGroup>
+    
+    The installer:
+    - Always installs common rules (language-agnostic)
+    - Installs requested language-specific rules
+    - Maintains directory structure (`common/`, `typescript/`, etc.)
+    - Warns if destination already exists
+    - Validates language names to prevent path traversal
+  </Step>
+  
+  <Step title="Verify Installation">
+    Verify the plugin is installed and commands are available:
+    
+    ```bash
+    # List all commands from the plugin
+    /plugin list everything-claude-code@everything-claude-code
+    
+    # Try a command
+    /everything-claude-code:plan "Add user authentication"
+    
+    # Check rules installation
+    ls -la ~/.claude/rules/
+    ```
+  </Step>
+</Steps>
+
+<Info>
+**Plugin commands use namespaced form**: `/everything-claude-code:plan`
+
+**Manual installation uses shorter form**: `/plan`
+</Info>
+
+## Option 2: Manual Installation
+
+For full control over what's installed, use manual installation.
+
+<Steps>
+  <Step title="Clone Repository">
+    Clone the Everything Claude Code repository:
+    
+    ```bash
+    git clone https://github.com/affaan-m/everything-claude-code.git
+    cd everything-claude-code
+    ```
+  </Step>
+  
+  <Step title="Install Agents">
+    Copy agents to your Claude config:
+    
+    <CodeGroup>
+    ```bash User-level (all projects)
+    mkdir -p ~/.claude/agents
+    cp agents/*.md ~/.claude/agents/
+    ```
+    
+    ```bash Project-level (current project only)
+    mkdir -p .claude/agents
+    cp agents/*.md .claude/agents/
+    ```
+    </CodeGroup>
+    
+    This installs 13 specialized agents:
+    - planner, architect, tdd-guide
+    - code-reviewer, security-reviewer
+    - build-error-resolver, go-build-resolver
+    - e2e-runner, refactor-cleaner, doc-updater
+    - go-reviewer, python-reviewer, database-reviewer
+  </Step>
+  
+  <Step title="Install Rules">
+    <Tabs>
+      <Tab title="Automated (Recommended)">
+        Use the installer script:
+        
+        <CodeGroup>
+        ```bash TypeScript
+        ./install.sh typescript
+        ```
+        
+        ```bash Python
+        ./install.sh python
+        ```
+        
+        ```bash Go
+        ./install.sh golang
+        ```
+        
+        ```bash Multiple Languages
+        ./install.sh typescript python golang swift
+        ```
+        </CodeGroup>
+        
+        The installer:
+        - Always installs `common/` rules (9 files)
+        - Installs requested language rules
+        - Maintains directory structure
+        - Installs to `~/.claude/rules/` by default
+      </Tab>
+      
+      <Tab title="Manual">
+        Copy rules maintaining directory structure:
+        
+        <CodeGroup>
+        ```bash User-level (all projects)
+        # Common rules (always install)
+        mkdir -p ~/.claude/rules
+        cp -r rules/common/* ~/.claude/rules/
+        
+        # Language-specific rules (pick your stack)
+        cp -r rules/typescript/* ~/.claude/rules/   # TypeScript/JavaScript
+        cp -r rules/python/* ~/.claude/rules/       # Python
+        cp -r rules/golang/* ~/.claude/rules/       # Go
+        ```
+        
+        ```bash Project-level (current project only)
+        # Common rules (always install)
+        mkdir -p .claude/rules
+        cp -r rules/common/* .claude/rules/
+        
+        # Language-specific rules (pick your stack)
+        cp -r rules/typescript/* .claude/rules/
+        ```
+        </CodeGroup>
+        
+        <Warning>
+        **Maintain directory structure!**
+        
+        Rules must be organized into `common/` and language-specific directories so that:
+        1. Files with the same name don't overwrite each other
+        2. Relative references (e.g., `../common/coding-style.md`) remain valid
+        </Warning>
+      </Tab>
+    </Tabs>
+  </Step>
+  
+  <Step title="Install Commands">
+    Copy commands to your Claude config:
+    
+    <CodeGroup>
+    ```bash User-level (all projects)
+    mkdir -p ~/.claude/commands
+    cp commands/*.md ~/.claude/commands/
+    ```
+    
+    ```bash Project-level (current project only)
+    mkdir -p .claude/commands
+    cp commands/*.md .claude/commands/
+    ```
+    </CodeGroup>
+    
+    This installs 33 slash commands:
+    - `/plan`, `/tdd`, `/code-review`, `/build-fix`
+    - `/e2e`, `/refactor-clean`, `/orchestrate`
+    - `/learn`, `/checkpoint`, `/verify`, `/eval`
+    - `/go-review`, `/go-test`, `/go-build`
+    - `/python-review`, `/multi-plan`, `/multi-execute`
+    - And more...
+  </Step>
+  
+  <Step title="Install Skills">
+    Install core skills or selectively install what you need:
+    
+    <Tabs>
+      <Tab title="Core Skills Only (Recommended)">
+        Install essential skills for all projects:
+        
+        ```bash
+        mkdir -p ~/.claude/skills
+        
+        # Core skills from .agents/skills/
+        cp -r .agents/skills/* ~/.claude/skills/
+        
+        # Essential general skills
+        cp -r skills/search-first ~/.claude/skills/
+        cp -r skills/continuous-learning-v2 ~/.claude/skills/
+        cp -r skills/strategic-compact ~/.claude/skills/
+        ```
+      </Tab>
+      
+      <Tab title="All Skills">
+        Install all 56+ skills:
+        
+        ```bash
+        mkdir -p ~/.claude/skills
+        cp -r skills/* ~/.claude/skills/
+        ```
+        
+        <Note>
+        Installing all skills may increase context usage. Consider installing only the skills you need.
+        </Note>
+      </Tab>
+      
+      <Tab title="Selective Installation">
+        Install only framework-specific or domain-specific skills:
+        
+        ```bash
+        mkdir -p ~/.claude/skills
+        
+        # Core skills
+        cp -r .agents/skills/* ~/.claude/skills/
+        
+        # Backend patterns
+        cp -r skills/backend-patterns ~/.claude/skills/
+        cp -r skills/api-design ~/.claude/skills/
+        
+        # Django (if using Django)
+        cp -r skills/django-patterns ~/.claude/skills/
+        cp -r skills/django-tdd ~/.claude/skills/
+        
+        # Spring Boot (if using Spring Boot)
+        cp -r skills/springboot-patterns ~/.claude/skills/
+        cp -r skills/springboot-tdd ~/.claude/skills/
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+  
+  <Step title="Configure Hooks">
+    Add hooks to your `~/.claude/settings.json`:
+    
+    <CodeGroup>
+    ```bash Quick Copy
+    # Merge hooks from hooks/hooks.json into your settings.json
+    # This requires manual editing to avoid overwriting existing config
+    ```
+    
+    ```json Example hooks section
+    {
+      "hooks": {
+        "PreToolUse": [
+          {
+            "matcher": "Bash",
+            "hooks": [
+              {
+                "type": "command",
+                "command": "node scripts/hooks/dev-server-guard.js"
+              }
+            ],
+            "description": "Block dev servers outside tmux"
+          }
+        ],
+        "PostToolUse": [
+          {
+            "matcher": "Edit|Write",
+            "hooks": [
+              {
+                "type": "command",
+                "command": "node scripts/hooks/format-on-save.js"
+              }
+            ],
+            "description": "Auto-format files on save"
+          }
+        ],
+        "SessionStart": [
+          {
+            "hooks": [
+              {
+                "type": "command",
+                "command": "node scripts/hooks/session-start.js"
+              }
+            ],
+            "description": "Load context on session start"
+          }
+        ],
+        "SessionEnd": [
+          {
+            "hooks": [
+              {
+                "type": "command",
+                "command": "node scripts/hooks/session-end.js"
+              }
+            ],
+            "description": "Save state on session end"
+          }
+        ]
+      }
+    }
+    ```
+    </CodeGroup>
+    
+    <Info>
+    Copy the `hooks` section from `hooks/hooks.json` to your `~/.claude/settings.json`. Be careful not to overwrite existing hooks.
+    </Info>
+  </Step>
+  
+  <Step title="Configure MCP Servers (Optional)">
+    Copy desired MCP servers from `mcp-configs/mcp-servers.json` to your `~/.claude.json`:
+    
+    ```json
+    {
+      "mcpServers": {
+        "github": {
+          "command": "npx",
+          "args": ["-y", "@modelcontextprotocol/server-github"],
+          "env": {
+            "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_TOKEN_HERE"
+          }
+        },
+        "supabase": {
+          "command": "npx",
+          "args": ["-y", "@supabase/mcp"],
+          "env": {
+            "SUPABASE_URL": "YOUR_URL_HERE",
+            "SUPABASE_SERVICE_ROLE_KEY": "YOUR_KEY_HERE"
+          }
+        }
+      }
+    }
+    ```
+    
+    <Warning>
+    **Replace `YOUR_*_HERE` placeholders with your actual API keys.**
+    
+    Never commit MCP configs with real API keys to version control.
+    </Warning>
+    
+    <Info>
+    Keep under 10 MCP servers enabled to avoid context window issues. Each MCP tool description consumes tokens.
+    </Info>
+  </Step>
+</Steps>
+
+## Cross-Platform Installation
+
+### Cursor IDE
+
+Install Everything Claude Code for Cursor IDE:
+
+<CodeGroup>
+```bash Automated
+./install.sh --target cursor typescript
+./install.sh --target cursor typescript python golang
+```
+
+```bash Manual
+# Copy Cursor configs
+mkdir -p .cursor
+cp -r .cursor/* .cursor/
+```
+</CodeGroup>
+
+Cursor installation includes:
+- **15 hook events** (sessionStart, beforeShellExecution, afterFileEdit, etc.)
+- **16 hook scripts** (DRY adapter pattern)
+- **29 rules** (9 common + 20 language-specific)
+- Shared agents, skills, and MCP configs via AGENTS.md
+
+### OpenCode
+
+Install Everything Claude Code for OpenCode:
+
+<CodeGroup>
+```bash Use Directly
+cd everything-claude-code
+opencode
+```
+
+```bash Install as npm Package
+npm install ecc-universal
+```
+
+```json Add to opencode.json
+{
+  "plugin": ["ecc-universal"]
+}
+```
+</CodeGroup>
+
+OpenCode installation includes:
+- **12 agents** (shared via plugin system)
+- **24 commands** (slash commands)
+- **37 skills** (workflow definitions)
+- **11 hook events** (via plugin hooks)
+- **6 native custom tools** (run-tests, check-coverage, security-audit)
+
+### Codex CLI
+
+Install Everything Claude Code for Codex CLI:
+
+```bash
+# Copy reference config
+cp .codex/config.toml ~/.codex/config.toml
+
+# Run in the repo (AGENTS.md auto-detected)
+codex
+```
+
+Codex installation includes:
+- **AGENTS.md** at root (universal) + `.codex/AGENTS.md` (Codex-specific)
+- **16 skills** from `.agents/skills/` (auto-loaded)
+- **4 MCP servers** (GitHub, Context7, Memory, Sequential Thinking)
+- Instruction-based rules via `persistent_instructions`
+
+<Warning>
+Codex CLI does **not yet support hooks** ([GitHub Issue #2109](https://github.com/openai/codex/issues/2109)).
+</Warning>
+
+## Package Manager Configuration
+
+Configure your preferred package manager:
+
+<Tabs>
+  <Tab title="Environment Variable">
+    Set via environment variable (highest priority):
+    
+    <CodeGroup>
+    ```bash npm
+    export CLAUDE_PACKAGE_MANAGER=npm
+    ```
+    
+    ```bash pnpm
+    export CLAUDE_PACKAGE_MANAGER=pnpm
+    ```
+    
+    ```bash yarn
+    export CLAUDE_PACKAGE_MANAGER=yarn
+    ```
+    
+    ```bash bun
+    export CLAUDE_PACKAGE_MANAGER=bun
+    ```
+    </CodeGroup>
+  </Tab>
+  
+  <Tab title="Global Config">
+    Set via global config:
+    
+    ```bash
+    node scripts/setup-package-manager.js --global pnpm
+    ```
+    
+    This creates `~/.claude/package-manager.json`:
+    
+    ```json
+    {
+      "packageManager": "pnpm"
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Project Config">
+    Set via project config:
+    
+    ```bash
+    node scripts/setup-package-manager.js --project bun
+    ```
+    
+    This creates `.claude/package-manager.json`:
+    
+    ```json
+    {
+      "packageManager": "bun"
+    }
+    ```
+  </Tab>
+  
+  <Tab title="package.json">
+    Set via `package.json`:
+    
+    ```json
+    {
+      "packageManager": "pnpm@8.15.0"
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Claude Code Command">
+    Use the `/setup-pm` command:
+    
+    ```bash
+    /setup-pm
+    ```
+    
+    Provides interactive package manager configuration.
+  </Tab>
+</Tabs>
+
+## Post-Installation
+
+<Steps>
+  <Step title="Verify Installation">
+    Verify all components are installed:
+    
+    <CodeGroup>
+    ```bash Plugin
+    # List plugin commands
+    /plugin list everything-claude-code@everything-claude-code
+    
+    # Check rules
+    ls -la ~/.claude/rules/
+    ```
+    
+    ```bash Manual
+    # Check agents
+    ls -la ~/.claude/agents/
+    
+    # Check rules
+    ls -la ~/.claude/rules/
+    
+    # Check commands
+    ls -la ~/.claude/commands/
+    
+    # Check skills
+    ls -la ~/.claude/skills/
+    ```
+    </CodeGroup>
+  </Step>
+  
+  <Step title="Test Commands">
+    Test that commands work:
+    
+    <CodeGroup>
+    ```bash Plugin
+    /everything-claude-code:plan "Add user authentication"
+    ```
+    
+    ```bash Manual
+    /plan "Add user authentication"
+    ```
+    </CodeGroup>
+  </Step>
+  
+  <Step title="Review Configuration">
+    Review and customize settings in `~/.claude/settings.json`:
+    
+    - Token optimization settings (model, MAX_THINKING_TOKENS, etc.)
+    - Disabled MCP servers (keep under 10 enabled)
+    - Hook configurations
+    - Package manager preferences
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Commands not found after plugin installation">
+    Verify the plugin is enabled in `~/.claude/settings.json`:
+    
+    ```json
+    {
+      "enabledPlugins": {
+        "everything-claude-code@everything-claude-code": true
+      }
+    }
+    ```
+    
+    Restart Claude Code after enabling the plugin.
+  </Accordion>
+  
+  <Accordion title="Hooks not working / 'Duplicate hooks file' errors">
+    **Do NOT add a `"hooks"` field to `.claude-plugin/plugin.json`.**
+    
+    Claude Code v2.1+ automatically loads `hooks/hooks.json` from installed plugins by convention. Explicitly declaring it causes duplicate detection errors.
+    
+    See issues [#29](https://github.com/affaan-m/everything-claude-code/issues/29), [#52](https://github.com/affaan-m/everything-claude-code/issues/52), [#103](https://github.com/affaan-m/everything-claude-code/issues/103).
+  </Accordion>
+  
+  <Accordion title="Rules not being followed">
+    Verify rules maintain directory structure:
+    
+    ```bash
+    ls -la ~/.claude/rules/
+    # Should show:
+    # common/
+    # typescript/ (or python/, golang/, etc.)
+    ```
+    
+    Rules files must be in subdirectories, not flat in `~/.claude/rules/`.
+  </Accordion>
+  
+  <Accordion title="Context window shrinking">
+    Too many MCP servers consume your context window. Each MCP tool description uses tokens.
+    
+    **Fix:** Disable unused MCPs in `.claude/settings.json`:
+    
+    ```json
+    {
+      "disabledMcpServers": ["supabase", "railway", "vercel"]
+    }
+    ```
+    
+    Keep under 10 MCPs enabled and under 80 tools active.
+  </Accordion>
+  
+  <Accordion title="Permission errors on install.sh">
+    Make the installer executable:
+    
+    ```bash
+    chmod +x install.sh
+    ./install.sh typescript
+    ```
+  </Accordion>
+  
+  <Accordion title="Hooks failing on Windows">
+    Ensure you're using Claude Code v2.1.0+ and Node.js 18+.
+    
+    All hooks have been rewritten in Node.js for cross-platform compatibility.
+    
+    ```bash
+    # Check Node.js version
+    node --version
+    # Should be v18.0.0 or higher
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Updating
+
+<Tabs>
+  <Tab title="Plugin">
+    Update the plugin to the latest version:
+    
+    ```bash
+    # Uninstall old version
+    /plugin uninstall everything-claude-code@everything-claude-code
+    
+    # Install latest version
+    /plugin install everything-claude-code@everything-claude-code
+    
+    # Update rules manually
+    cd everything-claude-code
+    git pull
+    ./install.sh typescript  # or your languages
+    ```
+  </Tab>
+  
+  <Tab title="Manual">
+    Update manual installation:
+    
+    ```bash
+    cd everything-claude-code
+    git pull
+    
+    # Copy updated components
+    cp agents/*.md ~/.claude/agents/
+    cp commands/*.md ~/.claude/commands/
+    ./install.sh typescript python golang
+    
+    # Update skills (selective or all)
+    cp -r .agents/skills/* ~/.claude/skills/
+    ```
+  </Tab>
+</Tabs>
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Quick Start" icon="rocket" href="/get-started/quickstart">
+    Get up and running in under 2 minutes
+  </Card>
+  
+  <Card title="Key Concepts" icon="lightbulb" href="/concepts/agents">
+    Learn about agents, skills, hooks, and rules
+  </Card>
+  
+  <Card title="Token Optimization" icon="gauge" href="/features/token-optimization">
+    Reduce costs without sacrificing quality
+  </Card>
+</CardGroup>

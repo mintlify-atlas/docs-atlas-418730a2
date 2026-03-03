@@ -1,0 +1,316 @@
+---
+title: Skill Creator
+description: Generate Claude Code skills from your repository's git history
+---
+
+## Overview
+
+Skill Creator analyzes your git commit history to extract coding patterns and generate reusable SKILL.md files. Available as a local command or GitHub App.
+
+## Two Ways to Use
+
+### Option A: Local Analysis (Built-in)
+
+Use the `/skill-create` command for local analysis without external services:
+
+```bash
+/skill-create                    # Analyze current repo
+/skill-create --instincts        # Also generate instincts for continuous-learning
+```
+
+**Capabilities:**
+- Analyzes local git history (no repo size limit)
+- Generates SKILL.md files
+- Extracts instincts for continuous-learning-v2
+- Works offline
+- No installation required (built into ECC)
+
+### Option B: GitHub App (Advanced)
+
+For advanced features (10k+ commits, auto-PRs, team sharing):
+
+**Install:** [github.com/apps/skill-creator](https://github.com/apps/skill-creator) | [ecc.tools](https://ecc.tools)
+
+```bash
+# Comment on any issue:
+/skill-creator analyze
+
+# Or auto-triggers on push to default branch
+```
+
+**Additional capabilities:**
+- Handles massive repos (10k+ commits)
+- Creates PRs with generated skills automatically
+- Team skill sharing via GitHub
+- Continuous updates on new commits
+- Web dashboard at [ecc.tools](https://ecc.tools)
+
+## What Gets Generated
+
+Both options create:
+
+### 1. SKILL.md Files
+
+Ready-to-use skills for Claude Code:
+
+```markdown
+---
+name: your-project-patterns
+description: Patterns extracted from your-project repository
+origin: Skill Creator
+---
+
+# Your Project Patterns
+
+## Core Principles
+
+[Extracted from commit messages and code changes]
+
+## Common Patterns
+
+### Error Handling
+[Pattern 1 from commits]
+[Pattern 2 from commits]
+
+### State Management
+[Pattern 3 from commits]
+
+...
+```
+
+### 2. Instinct Collections
+
+For continuous-learning-v2:
+
+```json
+{
+  "instincts": [
+    {
+      "id": "use-zod-validation",
+      "trigger": "Creating API endpoints",
+      "action": "Use Zod for request validation",
+      "confidence": 0.92,
+      "evidence": ["commit abc123", "commit def456"]
+    }
+  ]
+}
+```
+
+### 3. Pattern Extraction
+
+Learns from your commit history:
+- Naming conventions
+- File organization
+- Error handling approaches
+- Testing patterns
+- Code review patterns
+- Architecture decisions
+
+## Local Command Usage
+
+### Basic Analysis
+
+```bash
+/skill-create
+```
+
+This:
+1. Scans git history (last 1000 commits by default)
+2. Groups commits by pattern
+3. Extracts common practices
+4. Generates `.claude/skills/project-patterns/SKILL.md`
+
+### With Instincts
+
+```bash
+/skill-create --instincts
+```
+
+Additionally generates:
+- Instinct definitions in `~/.claude/homunculus/instincts/`
+- Confidence scores based on frequency
+- Evidence trails (commit hashes)
+
+### Custom Commit Range
+
+```bash
+/skill-create --range 5000
+```
+
+Analyzes last 5000 commits instead of default 1000.
+
+### Specific Directory
+
+```bash
+/skill-create --path src/api
+```
+
+Analyzes only commits affecting `src/api` directory.
+
+## GitHub App Usage
+
+### Installation
+
+1. Visit [github.com/apps/skill-creator](https://github.com/apps/skill-creator)
+2. Click "Install"
+3. Select repositories to analyze
+4. Grant required permissions (read-only)
+
+### Triggering Analysis
+
+**Manual trigger (comment on issue):**
+
+```
+/skill-creator analyze
+```
+
+**Automatic trigger:**
+- Push to default branch → auto-analyzes new commits
+- Creates PR with updated skills
+- Posts summary as issue comment
+
+### GitHub App Output
+
+Creates a PR with:
+
+```
+.claude/skills/your-repo-patterns/
+  ├── SKILL.md
+  └── instincts.json
+```
+
+PR includes:
+- Summary of patterns found
+- Confidence scores
+- Commit evidence links
+
+## Configuration
+
+### `.skillcreator.json`
+
+Customize analysis:
+
+```json
+{
+  "exclude": [
+    "node_modules/**",
+    "test/**",
+    "*.test.ts"
+  ],
+  "minCommits": 5,
+  "minConfidence": 0.7,
+  "outputPath": ".claude/skills/custom-patterns/",
+  "generateInstincts": true
+}
+```
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `exclude` | `[]` | File patterns to ignore |
+| `minCommits` | 5 | Minimum commits to consider a pattern |
+| `minConfidence` | 0.7 | Minimum confidence score (0-1) |
+| `outputPath` | `.claude/skills/project-patterns/` | Where to save generated skills |
+| `generateInstincts` | false | Also generate instincts |
+
+## Pattern Types Detected
+
+### Code Patterns
+
+- **Error Handling:** Try/catch patterns, error types, logging
+- **State Management:** Redux, Zustand, Context patterns
+- **API Design:** REST patterns, validation, response formats
+- **Testing:** Test structure, mocking patterns, coverage
+
+### Organizational Patterns
+
+- **File Structure:** Directory organization, naming conventions
+- **Import Patterns:** Relative vs absolute, barrel exports
+- **Architecture:** Layering, separation of concerns
+
+### Process Patterns
+
+- **Commit Messages:** Conventional commits, semantic versioning
+- **Code Review:** Common feedback patterns
+- **Refactoring:** Extract method, rename, consolidate
+
+## GitHub App Tiers
+
+| Tier | Price | Features |
+|------|-------|----------|
+| **Free** | $0 | 1 repo, 1k commits, manual trigger |
+| **Pro** | $10/mo | 10 repos, 10k commits, auto-trigger, instincts |
+| **Enterprise** | $100/mo | Unlimited repos/commits, team sharing, API access |
+
+Visit [ecc.tools](https://ecc.tools) for details.
+
+## Using Generated Skills
+
+### Load in Claude Code
+
+Generated skills are automatically detected:
+
+```bash
+# Skills are in .claude/skills/project-patterns/
+# Claude Code loads them automatically
+```
+
+### Share with Team
+
+**Commit to repo:**
+
+```bash
+git add .claude/skills/
+git commit -m "Add project-specific patterns"
+git push
+```
+
+Team members get skills when they clone/pull.
+
+**Or use GitHub App** for auto-PRs and team sync.
+
+### Update Over Time
+
+Re-run `/skill-create` periodically:
+
+```bash
+# Every few weeks or after major refactoring
+/skill-create --instincts
+```
+
+This keeps skills current with evolving patterns.
+
+## Troubleshooting
+
+### "No patterns found"
+
+**Cause:** Not enough commits or too restrictive config.
+
+**Fix:**
+1. Lower `minCommits` in `.skillcreator.json`
+2. Increase commit range: `/skill-create --range 5000`
+3. Check `exclude` patterns aren't too broad
+
+### "Low confidence scores"
+
+**Cause:** Inconsistent patterns in codebase.
+
+**Fix:**
+1. Focus on specific directory: `/skill-create --path src/core`
+2. Lower `minConfidence` threshold
+3. Refactor codebase for consistency
+
+### "GitHub App not creating PR"
+
+**Cause:** Permissions or configuration issue.
+
+**Fix:**
+1. Check app has write permissions
+2. Ensure default branch is protected properly
+3. Check webhook delivery in GitHub settings
+
+## Related Resources
+
+- [Continuous Learning v2](/guides/continuous-learning)
+- [Creating Custom Skills](/customize/skills)
+- [GitHub: skill-creator](https://github.com/apps/skill-creator)
+- [ecc.tools](https://ecc.tools)

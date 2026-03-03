@@ -1,0 +1,279 @@
+---
+title: E2E Runner Agent
+description: End-to-end testing specialist using Playwright
+---
+
+## Overview
+
+The **e2e-runner** agent is an expert end-to-end testing specialist. Its mission is to ensure critical user journeys work correctly by creating, maintaining, and executing comprehensive E2E tests with proper artifact management and flaky test handling.
+
+<ParamField path="name" type="string" default="e2e-runner">
+  Agent identifier
+</ParamField>
+
+<ParamField path="model" type="string" default="sonnet">
+  Uses Claude Sonnet for E2E test generation and maintenance
+</ParamField>
+
+<ParamField path="tools" type="array">
+  Available tools: `Read`, `Write`, `Edit`, `Bash`, `Grep`, `Glob`
+</ParamField>
+
+## When to Use
+
+<Check>Testing critical user flows (auth, checkout, core features)</Check>
+<Check>After implementing new user-facing features</Check>
+<Check>Before production deployments</Check>
+<Check>Maintaining existing E2E test suite</Check>
+
+<Info>The e2e-runner agent activates **PROACTIVELY** for generating, maintaining, and running E2E tests.</Info>
+
+## Core Responsibilities
+
+1. **Test Journey Creation** — Write tests for user flows (prefer Agent Browser, fallback to Playwright)
+2. **Test Maintenance** — Keep tests up to date with UI changes
+3. **Flaky Test Management** — Identify and quarantine unstable tests
+4. **Artifact Management** — Capture screenshots, videos, traces
+5. **CI/CD Integration** — Ensure tests run reliably in pipelines
+6. **Test Reporting** — Generate HTML reports and JUnit XML
+
+## Primary Tool: Agent Browser
+
+<Info>**Prefer Agent Browser over raw Playwright** — Semantic selectors, AI-optimized, auto-waiting, built on Playwright.</Info>
+
+```bash
+# Setup
+npm install -g agent-browser && agent-browser install
+
+# Core workflow
+agent-browser open https://example.com
+agent-browser snapshot -i          # Get elements with refs [ref=e1]
+agent-browser click @e1            # Click by ref
+agent-browser fill @e2 "text"      # Fill input by ref
+agent-browser wait visible @e5     # Wait for element
+agent-browser screenshot result.png
+```
+
+## Fallback: Playwright
+
+When Agent Browser isn't available, use Playwright directly.
+
+```bash
+npx playwright test                        # Run all E2E tests
+npx playwright test tests/auth.spec.ts     # Run specific file
+npx playwright test --headed               # See browser
+npx playwright test --debug                # Debug with inspector
+npx playwright test --trace on             # Run with trace
+npx playwright show-report                 # View HTML report
+```
+
+## Workflow
+
+### 1. Plan
+
+- Identify critical user journeys (auth, core features, payments, CRUD)
+- Define scenarios: happy path, edge cases, error cases
+- Prioritize by risk: HIGH (financial, auth), MEDIUM (search, nav), LOW (UI polish)
+
+### 2. Create
+
+- Use Page Object Model (POM) pattern
+- Prefer `data-testid` locators over CSS/XPath
+- Add assertions at key steps
+- Capture screenshots at critical points
+- Use proper waits (never `waitForTimeout`)
+
+### 3. Execute
+
+- Run locally 3-5 times to check for flakiness
+- Quarantine flaky tests with `test.fixme()` or `test.skip()`
+- Upload artifacts to CI
+
+## Example: User Authentication Flow
+
+```typescript
+import { test, expect } from '@playwright/test';
+
+test.describe('User Authentication', () => {
+  test('user can sign up with email and password', async ({ page }) => {
+    // Navigate to signup page
+    await page.goto('/signup');
+    
+    // Fill in form
+    await page.fill('[data-testid="email-input"]', 'test@example.com');
+    await page.fill('[data-testid="password-input"]', 'SecurePass123!');
+    await page.fill('[data-testid="confirm-password-input"]', 'SecurePass123!');
+    
+    // Submit form
+    await page.click('[data-testid="signup-button"]');
+    
+    // Wait for redirect to dashboard
+    await expect(page).toHaveURL('/dashboard');
+    
+    // Verify welcome message
+    await expect(page.locator('[data-testid="welcome-message"]'))
+      .toContainText('Welcome');
+    
+    // Take screenshot
+    await page.screenshot({ path: 'signup-success.png' });
+  });
+
+  test('shows error for invalid email', async ({ page }) => {
+    await page.goto('/signup');
+    
+    await page.fill('[data-testid="email-input"]', 'invalid-email');
+    await page.fill('[data-testid="password-input"]', 'SecurePass123!');
+    await page.click('[data-testid="signup-button"]');
+    
+    // Verify error message
+    await expect(page.locator('[data-testid="email-error"]'))
+      .toBeVisible();
+    await expect(page.locator('[data-testid="email-error"]'))
+      .toContainText('Invalid email format');
+  });
+});
+```
+
+## Page Object Model (POM)
+
+```typescript
+// pages/LoginPage.ts
+export class LoginPage {
+  constructor(private page: Page) {}
+
+  async goto() {
+    await this.page.goto('/login');
+  }
+
+  async login(email: string, password: string) {
+    await this.page.fill('[data-testid="email-input"]', email);
+    await this.page.fill('[data-testid="password-input"]', password);
+    await this.page.click('[data-testid="login-button"]');
+  }
+
+  async getErrorMessage() {
+    return this.page.locator('[data-testid="error-message"]').textContent();
+  }
+}
+
+// tests/auth.spec.ts
+import { test, expect } from '@playwright/test';
+import { LoginPage } from '../pages/LoginPage';
+
+test('user can log in', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await loginPage.goto();
+  await loginPage.login('test@example.com', 'password123');
+  
+  await expect(page).toHaveURL('/dashboard');
+});
+```
+
+## Key Principles
+
+<CardGroup cols={2}>
+  <Card title="Use Semantic Locators" icon="crosshairs">
+    `[data-testid="..."]` > CSS selectors > XPath
+  </Card>
+  <Card title="Wait for Conditions" icon="clock">
+    `waitForResponse()` > `waitForTimeout()`
+  </Card>
+  <Card title="Auto-Wait Built In" icon="hourglass">
+    `page.locator().click()` auto-waits; raw `page.click()` doesn't
+  </Card>
+  <Card title="Isolate Tests" icon="vials">
+    Each test should be independent; no shared state
+  </Card>
+  <Card title="Fail Fast" icon="bolt">
+    Use `expect()` assertions at every key step
+  </Card>
+  <Card title="Trace on Retry" icon="video">
+    Configure `trace: 'on-first-retry'` for debugging failures
+  </Card>
+</CardGroup>
+
+## Flaky Test Handling
+
+```typescript
+// Quarantine flaky test
+test('flaky: market search', async ({ page }) => {
+  test.fixme(true, 'Flaky - Issue #123');
+  // Test implementation...
+});
+
+// Identify flakiness by running test multiple times
+// npx playwright test --repeat-each=10
+```
+
+**Common causes:**
+- Race conditions (use auto-wait locators)
+- Network timing (wait for response)
+- Animation timing (wait for `networkidle`)
+
+## Configuration Example
+
+```typescript
+// playwright.config.ts
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './tests',
+  timeout: 30000,
+  retries: 2,
+  use: {
+    baseURL: 'http://localhost:3000',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { browserName: 'chromium' },
+    },
+    {
+      name: 'firefox',
+      use: { browserName: 'firefox' },
+    },
+  ],
+});
+```
+
+## Artifact Management
+
+```typescript
+// Capture screenshot
+await page.screenshot({ path: 'screenshot.png' });
+
+// Capture full page screenshot
+await page.screenshot({ path: 'screenshot.png', fullPage: true });
+
+// Capture video (configured in playwright.config.ts)
+// Videos automatically saved on failure
+
+// Capture trace (configured in playwright.config.ts)
+// View trace: npx playwright show-trace trace.zip
+```
+
+## Success Metrics
+
+<Check>All critical journeys passing (100%)</Check>
+<Check>Overall pass rate > 95%</Check>
+<Check>Flaky rate < 5%</Check>
+<Check>Test duration < 10 minutes</Check>
+<Check>Artifacts uploaded and accessible</Check>
+
+## Usage Example
+
+```bash
+# Invoke e2e-runner directly
+ask e2e-runner "Create E2E tests for checkout flow"
+
+# Or let it activate automatically
+ask "Test the new user registration feature"
+# → e2e-runner activates and creates tests
+```
+
+<Tip>For detailed Playwright patterns, Page Object Model examples, configuration templates, CI/CD workflows, and artifact management strategies, see skill: `e2e-testing`.</Tip>
+
+<Warning>E2E tests are your last line of defense before production. They catch integration issues that unit tests miss. Invest in stability, speed, and coverage.</Warning>

@@ -1,0 +1,287 @@
+---
+title: Security Reviewer Agent
+description: Security vulnerability detection and remediation specialist
+---
+
+## Overview
+
+The **security-reviewer** agent is an expert security specialist focused on identifying and remediating vulnerabilities in web applications. Its mission is to prevent security issues before they reach production.
+
+<ParamField path="name" type="string" default="security-reviewer">
+  Agent identifier
+</ParamField>
+
+<ParamField path="model" type="string" default="sonnet">
+  Uses Claude Sonnet for comprehensive security analysis
+</ParamField>
+
+<ParamField path="tools" type="array">
+  Available tools: `Read`, `Write`, `Edit`, `Bash`, `Grep`, `Glob`
+</ParamField>
+
+## When to Use
+
+<Check>After writing code that handles user input</Check>
+<Check>After implementing authentication/authorization</Check>
+<Check>Before committing API endpoints</Check>
+<Check>After handling sensitive data</Check>
+<Check>Before production deployments</Check>
+
+<Info>The security-reviewer agent activates **PROACTIVELY** after writing code that handles user input, authentication, API endpoints, or sensitive data.</Info>
+
+## Core Responsibilities
+
+1. **Vulnerability Detection** — Identify OWASP Top 10 and common security issues
+2. **Secrets Detection** — Find hardcoded API keys, passwords, tokens
+3. **Input Validation** — Ensure all user inputs are properly sanitized
+4. **Authentication/Authorization** — Verify proper access controls
+5. **Dependency Security** — Check for vulnerable npm packages
+6. **Security Best Practices** — Enforce secure coding patterns
+
+## Analysis Commands
+
+```bash
+npm audit --audit-level=high
+npx eslint . --plugin security
+```
+
+## Review Workflow
+
+### 1. Initial Scan
+
+- Run `npm audit`, `eslint-plugin-security`, search for hardcoded secrets
+- Review high-risk areas: auth, API endpoints, DB queries, file uploads, payments, webhooks
+
+### 2. OWASP Top 10 Check
+
+<AccordionGroup>
+  <Accordion title="1. Injection">
+    Queries parameterized? User input sanitized? ORMs used safely?
+  </Accordion>
+  <Accordion title="2. Broken Auth">
+    Passwords hashed (bcrypt/argon2)? JWT validated? Sessions secure?
+  </Accordion>
+  <Accordion title="3. Sensitive Data">
+    HTTPS enforced? Secrets in env vars? PII encrypted? Logs sanitized?
+  </Accordion>
+  <Accordion title="4. XXE">
+    XML parsers configured securely? External entities disabled?
+  </Accordion>
+  <Accordion title="5. Broken Access">
+    Auth checked on every route? CORS properly configured?
+  </Accordion>
+  <Accordion title="6. Misconfiguration">
+    Default creds changed? Debug mode off in prod? Security headers set?
+  </Accordion>
+  <Accordion title="7. XSS">
+    Output escaped? CSP set? Framework auto-escaping?
+  </Accordion>
+  <Accordion title="8. Insecure Deserialization">
+    User input deserialized safely?
+  </Accordion>
+  <Accordion title="9. Known Vulnerabilities">
+    Dependencies up to date? npm audit clean?
+  </Accordion>
+  <Accordion title="10. Insufficient Logging">
+    Security events logged? Alerts configured?
+  </Accordion>
+</AccordionGroup>
+
+### 3. Code Pattern Review
+
+Flag these patterns immediately:
+
+| Pattern | Severity | Fix |
+|---------|----------|-----|
+| Hardcoded secrets | CRITICAL | Use `process.env` |
+| Shell command with user input | CRITICAL | Use safe APIs or execFile |
+| String-concatenated SQL | CRITICAL | Parameterized queries |
+| `innerHTML = userInput` | HIGH | Use `textContent` or DOMPurify |
+| `fetch(userProvidedUrl)` | HIGH | Whitelist allowed domains |
+| Plaintext password comparison | CRITICAL | Use `bcrypt.compare()` |
+| No auth check on route | CRITICAL | Add authentication middleware |
+| Balance check without lock | CRITICAL | Use `FOR UPDATE` in transaction |
+| No rate limiting | HIGH | Add `express-rate-limit` |
+| Logging passwords/secrets | MEDIUM | Sanitize log output |
+
+## Common Vulnerabilities
+
+### SQL Injection
+
+```typescript
+// CRITICAL: SQL injection via string concatenation
+const query = `SELECT * FROM users WHERE email = '${email}'`;
+
+// FIX: Parameterized query
+const query = 'SELECT * FROM users WHERE email = $1';
+const result = await db.query(query, [email]);
+```
+
+### XSS (Cross-Site Scripting)
+
+```typescript
+// CRITICAL: XSS via dangerouslySetInnerHTML
+<div dangerouslySetInnerHTML={{ __html: userComment }} />
+
+// FIX: Use text content (auto-escaped)
+<div>{userComment}</div>
+
+// OR: Sanitize with DOMPurify
+import DOMPurify from 'dompurify';
+<div dangerouslySetInnerHTML={{ 
+  __html: DOMPurify.sanitize(userComment) 
+}} />
+```
+
+### Hardcoded Secrets
+
+```typescript
+// CRITICAL: Hardcoded API key
+const apiKey = 'sk-abc123xyz789';
+
+// FIX: Use environment variables
+const apiKey = process.env.OPENAI_API_KEY;
+if (!apiKey) throw new Error('OPENAI_API_KEY not set');
+```
+
+### Command Injection
+
+```typescript
+// CRITICAL: Command injection
+import { exec } from 'child_process';
+exec(`convert ${userFilename} output.png`);
+
+// FIX: Use array arguments with execFile
+import { execFile } from 'child_process';
+execFile('convert', [userFilename, 'output.png']);
+```
+
+### Missing Authentication
+
+```typescript
+// CRITICAL: No auth check
+app.get('/api/admin/users', async (req, res) => {
+  const users = await db.users.findAll();
+  res.json(users);
+});
+
+// FIX: Add authentication middleware
+app.get('/api/admin/users', requireAuth, requireAdmin, async (req, res) => {
+  const users = await db.users.findAll();
+  res.json(users);
+});
+```
+
+### Insecure Password Handling
+
+```typescript
+// CRITICAL: Plaintext password comparison
+if (password === user.password) {
+  // Login successful
+}
+
+// FIX: Use bcrypt
+import bcrypt from 'bcrypt';
+
+// Hash on signup
+const hashedPassword = await bcrypt.hash(password, 10);
+
+// Compare on login
+const isValid = await bcrypt.compare(password, user.hashedPassword);
+```
+
+### SSRF (Server-Side Request Forgery)
+
+```typescript
+// HIGH: SSRF via user-provided URL
+const response = await fetch(userProvidedUrl);
+
+// FIX: Whitelist allowed domains
+const allowedDomains = ['api.example.com', 'cdn.example.com'];
+const url = new URL(userProvidedUrl);
+
+if (!allowedDomains.includes(url.hostname)) {
+  throw new Error('Invalid URL');
+}
+
+const response = await fetch(url.toString());
+```
+
+## Key Principles
+
+<CardGroup cols={2}>
+  <Card title="Defense in Depth" icon="shield-halved">
+    Multiple layers of security
+  </Card>
+  <Card title="Least Privilege" icon="lock">
+    Minimum permissions required
+  </Card>
+  <Card title="Fail Securely" icon="triangle-exclamation">
+    Errors should not expose data
+  </Card>
+  <Card title="Don't Trust Input" icon="user-shield">
+    Validate and sanitize everything
+  </Card>
+  <Card title="Update Regularly" icon="arrows-rotate">
+    Keep dependencies current
+  </Card>
+</CardGroup>
+
+## Common False Positives
+
+<Warning>Always verify context before flagging:</Warning>
+
+- Environment variables in `.env.example` (not actual secrets)
+- Test credentials in test files (if clearly marked)
+- Public API keys (if actually meant to be public)
+- SHA256/MD5 used for checksums (not passwords)
+
+## Emergency Response
+
+If you find a CRITICAL vulnerability:
+
+1. Document with detailed report
+2. Alert project owner immediately
+3. Provide secure code example
+4. Verify remediation works
+5. Rotate secrets if credentials exposed
+
+## When to Run
+
+**ALWAYS:**
+- New API endpoints
+- Auth code changes
+- User input handling
+- DB query changes
+- File uploads
+- Payment code
+- External API integrations
+- Dependency updates
+
+**IMMEDIATELY:**
+- Production incidents
+- Dependency CVEs
+- User security reports
+- Before major releases
+
+## Success Metrics
+
+<Check>No CRITICAL issues found</Check>
+<Check>All HIGH issues addressed</Check>
+<Check>No secrets in code</Check>
+<Check>Dependencies up to date</Check>
+<Check>Security checklist complete</Check>
+
+## Usage Example
+
+```bash
+# Invoke security-reviewer directly
+ask security-reviewer "Review authentication implementation"
+
+# Or let it activate automatically
+# (after writing auth/API code, it activates proactively)
+```
+
+<Tip>For detailed vulnerability patterns, code examples, report templates, and PR review templates, see skill: `security-review`.</Tip>
+
+<Warning>Security is not optional. One vulnerability can cost users real financial losses. Be thorough, be paranoid, be proactive.</Warning>

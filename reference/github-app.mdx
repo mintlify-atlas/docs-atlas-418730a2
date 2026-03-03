@@ -1,0 +1,312 @@
+---
+title: GitHub App
+description: ECC Tools GitHub App for automated skill creation and team workflows
+---
+
+## Overview
+
+The **ECC Tools GitHub App** extends Everything Claude Code with GitHub integration for automated skill generation, team collaboration, and repository insights.
+
+**GitHub Marketplace:** [github.com/marketplace/ecc-tools](https://github.com/marketplace/ecc-tools)
+
+**Website:** [ecc.tools](https://ecc.tools)
+
+## Features
+
+### Automated Skill Creation
+
+Analyzes your repository's git history and generates Claude Code skills automatically.
+
+**Triggers:**
+- Push to default branch (auto-analyzes new commits)
+- Comment `/skill-creator analyze` on any issue
+- Manual trigger via web dashboard
+
+**Output:**
+- Creates PR with generated skills in `.claude/skills/`
+- Includes instincts for continuous-learning-v2
+- Posts summary with confidence scores and evidence
+
+### Team Collaboration
+
+- **Shared skills** across team via git
+- **Auto-PR workflow** for skill updates
+- **Skill versioning** with git history
+- **Team dashboard** at ecc.tools
+
+### Repository Insights
+
+- **Pattern detection** from commit history (10k+ commits)
+- **Coding standards** extraction
+- **Architecture visualization** (coming soon)
+- **Team velocity metrics** (Pro tier)
+
+## Installation
+
+### 1. Install GitHub App
+
+Visit [github.com/marketplace/ecc-tools](https://github.com/marketplace/ecc-tools) and click **Install**.
+
+### 2. Select Repositories
+
+Choose which repositories to analyze:
+- **All repositories** (recommended for teams)
+- **Selected repositories** (for specific projects)
+
+### 3. Grant Permissions
+
+Required permissions:
+- **Contents:** Read-only (to analyze commits)
+- **Issues:** Write (to post analysis results)
+- **Pull requests:** Write (to create skill PRs)
+- **Metadata:** Read (repository info)
+
+### 4. Configure Tier
+
+Select your plan:
+
+| Tier | Price | Features |
+|------|-------|----------|
+| **Free** | $0/mo | 1 repo, 1k commits, manual trigger |
+| **Pro** | $10/mo | 10 repos, 10k commits, auto-trigger, instincts |
+| **Enterprise** | $100/mo | Unlimited repos/commits, team sharing, API access, priority support |
+
+## Usage
+
+### Automatic Analysis (Pro/Enterprise)
+
+On every push to default branch:
+
+1. App analyzes new commits
+2. Updates skill patterns
+3. Creates PR if patterns changed
+4. Posts summary as PR description
+
+**Example PR:**
+
+```markdown
+## Skill Update: project-patterns
+
+### New Patterns Detected
+- Error handling with custom error classes (15 commits)
+- Zod validation for API endpoints (12 commits)
+- React Query for data fetching (8 commits)
+
+### Confidence Scores
+- use-zod-validation: 0.92
+- use-react-query: 0.88
+- custom-error-classes: 0.85
+
+### Evidence
+- [abc123] feat: add Zod validation to auth endpoints
+- [def456] refactor: migrate to React Query
+...
+```
+
+### Manual Trigger (All Tiers)
+
+Comment on any issue:
+
+```
+/skill-creator analyze
+```
+
+App will:
+1. Analyze repository
+2. Create issue comment with results
+3. Optionally create PR (Pro/Enterprise)
+
+### Web Dashboard (Pro/Enterprise)
+
+Visit [ecc.tools](https://ecc.tools) to:
+
+- View all analyzed repositories
+- Trigger manual analysis
+- Download generated skills
+- Manage team members
+- View pattern trends over time
+
+## Configuration
+
+### Repository Settings
+
+Create `.github/ecc-tools.yml`:
+
+```yaml
+# Skill generation settings
+skills:
+  enabled: true
+  outputPath: .claude/skills/project-patterns/
+  minCommits: 5
+  minConfidence: 0.7
+  
+# Exclude patterns
+exclude:
+  - node_modules/**
+  - test/**
+  - "*.test.ts"
+  
+# Auto-PR settings (Pro/Enterprise)
+autoPR:
+  enabled: true
+  branch: main
+  reviewers:
+    - username1
+    - username2
+  labels:
+    - ecc-skills
+    - automated
+
+# Instincts (Pro/Enterprise)
+instincts:
+  enabled: true
+  outputPath: .claude/skills/project-patterns/instincts.json
+```
+
+### Global Settings (ecc.tools)
+
+Configure via web dashboard:
+
+- **Default branch:** Which branch to analyze
+- **Analysis frequency:** On every push / daily / weekly
+- **Notification preferences:** Email, Slack, Discord
+- **Team members:** Grant access to organization members
+
+## Webhook Events
+
+The app listens for:
+
+| Event | Trigger | Action |
+|-------|---------|--------|
+| `push` | Push to default branch | Analyze new commits |
+| `issue_comment` | `/skill-creator` command | Manual analysis |
+| `installation` | App installed | Initial repository scan |
+| `pull_request` | PR opened/synced | Analyze PR commits (Enterprise) |
+
+## Output Structure
+
+Generated skills are added to your repository:
+
+```
+.claude/skills/project-patterns/
+  ├── SKILL.md              # Main skill file
+  ├── instincts.json        # Instincts for continuous-learning-v2
+  └── metadata.json         # Analysis metadata
+```
+
+### SKILL.md Format
+
+```markdown
+---
+name: project-patterns
+description: Patterns from username/repo (generated by Skill Creator)
+origin: Skill Creator
+generated: 2026-03-03T12:00:00Z
+commits: 1250
+---
+
+# Project Patterns
+
+Automatically extracted patterns from 1,250 commits.
+
+## Error Handling
+
+[Pattern 1]
+[Pattern 2]
+...
+```
+
+### instincts.json Format
+
+```json
+{
+  "generated": "2026-03-03T12:00:00Z",
+  "commits": 1250,
+  "instincts": [
+    {
+      "id": "use-zod-validation",
+      "trigger": "Creating API endpoints",
+      "action": "Use Zod for request validation",
+      "confidence": 0.92,
+      "evidence": [
+        {"commit": "abc123", "message": "feat: add Zod validation"},
+        {"commit": "def456", "message": "refactor: validate with Zod"}
+      ]
+    }
+  ]
+}
+```
+
+## Security & Privacy
+
+### Data Access
+
+- **Read-only access** to repository contents
+- **No code storage** — analysis happens in-memory
+- **No external data sharing** — results stay in your GitHub
+
+### Permissions
+
+The app requests minimal permissions:
+
+- ✅ **Contents (read):** Analyze commit history
+- ✅ **Issues (write):** Post analysis results
+- ✅ **Pull requests (write):** Create skill PRs
+- ✅ **Metadata (read):** Repository info
+- ❌ **No secrets access**
+- ❌ **No deploy key access**
+- ❌ **No organization member access**
+
+### Audit Log
+
+All app actions are logged in GitHub's audit log:
+
+```
+Settings > Security > Audit log
+```
+
+Filter by `app:ecc-tools` to see all actions.
+
+## Troubleshooting
+
+### "No PR created after analysis"
+
+**Cause:** Free tier doesn't include auto-PRs, or no new patterns detected.
+
+**Fix:**
+- Upgrade to Pro/Enterprise for auto-PRs
+- Check if patterns changed since last analysis
+- Lower `minConfidence` in `.github/ecc-tools.yml`
+
+### "Analysis taking too long"
+
+**Cause:** Large repository (10k+ commits).
+
+**Fix:**
+- Use Pro/Enterprise tier (optimized for large repos)
+- Reduce commit range in config
+- Exclude test directories
+
+### "Webhook not triggering"
+
+**Cause:** Webhook delivery failure.
+
+**Fix:**
+1. Check webhook deliveries: `Settings > Webhooks > ecc-tools`
+2. Re-deliver failed webhooks
+3. Verify app has correct permissions
+
+## Support
+
+- **Free tier:** GitHub Issues only
+- **Pro tier:** Email support (48h response)
+- **Enterprise tier:** Priority support (4h response) + Slack/Discord
+
+**Contact:** [support@ecc.tools](mailto:support@ecc.tools)
+
+## Related Resources
+
+- [Skill Creator Reference](/reference/skill-creator)
+- [Continuous Learning v2](/guides/continuous-learning)
+- [GitHub: ecc-tools](https://github.com/marketplace/ecc-tools)
+- [ecc.tools](https://ecc.tools)

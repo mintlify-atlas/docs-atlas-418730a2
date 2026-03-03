@@ -1,0 +1,472 @@
+---
+title: Contributing Guide
+description: How to contribute agents, skills, hooks, and commands to Everything Claude Code
+---
+
+## Overview
+
+Everything Claude Code is a community resource. We welcome contributions of agents, skills, hooks, commands, and improvements.
+
+**Repository:** [github.com/affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code)
+
+## What We're Looking For
+
+### Agents
+
+New agents that handle specific tasks:
+
+- Language-specific reviewers (Python, Go, Rust, C++)
+- Framework experts (Django, Rails, Laravel, Spring, NestJS)
+- DevOps specialists (Kubernetes, Terraform, CI/CD, Docker)
+- Domain experts (ML pipelines, data engineering, mobile, embedded)
+
+### Skills
+
+Workflow definitions and domain knowledge:
+
+- Language best practices
+- Framework patterns
+- Testing strategies
+- Architecture guides
+- Domain-specific knowledge
+
+### Hooks
+
+Useful automations:
+
+- Linting/formatting hooks
+- Security checks
+- Validation hooks
+- Notification hooks
+- Custom tooling integration
+
+### Commands
+
+Slash commands that invoke useful workflows:
+
+- Deployment commands
+- Testing commands
+- Code generation commands
+- Analysis commands
+
+## Quick Start
+
+```bash
+# 1. Fork and clone
+gh repo fork affaan-m/everything-claude-code --clone
+cd everything-claude-code
+
+# 2. Create a branch
+git checkout -b feat/my-contribution
+
+# 3. Add your contribution (see sections below)
+
+# 4. Test locally
+cp -r skills/my-skill ~/.claude/skills/  # for skills
+# Then test with Claude Code
+
+# 5. Submit PR
+git add . && git commit -m "feat: add my-skill" && git push
+```
+
+## Contributing Skills
+
+### Directory Structure
+
+```
+skills/
+└── your-skill-name/
+    └── SKILL.md
+```
+
+### SKILL.md Template
+
+```markdown
+---
+name: your-skill-name
+description: Brief description shown in skill list
+origin: ECC
+---
+
+# Your Skill Title
+
+Brief overview of what this skill covers.
+
+## Core Concepts
+
+Explain key patterns and guidelines.
+
+## Code Examples
+
+\`\`\`typescript
+// Include practical, tested examples
+function example() {
+  // Well-commented code
+}
+\`\`\`
+
+## Best Practices
+
+- Actionable guidelines
+- Do's and don'ts
+- Common pitfalls to avoid
+
+## When to Use
+
+Describe scenarios where this skill applies.
+```
+
+### Skill Checklist
+
+- [ ] Focused on one domain/technology
+- [ ] Includes practical code examples
+- [ ] Under 500 lines
+- [ ] Uses clear section headers
+- [ ] Tested with Claude Code
+- [ ] No sensitive information (API keys, paths)
+
+### Example Skills
+
+| Skill | Purpose |
+|-------|---------|
+| `coding-standards/` | TypeScript/JavaScript patterns |
+| `frontend-patterns/` | React and Next.js best practices |
+| `backend-patterns/` | API and database patterns |
+| `security-review/` | Security checklist |
+
+## Contributing Agents
+
+### File Location
+
+```
+agents/your-agent-name.md
+```
+
+### Agent Template
+
+```markdown
+---
+name: your-agent-name
+description: What this agent does and when Claude should invoke it. Be specific!
+tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
+model: sonnet
+---
+
+You are a [role] specialist.
+
+## Your Role
+
+- Primary responsibility
+- Secondary responsibility
+- What you DO NOT do (boundaries)
+
+## Workflow
+
+### Step 1: Understand
+How you approach the task.
+
+### Step 2: Execute
+How you perform the work.
+
+### Step 3: Verify
+How you validate results.
+
+## Output Format
+
+What you return to the user.
+
+## Examples
+
+### Example: [Scenario]
+Input: [what user provides]
+Action: [what you do]
+Output: [what you return]
+```
+
+### Agent Fields
+
+| Field | Description | Options |
+|-------|-------------|---------||
+| `name` | Lowercase, hyphenated | `code-reviewer` |
+| `description` | Used to decide when to invoke | Be specific! |
+| `tools` | Only what's needed | `Read, Write, Edit, Bash, Grep, Glob, WebFetch, Task` |
+| `model` | Complexity level | `haiku` (simple), `sonnet` (coding), `opus` (complex) |
+
+### Agent Checklist
+
+- [ ] Clear, specific description
+- [ ] Minimal tool set (only what's needed)
+- [ ] Appropriate model selection
+- [ ] Well-defined boundaries
+- [ ] Includes examples
+- [ ] Tested with Task tool
+
+### Example Agents
+
+| Agent | Purpose |
+|-------|---------||
+| `tdd-guide.md` | Test-driven development |
+| `code-reviewer.md` | Code review |
+| `security-reviewer.md` | Security scanning |
+| `build-error-resolver.md` | Fix build errors |
+
+## Contributing Hooks
+
+### File Location
+
+```
+hooks/hooks.json
+```
+
+### Hook Types
+
+| Type | Trigger | Use Case |
+|------|---------|----------|
+| `PreToolUse` | Before tool runs | Validate, warn, block |
+| `PostToolUse` | After tool runs | Format, check, notify |
+| `SessionStart` | Session begins | Load context |
+| `Stop` | Session ends | Cleanup, audit |
+
+### Hook Format
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "tool == \"Bash\" && tool_input.command matches \"rm -rf /\"",
+        "hooks": [{
+          "type": "command",
+          "command": "echo '[Hook] BLOCKED: Dangerous command' && exit 1"
+        }],
+        "description": "Block dangerous rm commands"
+      }
+    ]
+  }
+}
+```
+
+### Matcher Syntax
+
+```javascript
+// Match specific tools
+tool == "Bash"
+tool == "Edit"
+tool == "Write"
+
+// Match input patterns
+tool_input.command matches "npm install"
+tool_input.file_path matches "\\.tsx?$"
+
+// Combine conditions
+tool == "Bash" && tool_input.command matches "git push"
+```
+
+### Hook Checklist
+
+- [ ] Matcher is specific (not overly broad)
+- [ ] Includes clear error/info messages
+- [ ] Uses correct exit codes (`exit 1` blocks, `exit 0` allows)
+- [ ] Tested thoroughly
+- [ ] Has description
+- [ ] Cross-platform compatible (use Node.js, not bash)
+
+## Contributing Commands
+
+### File Location
+
+```
+commands/your-command.md
+```
+
+### Command Template
+
+```markdown
+---
+description: Brief description shown in /help
+---
+
+# Command Name
+
+## Purpose
+
+What this command does.
+
+## Usage
+
+\`\`\`
+/your-command [args]
+\`\`\`
+
+## Workflow
+
+1. First step
+2. Second step
+3. Final step
+
+## Output
+
+What the user receives.
+```
+
+### Command Checklist
+
+- [ ] Clear description
+- [ ] Usage examples
+- [ ] Defined workflow
+- [ ] Expected output documented
+- [ ] Tested with Claude Code
+
+### Example Commands
+
+| Command | Purpose |
+|---------|---------||
+| `tdd.md` | TDD workflow |
+| `code-review.md` | Review code changes |
+| `plan.md` | Implementation planning |
+| `e2e.md` | E2E testing |
+
+## Pull Request Process
+
+### 1. PR Title Format
+
+Use conventional commits:
+
+```
+feat(skills): add rust-patterns skill
+feat(agents): add api-designer agent
+feat(hooks): add auto-format hook
+fix(skills): update React patterns
+docs: improve contributing guide
+```
+
+### 2. PR Description Template
+
+```markdown
+## Summary
+What you're adding and why.
+
+## Type
+- [ ] Skill
+- [ ] Agent
+- [ ] Hook
+- [ ] Command
+- [ ] Documentation
+- [ ] Bug fix
+
+## Testing
+How you tested this.
+
+## Checklist
+- [ ] Follows format guidelines
+- [ ] Tested with Claude Code
+- [ ] No sensitive info (API keys, paths)
+- [ ] Clear descriptions
+- [ ] Documentation updated (if needed)
+```
+
+### 3. Review Process
+
+1. Maintainers review within 48 hours
+2. Address feedback if requested
+3. Once approved, merged to main
+4. Contribution added to next release
+
+## Guidelines
+
+### Do
+
+- Keep contributions focused and modular
+- Include clear descriptions
+- Test before submitting
+- Follow existing patterns
+- Document dependencies
+- Use cross-platform code (Node.js over bash)
+
+### Don't
+
+- Include sensitive data (API keys, tokens, paths)
+- Add overly complex or niche configs without discussion
+- Submit untested contributions
+- Create duplicates of existing functionality
+- Use platform-specific code (bash, PowerShell)
+
+## File Naming
+
+- Use lowercase with hyphens: `python-reviewer.md`
+- Be descriptive: `tdd-workflow.md` not `workflow.md`
+- Match name to filename
+
+## Testing Your Contribution
+
+### For Skills
+
+```bash
+# Copy to local Claude
+cp -r skills/my-skill ~/.claude/skills/
+
+# Test with Claude Code
+# Ask questions that should invoke the skill
+```
+
+### For Agents
+
+```bash
+# Copy to local Claude
+cp agents/my-agent.md ~/.claude/agents/
+
+# Test with Task tool or command
+/my-command  # if you also created a command
+```
+
+### For Hooks
+
+```bash
+# Backup existing hooks
+cp hooks/hooks.json hooks/hooks.json.backup
+
+# Add your hook to hooks.json
+
+# Test by triggering the hook condition
+# (e.g., edit a file for PostToolUse hook)
+
+# Restore backup
+mv hooks/hooks.json.backup hooks/hooks.json
+```
+
+## Documentation
+
+If your contribution requires documentation updates:
+
+- Update README.md if adding new component type
+- Update relevant skill/agent/hook README if modifying existing
+- Add examples to CONTRIBUTING.md if introducing new pattern
+
+## Getting Help
+
+### Questions?
+
+- **GitHub Issues:** [github.com/affaan-m/everything-claude-code/issues](https://github.com/affaan-m/everything-claude-code/issues)
+- **GitHub Discussions:** [github.com/affaan-m/everything-claude-code/discussions](https://github.com/affaan-m/everything-claude-code/discussions)
+- **X/Twitter:** [@affaanmustafa](https://x.com/affaanmustafa)
+
+### Ideas for Contributions
+
+- **Language-specific skills:** Rust, C#, Swift, Kotlin, Ruby
+- **Framework-specific configs:** Rails, Laravel, FastAPI, NestJS, Phoenix
+- **DevOps agents:** Kubernetes, Terraform, AWS, Docker, CI/CD
+- **Testing strategies:** Different frameworks, visual regression, load testing
+- **Domain-specific knowledge:** ML, data engineering, mobile, embedded, gaming
+
+## Recognition
+
+Contributors are recognized in:
+
+- README.md contributors section
+- Release notes
+- GitHub contributors page
+- Special thanks in documentation
+
+---
+
+**Thank you for contributing! Let's build a great resource together.**

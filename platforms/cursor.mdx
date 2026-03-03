@@ -1,0 +1,394 @@
+---
+title: "Cursor IDE Support"
+description: "Full Cursor IDE integration with hooks, rules, and DRY adapter pattern"
+icon: "arrow-pointer"
+---
+
+Everything Claude Code provides **full Cursor IDE support** with hooks, rules, agents, skills, commands, and MCP configs adapted for Cursor's native format.
+
+## Overview
+
+Cursor has **more hook events than Claude Code** (20 vs 8), providing richer automation capabilities. ECC leverages this with a DRY adapter pattern that reuses existing hook logic.
+
+### What's Included
+
+| Component | Count | Details |
+|-----------|-------|----------|
+| **Hook Events** | 15 | sessionStart, beforeShellExecution, afterFileEdit, beforeMCPExecution, beforeSubmitPrompt, and 10 more |
+| **Hook Scripts** | 16 | Thin Node.js scripts delegating to `scripts/hooks/` via shared adapter |
+| **Rules** | 29 | 9 common (alwaysApply) + 20 language-specific (TypeScript, Python, Go, Swift) |
+| **Agents** | Shared | Via AGENTS.md at root (read by Cursor natively) |
+| **Skills** | Shared + Bundled | Via AGENTS.md at root and `.cursor/skills/` for translated additions |
+| **Commands** | Shared | `.cursor/commands/` if installed |
+| **MCP Config** | Shared | `.cursor/mcp.json` if installed |
+
+## Installation
+
+### Quick Install
+
+```bash
+# Install for your language(s)
+./install.sh --target cursor typescript
+
+# Multiple languages
+./install.sh --target cursor python golang swift
+```
+
+The installer:
+- Copies rules to `.cursor/rules/` with YAML frontmatter
+- Creates hook scripts in `.cursor/hooks/`
+- Sets up the DRY adapter pattern
+- Configures language-specific settings
+
+### Manual Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/affaan-m/everything-claude-code.git
+cd everything-claude-code
+
+# Copy rules (common + language-specific)
+cp -r .cursor/rules/* ~/.cursor/rules/
+
+# Copy hooks
+cp -r .cursor/hooks/* ~/.cursor/hooks/
+
+# AGENTS.md is auto-detected from repo root
+```
+
+## Hook Architecture (DRY Adapter Pattern)
+
+Cursor's extensive hook system (20 events) is more powerful than Claude Code's (8 events). The `.cursor/hooks/adapter.js` module transforms Cursor's stdin JSON to Claude Code's format, allowing existing `scripts/hooks/*.js` to be reused **without duplication**.
+
+```
+Cursor stdin JSON → adapter.js → transforms → scripts/hooks/*.js
+                                               (shared with Claude Code)
+```
+
+### Architecture Benefits
+
+<CardGroup cols={2}>
+  <Card title="DRY Principle" icon="code">
+    Hook logic written once, works on both platforms
+  </Card>
+  <Card title="Zero Duplication" icon="copy">
+    No need to maintain separate hook implementations
+  </Card>
+  <Card title="Cursor Advantages" icon="bolt">
+    More events = richer automation than Claude Code
+  </Card>
+  <Card title="Easy Maintenance" icon="wrench">
+    Bug fixes apply to both platforms automatically
+  </Card>
+</CardGroup>
+
+### Example Hook
+
+<CodeGroup>
+```javascript .cursor/hooks/beforeShellExecution.js
+const { transformCursorInput } = require('./adapter');
+const shellCheck = require('../../scripts/hooks/shell-check');
+
+const input = JSON.parse(require('fs').readFileSync(0, 'utf-8'));
+const transformed = transformCursorInput('beforeShellExecution', input);
+shellCheck(transformed);
+```
+
+```javascript scripts/hooks/shell-check.js
+// Shared hook logic used by both Cursor and Claude Code
+module.exports = function(input) {
+  const { command } = input;
+  
+  // Block dev servers outside tmux
+  if (command.match(/npm run dev|yarn dev|pnpm dev/) && !process.env.TMUX) {
+    console.error('[Hook] Dev servers must run in tmux');
+    process.exit(2);  // Exit 2 = block execution
+  }
+  
+  // Warn on git push
+  if (command.startsWith('git push')) {
+    console.warn('[Hook] Review changes before pushing');
+  }
+};
+```
+</CodeGroup>
+
+## 15 Hook Events
+
+Cursor provides these hook events:
+
+<AccordionGroup>
+  <Accordion title="Session Lifecycle">
+    - **sessionStart** — Load context on session start
+    - **sessionEnd** — Save state on session end
+    - **sessionIdle** — Suggest compaction when idle
+  </Accordion>
+
+  <Accordion title="File Operations">
+    - **beforeFileRead** — Validate file access permissions
+    - **afterFileEdit** — Auto-format, run type checks
+    - **beforeFileWrite** — Block writes to protected files
+    - **beforeTabFileRead** — Block Tab from reading .env, .key, .pem files
+  </Accordion>
+
+  <Accordion title="Shell Execution">
+    - **beforeShellExecution** — Block dev servers outside tmux, git push review
+    - **afterShellExecution** — Log command results, detect failures
+  </Accordion>
+
+  <Accordion title="AI Interactions">
+    - **beforeSubmitPrompt** — Detect secrets (sk-, ghp_, AKIA) in prompts
+    - **afterPromptResponse** — Extract learnings from responses
+  </Accordion>
+
+  <Accordion title="MCP Operations">
+    - **beforeMCPExecution** — Audit MCP tool calls
+    - **afterMCPExecution** — Log MCP results
+  </Accordion>
+
+  <Accordion title="Other Events">
+    - **beforeToolUse** — Generic pre-tool validation
+    - **afterToolUse** — Generic post-tool actions
+  </Accordion>
+</AccordionGroup>
+
+### Key Hooks in Action
+
+<CodeGroup>
+```bash beforeShellExecution
+# Blocks dev servers outside tmux (exit 2)
+npm run dev  # ❌ Error: Dev servers must run in tmux
+
+# Warns on git push
+git push     # ⚠️  Warning: Review changes before pushing
+```
+
+```bash afterFileEdit
+# Auto-formats TypeScript files
+# Runs TypeScript compiler check
+# Warns if console.log detected
+```
+
+```bash beforeSubmitPrompt
+# Detects secrets in prompts
+"Use API key sk-1234..."  # ❌ Error: Detected secret in prompt
+```
+
+```bash beforeTabFileRead
+# Blocks Tab from reading sensitive files (exit 2)
+Tab tries to read .env   # ❌ Error: Cannot read .env file
+```
+</CodeGroup>
+
+## Rules Format
+
+Cursor rules use **YAML frontmatter** with `description`, `globs`, and `alwaysApply`:
+
+```yaml
+---
+description: "TypeScript coding style extending common rules"
+globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
+alwaysApply: false
+---
+
+# TypeScript Coding Standards
+
+## Immutability
+
+ALWAYS create new objects, NEVER mutate existing ones.
+
+```typescript
+// ❌ Bad - mutation
+const user = { name: 'Alice' };
+user.name = 'Bob';
+
+// ✅ Good - immutable
+const user = { name: 'Alice' };
+const updated = { ...user, name: 'Bob' };
+```
+
+## Type Safety
+
+Use strict TypeScript settings. Avoid `any`.
+```
+
+### Common Rules (alwaysApply: true)
+
+These apply to **all files** regardless of language:
+
+- `coding-style.md` — Immutability, file organization
+- `git-workflow.md` — Commit format, PR process
+- `testing.md` — TDD, 80% coverage requirement
+- `performance.md` — Model selection, context management
+- `patterns.md` — Design patterns, skeleton projects
+- `hooks.md` — Hook architecture, TodoWrite
+- `agents.md` — When to delegate to subagents
+- `security.md` — Mandatory security checks
+
+### Language-Specific Rules (alwaysApply: false)
+
+These activate based on file extension via `globs`:
+
+<CodeGroup>
+```yaml TypeScript
+---
+description: "TypeScript coding standards"
+globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
+alwaysApply: false
+---
+```
+
+```yaml Python
+---
+description: "Python coding standards (PEP 8)"
+globs: ["**/*.py"]
+alwaysApply: false
+---
+```
+
+```yaml Go
+---
+description: "Go idioms and best practices"
+globs: ["**/*.go"]
+alwaysApply: false
+---
+```
+
+```yaml Swift
+---
+description: "Swift coding standards"
+globs: ["**/*.swift"]
+alwaysApply: false
+---
+```
+
+
+## Configuration Example
+
+`.cursor/settings.json`:
+
+```json
+{
+  "cursor.ai.model": "claude-sonnet-4.6",
+  "cursor.ai.maxTokens": 10000,
+  "cursor.ai.temperature": 0.7,
+  "cursor.ai.enableHooks": true,
+  "cursor.ai.rulesDirectory": ".cursor/rules"
+}
+```
+
+## Feature Comparison
+
+| Feature | Claude Code | Cursor IDE |
+|---------|-------------|------------|
+| **Agents** | 13 agents | Shared (AGENTS.md) |
+| **Commands** | 33 commands | Shared |
+| **Skills** | 50+ skills | Shared + Bundled |
+| **Hook Events** | 8 types | **15 types** ✨ |
+| **Hook Scripts** | 9 scripts | **16 scripts** |
+| **Rules** | 29 rules | 29 rules (YAML) |
+| **Custom Tools** | Via hooks | Via hooks |
+| **MCP Servers** | 14 servers | Shared |
+| **Secret Detection** | Hook-based | **beforeSubmitPrompt hook** ✨ |
+| **Auto-Format** | PostToolUse hook | **afterFileEdit hook** ✨ |
+
+<Info>
+**Cursor Advantages**: More hook events, richer automation, native IDE integration
+</Info>
+
+## Usage Examples
+
+### Starting a Feature
+
+```bash
+# Cursor detects AGENTS.md automatically
+# Just start prompting:
+
+"Plan authentication with OAuth"
+# → planner agent creates blueprint
+
+"Implement with TDD"
+# → tdd-guide enforces write-tests-first
+
+"Review my changes"
+# → code-reviewer checks quality
+```
+
+### Auto-Formatting on Save
+
+Cursor's `afterFileEdit` hook automatically:
+1. Runs Prettier on TypeScript/JavaScript files
+2. Runs TypeScript compiler check
+3. Warns if `console.log` detected
+4. Updates documentation if needed
+
+No manual action required!
+
+### Secret Detection
+
+```bash
+# Try to submit a prompt with a secret:
+"Deploy with API key sk-1234567890"
+
+# beforeSubmitPrompt hook blocks it:
+# ❌ Error: Detected secret pattern in prompt (sk-)
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use AGENTS.md" icon="file">
+    Keep project-specific context in AGENTS.md at repo root
+  </Card>
+  <Card title="Leverage Hooks" icon="link">
+    Cursor's 15 hook events enable rich automation
+  </Card>
+  <Card title="Language Rules" icon="code">
+    Install only rules for languages you use
+  </Card>
+  <Card title="Test Hooks" icon="flask">
+    Verify hooks work by triggering events manually
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Hooks not firing">
+    1. Check `.cursor/hooks/` exists and scripts are executable
+    2. Verify `cursor.ai.enableHooks` is true in settings
+    3. Check hook script exit codes (0 = allow, 2 = block)
+    4. View Cursor logs for hook execution errors
+  </Accordion>
+
+  <Accordion title="Rules not applying">
+    1. Verify rules are in `.cursor/rules/`
+    2. Check YAML frontmatter is valid
+    3. Ensure `globs` match your file extensions
+    4. Common rules need `alwaysApply: true`
+  </Accordion>
+
+  <Accordion title="AGENTS.md not detected">
+    1. Place AGENTS.md at repository root
+    2. Restart Cursor
+    3. Open a file in the project
+    4. Check Cursor AI panel for context loading
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Hook Examples" icon="link" href="/hooks/overview">
+    See all 16 hook scripts in detail
+  </Card>
+  <Card title="Rules Guide" icon="book" href="/rules/overview">
+    Learn about the 29 rules and how to customize
+  </Card>
+  <Card title="Agents" icon="users" href="/agents/overview">
+    Explore shared agent system
+  </Card>
+  <Card title="Skills" icon="brain" href="/skills/overview">
+    Browse 50+ skills available in Cursor
+  </Card>
+</CardGroup>

@@ -1,0 +1,226 @@
+---
+title: Commands Overview
+description: Complete reference of all 35 Everything Claude Code commands for workflow automation and development
+---
+
+# Commands Overview
+
+Everything Claude Code provides 35 slash commands that automate common development workflows. Commands are organized into categories for planning, testing, code quality, multi-model collaboration, and more.
+
+## Quick Reference
+
+| Command | Category | Description |
+|---------|----------|-------------|
+| `/plan` | Planning | Create implementation plan with risk assessment |
+| `/tdd` | Testing | Enforce test-driven development workflow |
+| `/code-review` | Quality | Security and quality review of changes |
+| `/build-fix` | Errors | Fix build and type errors incrementally |
+| `/e2e` | Testing | Generate and run Playwright end-to-end tests |
+| `/verify` | Quality | Comprehensive codebase verification |
+| `/security` | Security | Security-focused vulnerability scan |
+| `/go-build` | Go | Fix Go build errors incrementally |
+| `/go-review` | Go | Idiomatic Go code review |
+| `/go-test` | Go | Go TDD workflow with table-driven tests |
+| `/python-review` | Python | PEP 8 and Pythonic code review |
+| `/orchestrate` | Workflow | Sequential agent workflow for complex tasks |
+| `/checkpoint` | Workflow | Create/verify checkpoints in development |
+| `/eval` | Workflow | Manage eval-driven development |
+| `/evolve` | Learning | Analyze and cluster instincts into skills |
+| `/instinct-export` | Learning | Export learned instincts to shareable format |
+| `/instinct-import` | Learning | Import instincts from file or URL |
+| `/instinct-status` | Learning | Show learned instincts by domain |
+| `/learn` | Learning | Extract reusable patterns from session |
+| `/learn-eval` | Learning | Extract and evaluate patterns before saving |
+| `/promote` | Learning | Promote project instincts to global scope |
+| `/projects` | Learning | List projects and instinct statistics |
+| `/skill-create` | Skills | Generate skills from git history |
+| `/refactor-clean` | Refactoring | Safely remove dead code with test verification |
+| `/test-coverage` | Testing | Analyze coverage and generate missing tests |
+| `/update-codemaps` | Documentation | Generate architecture documentation |
+| `/update-docs` | Documentation | Sync docs with codebase |
+| `/setup-pm` | Setup | Configure package manager preference |
+| `/claw` | Interactive | Start NanoClaw REPL session |
+| `/sessions` | Management | Manage session history and aliases |
+| `/pm2` | DevOps | Auto-generate PM2 service commands |
+| `/multi-plan` | Multi-Model | Multi-model collaborative planning |
+| `/multi-execute` | Multi-Model | Multi-model collaborative execution |
+| `/multi-workflow` | Multi-Model | Full multi-model workflow (Research to Review) |
+| `/multi-backend` | Multi-Model | Backend-focused multi-model workflow |
+| `/multi-frontend` | Multi-Model | Frontend-focused multi-model workflow |
+
+## Command Categories
+
+### Planning & Architecture
+
+Commands for planning features and making architectural decisions:
+
+- **[/plan](/commands/plan)** - Restate requirements, assess risks, create implementation plan
+- **[/orchestrate](/commands/orchestrate)** - Sequential agent workflow (planner → tdd → reviewer → security)
+- **[/multi-plan](/commands/multi-plan)** - Multi-model collaborative planning with Codex and Gemini
+
+### Test-Driven Development
+
+Commands that enforce testing best practices:
+
+- **[/tdd](/commands/tdd)** - Scaffold interfaces, write tests first, implement minimal code
+- **[/go-test](/commands/go-test)** - Go TDD with table-driven tests
+- **[/test-coverage](/commands/test-coverage)** - Analyze coverage gaps and generate missing tests
+- **[/e2e](/commands/e2e)** - Generate and run Playwright end-to-end tests
+
+### Code Quality & Review
+
+Commands for maintaining code quality:
+
+- **[/code-review](/commands/code-review)** - Security and quality review of uncommitted changes
+- **[/go-review](/commands/go-review)** - Idiomatic Go code review with concurrency analysis
+- **[/python-review](/commands/python-review)** - PEP 8 compliance and Pythonic patterns
+- **[/verify](/commands/verify)** - Comprehensive verification (build, types, lint, tests)
+
+### Build & Error Fixing
+
+Commands for resolving build errors:
+
+- **[/build-fix](/commands/build-fix)** - Fix build and type errors incrementally
+- **[/go-build](/commands/go-build)** - Fix Go build errors with minimal changes
+
+### Refactoring & Cleanup
+
+Commands for code maintenance:
+
+- **[/refactor-clean](/commands/refactor-clean)** - Safely identify and remove dead code
+
+### Continuous Learning
+
+Commands for learning from your workflow:
+
+- **[/learn](/commands/learn)** - Extract reusable patterns from session
+- **[/learn-eval](/commands/learn-eval)** - Extract and evaluate patterns with quality gate
+- **[/instinct-status](/commands/instinct-status)** - Show learned instincts
+- **[/instinct-export](/commands/instinct-export)** - Export instincts to shareable format
+- **[/instinct-import](/commands/instinct-import)** - Import instincts from file/URL
+- **[/promote](/commands/promote)** - Promote project instincts to global
+- **[/evolve](/commands/evolve)** - Cluster instincts into skills/commands/agents
+- **[/projects](/commands/projects)** - List projects and instinct stats
+
+### Skills & Automation
+
+Commands for skill management:
+
+- **[/skill-create](/commands/skill-create)** - Generate skills from git history analysis
+
+### Documentation
+
+Commands for maintaining documentation:
+
+- **[/update-docs](/commands/update-docs)** - Sync docs with codebase sources of truth
+- **[/update-codemaps](/commands/update-codemaps)** - Generate architecture codemaps
+
+### Workflow Management
+
+Commands for managing development workflows:
+
+- **[/checkpoint](/commands/checkpoint)** - Create/verify workflow checkpoints
+- **[/eval](/commands/eval)** - Manage eval-driven development
+- **[/sessions](/commands/sessions)** - Manage session history and aliases
+
+### Multi-Model Collaboration
+
+Commands leveraging Codex (backend) and Gemini (frontend):
+
+- **[/multi-workflow](/commands/multi-workflow)** - Full workflow from Research to Review
+- **[/multi-plan](/commands/multi-plan)** - Collaborative planning phase
+- **[/multi-execute](/commands/multi-execute)** - Collaborative execution phase
+- **[/multi-backend](/commands/multi-backend)** - Backend-focused with Codex
+- **[/multi-frontend](/commands/multi-frontend)** - Frontend-focused with Gemini
+
+### Setup & Configuration
+
+Commands for project setup:
+
+- **[/setup-pm](/commands/setup-pm)** - Configure package manager (npm/pnpm/yarn/bun)
+- **[/pm2](/commands/pm2)** - Generate PM2 service configuration
+
+### Interactive Tools
+
+Commands for interactive sessions:
+
+- **[/claw](/commands/claw)** - Start NanoClaw REPL with persistent history
+
+## Usage Patterns
+
+### New Feature Workflow
+
+```bash
+# 1. Plan the feature
+/plan Add real-time notifications
+
+# 2. Implement with TDD
+/tdd
+
+# 3. Review code quality
+/code-review
+
+# 4. Verify everything passes
+/verify
+```
+
+### Bug Fix Workflow
+
+```bash
+# 1. Write failing test first
+/tdd Reproduce login error
+
+# 2. Fix the bug
+# (make changes)
+
+# 3. Verify fix
+/verify
+```
+
+### Multi-Model Workflow
+
+```bash
+# 1. Collaborative planning
+/multi-plan Add payment integration
+
+# 2. Execute plan
+/multi-execute .claude/plan/payment.md
+```
+
+## Command Conventions
+
+### Arguments
+
+Most commands accept natural language descriptions:
+
+```bash
+/plan I need to add real-time notifications
+/tdd function to validate email addresses
+/e2e Test the checkout flow
+```
+
+### Flags
+
+Some commands support flags:
+
+```bash
+/verify quick              # Only build + types
+/verify pre-pr             # Full checks + security
+/instinct-export --domain testing
+/evolve --generate         # Generate files
+```
+
+### File Paths
+
+Commands that reference files accept paths:
+
+```bash
+/multi-execute .claude/plan/feature.md
+/sessions load my-session
+```
+
+## Related Resources
+
+- [Agents Overview](/agents/overview) - 13 specialized agents
+- [Skills Overview](/skills/overview) - 50+ workflow skills
+- [Hooks Overview](/hooks/overview) - Trigger-based automation

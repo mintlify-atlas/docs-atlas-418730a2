@@ -1,0 +1,241 @@
+---
+title: TypeScript-Specific Rules
+description: TypeScript and JavaScript coding standards, testing, and security guidelines
+icon: js
+---
+
+<Note>
+  This page extends [Common Rules](/rules/common-rules) with TypeScript/JavaScript specific content.
+  
+  Applies to: `**/*.ts`, `**/*.tsx`, `**/*.js`, `**/*.jsx`
+</Note>
+
+## Coding Style
+
+### Immutability
+
+Use spread operator for immutable updates:
+
+<CodeGroup>
+```typescript ❌ Wrong: Mutation
+function updateUser(user, name) {
+  user.name = name  // MUTATION!
+  return user
+}
+```
+
+```typescript ✅ Correct: Immutability
+function updateUser(user, name) {
+  return {
+    ...user,
+    name
+  }
+}
+```
+</CodeGroup>
+
+### Error Handling
+
+Use async/await with try-catch:
+
+```typescript
+try {
+  const result = await riskyOperation()
+  return result
+} catch (error) {
+  console.error('Operation failed:', error)
+  throw new Error('Detailed user-friendly message')
+}
+```
+
+### Input Validation
+
+Use Zod for schema-based validation:
+
+```typescript
+import { z } from 'zod'
+
+const schema = z.object({
+  email: z.string().email(),
+  age: z.number().int().min(0).max(150)
+})
+
+const validated = schema.parse(input)
+```
+
+### Console.log
+
+<Warning>
+  - No `console.log` statements in production code
+  - Use proper logging libraries instead
+  - See hooks for automatic detection
+</Warning>
+
+## Testing
+
+### E2E Testing
+
+Use **Playwright** as the E2E testing framework for critical user flows.
+
+```typescript
+import { test, expect } from '@playwright/test'
+
+test('user can log in', async ({ page }) => {
+  await page.goto('/login')
+  await page.fill('[name=email]', 'user@example.com')
+  await page.fill('[name=password]', 'password123')
+  await page.click('button[type=submit]')
+  await expect(page).toHaveURL('/dashboard')
+})
+```
+
+### Agent Support
+
+<Card title="e2e-runner" icon="robot">
+  Playwright E2E testing specialist
+</Card>
+
+## Patterns
+
+### API Response Format
+
+```typescript
+interface ApiResponse<T> {
+  success: boolean
+  data?: T
+  error?: string
+  meta?: {
+    total: number
+    page: number
+    limit: number
+  }
+}
+```
+
+### Custom Hooks Pattern
+
+```typescript
+export function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value)
+
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay)
+    return () => clearTimeout(handler)
+  }, [value, delay])
+
+  return debouncedValue
+}
+```
+
+### Repository Pattern
+
+```typescript
+interface Repository<T> {
+  findAll(filters?: Filters): Promise<T[]>
+  findById(id: string): Promise<T | null>
+  create(data: CreateDto): Promise<T>
+  update(id: string, data: UpdateDto): Promise<T>
+  delete(id: string): Promise<void>
+}
+```
+
+## Security
+
+### Secret Management
+
+<CodeGroup>
+```typescript ❌ NEVER: Hardcoded secrets
+const apiKey = "sk-proj-xxxxx"
+```
+
+```typescript ✅ ALWAYS: Environment variables
+const apiKey = process.env.OPENAI_API_KEY
+
+if (!apiKey) {
+  throw new Error('OPENAI_API_KEY not configured')
+}
+```
+</CodeGroup>
+
+### Agent Support
+
+<Card title="security-reviewer" icon="shield">
+  Use for comprehensive security audits
+</Card>
+
+## Hooks
+
+### PostToolUse Hooks
+
+Configure in `~/.claude/settings.json`:
+
+<AccordionGroup>
+  <Accordion title="Prettier: Auto-format JS/TS files after edit">
+    Automatically runs Prettier on JavaScript and TypeScript files after edits to maintain consistent formatting.
+    
+    ```json
+    {
+      "matcher": "Edit",
+      "hooks": [{
+        "type": "command",
+        "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hooks/post-edit-format.js\""
+      }]
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="TypeScript check: Run tsc after editing .ts/.tsx files">
+    Runs TypeScript compiler in check mode (`tsc --noEmit`) to catch type errors immediately.
+    
+    ```json
+    {
+      "matcher": "Edit",
+      "hooks": [{
+        "type": "command",
+        "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hooks/post-edit-typecheck.js\""
+      }]
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="console.log warning: Warn about console.log in edited files">
+    Detects `console.log` statements in edited files and warns to use proper logging instead.
+    
+    ```json
+    {
+      "matcher": "Edit",
+      "hooks": [{
+        "type": "command",
+        "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hooks/post-edit-console-warn.js\""
+      }]
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Stop Hooks
+
+<Accordion title="console.log audit: Check all modified files for console.log before session ends">
+  Final check for any `console.log` statements that may have been added during the session.
+  
+  ```json
+  {
+    "matcher": "*",
+    "hooks": [{
+      "type": "command",
+      "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hooks/check-console-log.js\""
+    }]
+  }
+  ```
+</Accordion>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Common Rules" icon="list-check" href="/rules/common-rules">
+    Language-agnostic base rules
+  </Card>
+  <Card title="Hooks Overview" icon="webhook" href="/hooks/overview">
+    Complete hook system reference
+  </Card>
+</CardGroup>

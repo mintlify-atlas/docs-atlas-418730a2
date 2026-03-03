@@ -1,0 +1,291 @@
+---
+title: AgentShield
+description: Security scanner for Claude Code configurations and agent definitions
+---
+
+## Overview
+
+AgentShield is a security auditor for Claude Code configurations. Built at the Claude Code Hackathon (Cerebral Valley x Anthropic, Feb 2026), it scans for vulnerabilities, misconfigurations, and injection risks.
+
+**Stats:** 1,282 tests | 98% coverage | 102 static analysis rules
+
+## Quick Start
+
+```bash
+# Quick scan (no install needed)
+npx ecc-agentshield scan
+
+# Auto-fix safe issues
+npx ecc-agentshield scan --fix
+
+# Deep analysis with three Opus 4.6 agents
+npx ecc-agentshield scan --opus --stream
+
+# Generate secure config from scratch
+npx ecc-agentshield init
+```
+
+## What It Scans
+
+AgentShield analyzes your Claude Code setup across **5 categories:**
+
+### 1. Secrets Detection (14 patterns)
+
+- API keys (OpenAI, Anthropic, AWS, etc.)
+- GitHub tokens (ghp_, gho_, ghs_, etc.)
+- Database credentials
+- Private keys and certificates
+- OAuth tokens
+
+### 2. Permission Auditing
+
+- Tool access boundaries
+- File system permissions
+- Command execution limits
+- Network access restrictions
+
+### 3. Hook Injection Analysis
+
+- Command injection vulnerabilities
+- Path traversal risks
+- Shell escape issues
+- Unsafe eval/exec patterns
+
+### 4. MCP Server Risk Profiling
+
+- Excessive permissions
+- Unvalidated MCP configurations
+- Deprecated or insecure MCP servers
+- Missing authentication
+
+### 5. Agent Config Review
+
+- Overly permissive agent definitions
+- Missing security constraints
+- Unsafe tool combinations
+- Model selection vulnerabilities
+
+## Files Scanned
+
+- `CLAUDE.md` — Project-level configuration
+- `~/.claude/settings.json` — User settings
+- `~/.claude.json` — MCP server configurations
+- `hooks/hooks.json` — Hook definitions
+- `agents/*.md` — Agent definitions
+- `skills/*.md` — Skill files
+
+## The `--opus` Flag
+
+Runs **three Claude Opus 4.6 agents** in a red-team/blue-team/auditor pipeline:
+
+1. **Attacker Agent** — Finds exploit chains and injection vectors
+2. **Defender Agent** — Evaluates existing protections and mitigations
+3. **Auditor Agent** — Synthesizes both into a prioritized risk assessment
+
+**Adversarial reasoning, not just pattern matching.**
+
+```bash
+npx ecc-agentshield scan --opus --stream
+```
+
+This provides:
+- Attack surface analysis
+- Exploit chain mapping
+- Defense effectiveness scoring
+- Prioritized remediation steps
+
+## Output Formats
+
+### Terminal (Default)
+
+Color-graded report with severity scores:
+
+```
+Security Scan Results
+─────────────────────
+Grade: B+
+Critical: 0 | High: 2 | Medium: 5 | Low: 3
+
+❌ HIGH: Hardcoded API key in CLAUDE.md:15
+   Fix: Move to environment variable
+
+⚠️  MEDIUM: Overly permissive hook in hooks.json:42
+   Fix: Restrict to specific file patterns
+```
+
+### JSON (CI Pipelines)
+
+```bash
+npx ecc-agentshield scan --format json > scan-results.json
+```
+
+Machine-readable output for automated processing.
+
+### Markdown (Reports)
+
+```bash
+npx ecc-agentshield scan --format markdown > SECURITY_AUDIT.md
+```
+
+### HTML (Web Dashboard)
+
+```bash
+npx ecc-agentshield scan --format html > security-report.html
+```
+
+## Exit Codes
+
+- **0** — No issues found
+- **1** — Low/medium issues found
+- **2** — Critical/high issues found (fails CI builds)
+
+Use in CI/CD:
+
+```yaml
+- name: Security Scan
+  run: npx ecc-agentshield scan
+  # Fails if exit code 2 (critical issues)
+```
+
+## Using in Claude Code
+
+Run directly from Claude Code via the `/security-scan` command:
+
+```bash
+/security-scan
+```
+
+This:
+1. Runs AgentShield on current project
+2. Reports findings in chat
+3. Offers auto-fix for safe issues
+
+## Configuration
+
+Create `.agentshield.json` to customize scans:
+
+```json
+{
+  "severity": {
+    "failOn": "high",
+    "reportLow": false
+  },
+  "exclude": [
+    "node_modules/**",
+    ".git/**",
+    "test-fixtures/**"
+  ],
+  "rules": {
+    "secrets-detection": true,
+    "hook-injection": true,
+    "mcp-audit": true,
+    "permission-review": true,
+    "agent-config": true
+  }
+}
+```
+
+## Auto-Fix
+
+AgentShield can automatically fix **safe issues**:
+
+```bash
+npx ecc-agentshield scan --fix
+```
+
+**Safe fixes:**
+- Add `.gitignore` entries for config files with secrets
+- Remove debug hooks in production configs
+- Update deprecated MCP server URLs
+- Fix path traversal vulnerabilities in hooks
+
+**Manual fixes required:**
+- Hardcoded secrets (requires you to choose secret manager)
+- Overly permissive agents (requires context about intent)
+- Complex injection chains
+
+## GitHub Action
+
+Run AgentShield in CI:
+
+```yaml
+name: Security Scan
+on: [push, pull_request]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run AgentShield
+        run: npx ecc-agentshield scan
+```
+
+See [github.com/affaan-m/agentshield](https://github.com/affaan-m/agentshield) for the official GitHub Action.
+
+## Common Issues Found
+
+### Hardcoded Secrets
+
+```markdown
+# CLAUDE.md
+API_KEY=sk-1234567890abcdef  ❌
+```
+
+**Fix:** Use environment variables
+
+```markdown
+# CLAUDE.md
+API_KEY=${OPENAI_API_KEY}  ✅
+```
+
+### Unsafe Hook Commands
+
+```json
+{
+  "command": "bash -c \"rm -rf $file_path\""  ❌
+}
+```
+
+**Fix:** Validate and sanitize inputs
+
+```json
+{
+  "command": "node scripts/safe-delete.js"  ✅
+}
+```
+
+### Overly Permissive MCPs
+
+```json
+{
+  "filesystem": {
+    "args": ["/"]  ❌  // Root access
+  }
+}
+```
+
+**Fix:** Restrict to project directory
+
+```json
+{
+  "filesystem": {
+    "args": ["/path/to/project"]  ✅
+  }
+}
+```
+
+## Links
+
+- **GitHub:** [github.com/affaan-m/agentshield](https://github.com/affaan-m/agentshield)
+- **npm:** [npmjs.com/package/ecc-agentshield](https://www.npmjs.com/package/ecc-agentshield)
+- **Hackathon:** [Cerebral Valley x Anthropic, Feb 2026]
+
+## Related Resources
+
+- [Security Best Practices](/customize/security)
+- [Hooks Reference](/reference/hooks)
+- [Troubleshooting](/reference/troubleshooting)

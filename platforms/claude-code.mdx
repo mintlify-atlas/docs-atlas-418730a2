@@ -1,0 +1,428 @@
+---
+title: "Claude Code Support"
+description: "Everything Claude Code's native platform with full plugin capabilities"
+icon: "code"
+---
+
+Claude Code is the **native platform** for Everything Claude Code. This plugin was designed specifically for Claude Code's architecture and provides the most comprehensive feature set.
+
+## Overview
+
+Everything Claude Code provides complete integration with Claude Code CLI v2.1.0+, including:
+
+- **13 specialized agents** for delegated tasks
+- **33 slash commands** for quick execution
+- **56 workflow skills** and domain knowledge libraries
+- **8 hook event types** for trigger-based automation
+- **29 rules** (9 common + 20 language-specific)
+- **14 MCP server configurations**
+
+## Installation
+
+### Quick Install (Recommended)
+
+Install as a Claude Code plugin for instant access to all components:
+
+```bash
+# Add marketplace
+/plugin marketplace add affaan-m/everything-claude-code
+
+# Install plugin
+/plugin install everything-claude-code@everything-claude-code
+```
+
+Or add directly to your `~/.claude/settings.json`:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "everything-claude-code": {
+      "source": {
+        "source": "github",
+        "repo": "affaan-m/everything-claude-code"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "everything-claude-code@everything-claude-code": true
+  }
+}
+```
+
+### Install Rules (Required)
+
+<Warning>
+The Claude Code plugin system does not support distributing `rules` automatically. You must install them manually.
+</Warning>
+
+```bash
+# Clone the repo first
+git clone https://github.com/affaan-m/everything-claude-code.git
+cd everything-claude-code
+
+# Recommended: use the installer (handles common + language rules safely)
+./install.sh typescript    # or python or golang
+
+# You can pass multiple languages:
+./install.sh typescript python golang
+```
+
+For manual installation:
+
+```bash
+# Option A: User-level rules (applies to all projects)
+mkdir -p ~/.claude/rules
+cp -r rules/common/* ~/.claude/rules/
+cp -r rules/typescript/* ~/.claude/rules/   # pick your stack
+cp -r rules/python/* ~/.claude/rules/
+cp -r rules/golang/* ~/.claude/rules/
+
+# Option B: Project-level rules (applies to current project only)
+mkdir -p .claude/rules
+cp -r rules/common/* .claude/rules/
+cp -r rules/typescript/* .claude/rules/     # pick your stack
+```
+
+## Available Features
+
+### 13 Specialized Agents
+
+| Agent | Purpose |
+|-------|----------|
+| planner | Feature implementation planning |
+| architect | System design decisions |
+| tdd-guide | Test-driven development |
+| code-reviewer | Quality and security review |
+| security-reviewer | Vulnerability analysis |
+| build-error-resolver | Fix build errors |
+| e2e-runner | Playwright E2E testing |
+| refactor-cleaner | Dead code cleanup |
+| doc-updater | Documentation sync |
+| go-reviewer | Go code review |
+| go-build-resolver | Go build error resolution |
+| python-reviewer | Python code review |
+| database-reviewer | Database/Supabase review |
+
+### 33 Commands
+
+```bash
+# Core workflow
+/everything-claude-code:plan "Add user authentication"
+/tdd                         # Enforce TDD workflow
+/code-review                 # Quality review
+/build-fix                   # Fix build errors
+
+# Testing
+/e2e                        # E2E test generation
+/test-coverage              # Coverage analysis
+/verify                     # Run verification loop
+/checkpoint                 # Save verification state
+
+# Multi-agent orchestration
+/multi-plan                 # Multi-agent task decomposition
+/multi-execute              # Orchestrated multi-agent workflows
+/pm2                        # PM2 service lifecycle management
+
+# Continuous learning
+/learn                      # Extract patterns mid-session
+/instinct-status            # View learned instincts
+/instinct-import            # Import instincts
+/instinct-export            # Export instincts
+/evolve                     # Cluster instincts into skills
+
+# Language-specific
+/go-review                  # Go code review
+/go-test                    # Go TDD workflow
+/python-review              # Python code review
+
+# Utilities
+/setup-pm                   # Configure package manager
+/sessions                   # Session history management
+/update-docs                # Update documentation
+```
+
+### 56 Skills
+
+<AccordionGroup>
+  <Accordion title="Coding Standards (5)">
+    - coding-standards — Universal coding standards
+    - cpp-coding-standards — C++ Core Guidelines
+    - java-coding-standards — Java coding standards
+    - python-patterns — Python idioms and best practices
+    - golang-patterns — Go idioms and best practices
+  </Accordion>
+
+  <Accordion title="Backend Patterns (8)">
+    - backend-patterns — API, database, caching patterns
+    - api-design — REST API design, pagination, error responses
+    - database-migrations — Migration patterns (Prisma, Drizzle, Django, Go)
+    - postgres-patterns — PostgreSQL optimization patterns
+    - jpa-patterns — JPA/Hibernate patterns
+    - clickhouse-io — ClickHouse analytics and queries
+    - django-patterns — Django models, views, ORM
+    - springboot-patterns — Java Spring Boot patterns
+  </Accordion>
+
+  <Accordion title="Frontend Patterns (3)">
+    - frontend-patterns — React, Next.js patterns
+    - frontend-slides — HTML presentation builder with PPTX conversion
+    - liquid-glass-design — iOS 26 Liquid Glass design system
+  </Accordion>
+
+  <Accordion title="Testing & Verification (11)">
+    - tdd-workflow — Test-driven development methodology
+    - e2e-testing — Playwright E2E patterns and Page Object Model
+    - golang-testing — Go testing patterns, TDD, benchmarks
+    - python-testing — Python testing with pytest
+    - cpp-testing — C++ testing with GoogleTest, CMake/CTest
+    - django-tdd — Django TDD workflow
+    - django-verification — Django verification loops
+    - springboot-tdd — Spring Boot TDD
+    - springboot-verification — Spring Boot verification
+    - eval-harness — Evaluation-driven development
+    - verification-loop — Build, test, lint, typecheck, security
+  </Accordion>
+
+  <Accordion title="Security & Review (4)">
+    - security-review — Comprehensive security checklist
+    - security-scan — AgentShield security auditor integration
+    - django-security — Django security best practices
+    - springboot-security — Spring Boot security
+  </Accordion>
+
+  <Accordion title="AI & Content (5)">
+    - article-writing — Long-form writing without generic AI tone
+    - content-engine — Multi-platform social content workflows
+    - market-research — Source-attributed research
+    - investor-materials — Pitch decks, memos, financial models
+    - investor-outreach — Personalized fundraising outreach
+  </Accordion>
+
+  <Accordion title="Advanced Patterns (10)">
+    - continuous-learning — Auto-extract patterns from sessions
+    - continuous-learning-v2 — Instinct-based learning with confidence scoring
+    - iterative-retrieval — Progressive context refinement for subagents
+    - strategic-compact — Manual compaction suggestions
+    - search-first — Research-before-coding workflow
+    - content-hash-cache-pattern — SHA-256 content hash caching
+    - cost-aware-llm-pipeline — LLM cost optimization and model routing
+    - regex-vs-llm-structured-text — Decision framework for text parsing
+    - swift-actor-persistence — Thread-safe Swift data persistence
+    - swift-protocol-di-testing — Protocol-based DI for testable Swift
+  </Accordion>
+
+  <Accordion title="DevOps & Deployment (3)">
+    - deployment-patterns — CI/CD, health checks, rollbacks
+    - docker-patterns — Docker Compose, networking, volumes, security
+    - nutrient-document-processing — Document processing with Nutrient API
+  </Accordion>
+
+  <Accordion title="Tools & Utilities (2)">
+    - configure-ecc — Interactive installation wizard
+    - skill-stocktake — Audit skills and commands for quality
+  </Accordion>
+</AccordionGroup>
+
+### Hook Events
+
+Claude Code supports 8 hook event types:
+
+<CodeGroup>
+```json PreToolUse
+{
+  "matcher": "tool == \"Edit\"",
+  "hooks": [{
+    "type": "command",
+    "command": "node scripts/hooks/pre-edit-check.js"
+  }]
+}
+```
+
+```json PostToolUse
+{
+  "matcher": "tool == \"Write\" && tool_input.file_path matches \"\\.ts$\"",
+  "hooks": [{
+    "type": "command",
+    "command": "npx prettier --write {{tool_input.file_path}}"
+  }]
+}
+```
+
+```json SessionStart
+{
+  "matcher": "true",
+  "hooks": [{
+    "type": "command",
+    "command": "node scripts/hooks/session-start.js"
+  }]
+}
+```
+
+```json SessionEnd
+{
+  "matcher": "true",
+  "hooks": [{
+    "type": "command",
+    "command": "node scripts/hooks/session-end.js"
+  }]
+}
+```
+</CodeGroup>
+
+## Configuration Examples
+
+### Minimal Setup
+
+```json ~/.claude/settings.json
+{
+  "model": "sonnet",
+  "enabledPlugins": {
+    "everything-claude-code@everything-claude-code": true
+  }
+}
+```
+
+### Optimized for Cost
+
+```json ~/.claude/settings.json
+{
+  "model": "sonnet",
+  "env": {
+    "MAX_THINKING_TOKENS": "10000",
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "haiku"
+  },
+  "enabledPlugins": {
+    "everything-claude-code@everything-claude-code": true
+  }
+}
+```
+
+### Per-Project Overrides
+
+```json .claude/settings.json
+{
+  "model": "opus",
+  "disabledMcpServers": ["supabase", "railway", "vercel"],
+  "env": {
+    "CLAUDE_PACKAGE_MANAGER": "pnpm"
+  }
+}
+```
+
+## Package Manager Detection
+
+The plugin automatically detects your preferred package manager with the following priority:
+
+1. **Environment variable**: `CLAUDE_PACKAGE_MANAGER`
+2. **Project config**: `.claude/package-manager.json`
+3. **package.json**: `packageManager` field
+4. **Lock file**: Detection from package-lock.json, yarn.lock, pnpm-lock.yaml, or bun.lockb
+5. **Global config**: `~/.claude/package-manager.json`
+6. **Fallback**: First available package manager
+
+To set your preferred package manager:
+
+```bash
+# Via command
+/setup-pm
+
+# Via environment variable
+export CLAUDE_PACKAGE_MANAGER=pnpm
+
+# Via global config
+node scripts/setup-package-manager.js --global pnpm
+
+# Via project config
+node scripts/setup-package-manager.js --project bun
+```
+
+## Requirements
+
+<Warning>
+**Minimum version: Claude Code CLI v2.1.0 or later**
+
+This plugin requires v2.1.0+ due to changes in how the plugin system handles hooks.
+</Warning>
+
+Check your version:
+
+```bash
+claude --version
+```
+
+### Important: Hooks Auto-Loading Behavior
+
+Claude Code v2.1+ **automatically loads** `hooks/hooks.json` from any installed plugin by convention. 
+
+<Warning>
+**For Contributors:** Do NOT add a `"hooks"` field to `.claude-plugin/plugin.json`. This causes a duplicate detection error.
+</Warning>
+
+## Usage
+
+### Check Installed Components
+
+```bash
+/plugin list everything-claude-code@everything-claude-code
+```
+
+This shows all available agents, commands, and skills from the plugin.
+
+### Starting a New Feature
+
+```bash
+# 1. Plan the implementation
+/everything-claude-code:plan "Add user authentication with OAuth"
+
+# 2. Write tests first
+/tdd
+
+# 3. Review your work
+/code-review
+```
+
+### Fixing a Bug
+
+```bash
+# 1. Write a failing test that reproduces it
+/tdd
+
+# 2. Fix the implementation
+# 3. Verify test passes
+/code-review
+```
+
+### Preparing for Production
+
+```bash
+# Run security audit
+/security-scan
+
+# Run E2E tests
+/e2e
+
+# Check coverage
+/test-coverage
+```
+
+## Cross-Platform Notes
+
+All hooks and scripts are written in Node.js for maximum compatibility across **Windows, macOS, and Linux**.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Agents" icon="users" href="/agents/overview">
+    Explore the 13 specialized agents
+  </Card>
+  <Card title="Commands" icon="terminal" href="/commands/overview">
+    See all 33 slash commands
+  </Card>
+  <Card title="Skills" icon="brain" href="/skills/overview">
+    Browse 56 workflow skills
+  </Card>
+  <Card title="Hooks" icon="link" href="/hooks/overview">
+    Configure trigger-based automation
+  </Card>
+</CardGroup>

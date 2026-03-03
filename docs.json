@@ -1,122 +1,279 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Everything Claude Code",
+  "theme": "aspen",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#D4886C",
+    "light": "#F5E6E0",
+    "dark": "#8B5A3C"
   },
-  "favicon": "/favicon.svg",
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/affaan-m/everything-claude-code"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/affaan-m/everything-claude-code",
+      "x": "https://x.com/affaanmustafa"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Get Started",
             "pages": [
-              "index",
+              "introduction",
               "quickstart",
-              "development"
+              "installation"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Core Concepts",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "concepts/overview",
+              "concepts/agents",
+              "concepts/skills",
+              "concepts/commands",
+              "concepts/hooks",
+              "concepts/rules"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Platform Support",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "platforms/claude-code",
+              "platforms/cursor",
+              "platforms/codex",
+              "platforms/opencode"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Guides",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "guides/token-optimization",
+              "guides/continuous-learning",
+              "guides/security-best-practices",
+              "guides/tdd-workflow",
+              "guides/multi-language-setup"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "Agents",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Overview",
             "pages": [
-              "api-reference/introduction"
+              "agents/overview"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Development Agents",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "agents/planner",
+              "agents/architect",
+              "agents/tdd-guide",
+              "agents/code-reviewer",
+              "agents/build-error-resolver"
+            ]
+          },
+          {
+            "group": "Specialized Agents",
+            "pages": [
+              "agents/security-reviewer",
+              "agents/e2e-runner",
+              "agents/refactor-cleaner",
+              "agents/doc-updater",
+              "agents/database-reviewer"
+            ]
+          },
+          {
+            "group": "Language-Specific Agents",
+            "pages": [
+              "agents/go-reviewer",
+              "agents/go-build-resolver",
+              "agents/python-reviewer"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Skills",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "skills/overview"
+            ]
+          },
+          {
+            "group": "Core Skills",
+            "pages": [
+              "skills/tdd-workflow",
+              "skills/security-review",
+              "skills/coding-standards",
+              "skills/verification-loop",
+              "skills/eval-harness"
+            ]
+          },
+          {
+            "group": "Development Patterns",
+            "pages": [
+              "skills/frontend-patterns",
+              "skills/backend-patterns",
+              "skills/api-design",
+              "skills/e2e-testing",
+              "skills/database-migrations"
+            ]
+          },
+          {
+            "group": "Language-Specific Skills",
+            "pages": [
+              "skills/golang-patterns",
+              "skills/golang-testing",
+              "skills/python-patterns",
+              "skills/django-patterns",
+              "skills/cpp-coding-standards"
+            ]
+          },
+          {
+            "group": "Advanced Skills",
+            "pages": [
+              "skills/continuous-learning-v2",
+              "skills/strategic-compact",
+              "skills/iterative-retrieval",
+              "skills/security-scan"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Commands",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "commands/overview"
+            ]
+          },
+          {
+            "group": "Development Commands",
+            "pages": [
+              "commands/plan",
+              "commands/tdd",
+              "commands/code-review",
+              "commands/build-fix",
+              "commands/e2e",
+              "commands/refactor-clean"
+            ]
+          },
+          {
+            "group": "Testing & Verification",
+            "pages": [
+              "commands/test-coverage",
+              "commands/verify",
+              "commands/checkpoint",
+              "commands/eval"
+            ]
+          },
+          {
+            "group": "Learning & Evolution",
+            "pages": [
+              "commands/learn",
+              "commands/learn-eval",
+              "commands/instinct-status",
+              "commands/instinct-import",
+              "commands/instinct-export",
+              "commands/evolve"
+            ]
+          },
+          {
+            "group": "Language-Specific Commands",
+            "pages": [
+              "commands/go-review",
+              "commands/go-test",
+              "commands/go-build",
+              "commands/python-review"
+            ]
+          },
+          {
+            "group": "Orchestration",
+            "pages": [
+              "commands/orchestrate",
+              "commands/multi-plan",
+              "commands/multi-execute",
+              "commands/pm2"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Hooks & Rules",
+        "groups": [
+          {
+            "group": "Hooks",
+            "pages": [
+              "hooks/overview",
+              "hooks/memory-persistence",
+              "hooks/strategic-compact",
+              "hooks/custom-hooks"
+            ]
+          },
+          {
+            "group": "Rules",
+            "pages": [
+              "rules/overview",
+              "rules/common-rules",
+              "rules/typescript-rules",
+              "rules/python-rules",
+              "rules/golang-rules"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "groups": [
+          {
+            "group": "Configuration",
+            "pages": [
+              "reference/settings",
+              "reference/mcp-servers",
+              "reference/package-managers"
+            ]
+          },
+          {
+            "group": "Ecosystem",
+            "pages": [
+              "reference/agentshield",
+              "reference/skill-creator",
+              "reference/github-app"
+            ]
+          },
+          {
+            "group": "Migration & Troubleshooting",
+            "pages": [
+              "reference/migration",
+              "reference/troubleshooting",
+              "reference/faq"
+            ]
+          },
+          {
+            "group": "Community",
+            "pages": [
+              "reference/contributing",
+              "reference/changelog",
+              "reference/sponsors"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

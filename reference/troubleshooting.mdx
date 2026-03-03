@@ -1,0 +1,560 @@
+---
+title: Troubleshooting
+description: Common issues and solutions for Everything Claude Code
+---
+
+## Plugin Issues
+
+### "Duplicate hooks file detected"
+
+**Error:**
+```
+Duplicate hooks file detected: ./hooks/hooks.json resolves to already-loaded file
+```
+
+**Cause:** `hooks` field declared in `.claude-plugin/plugin.json`. Claude Code v2.1+ auto-loads `hooks/hooks.json` from plugins.
+
+**Fix:** Remove `"hooks"` field from `.claude-plugin/plugin.json`:
+
+```json
+// WRONG
+{
+  "name": "everything-claude-code",
+  "hooks": ["hooks/hooks.json"]  // ❌ Remove this
+}
+
+// CORRECT
+{
+  "name": "everything-claude-code"
+  // ✅ No hooks field needed
+}
+```
+
+**History:** This has caused repeated fix/revert cycles ([#29](https://github.com/affaan-m/everything-claude-code/issues/29), [#52](https://github.com/affaan-m/everything-claude-code/issues/52), [#103](https://github.com/affaan-m/everything-claude-code/issues/103)).
+
+### Hooks Not Working
+
+**Symptoms:**
+- Hooks don't fire
+- No warnings/errors from hooks
+- Auto-formatting not happening
+
+**Causes & Fixes:**
+
+#### 1. Plugin Not Installed
+
+```bash
+# Check installed plugins
+/plugin list
+
+# If not listed, install:
+/plugin marketplace add affaan-m/everything-claude-code
+/plugin install everything-claude-code@everything-claude-code
+```
+
+#### 2. Hooks File Malformed
+
+```bash
+# Validate JSON syntax
+node -e "JSON.parse(require('fs').readFileSync('hooks/hooks.json', 'utf8'))"
+```
+
+Common JSON errors:
+- Trailing commas
+- Missing quotes
+- Incorrect escape sequences
+
+#### 3. Node.js Not Available
+
+Many hooks use `node -e` commands:
+
+```bash
+# Check Node.js
+node --version
+# Should be v16+ for best compatibility
+```
+
+### Skills Not Being Picked Up
+
+**Symptoms:**
+- Skills not mentioned by Claude
+- Skills not affecting behavior
+
+**Causes & Fixes:**
+
+#### 1. Wrong Directory Structure
+
+**Correct:**
+```
+~/.claude/skills/
+  ├── tdd-workflow/
+  │   └── SKILL.md
+  ├── frontend-patterns/
+  │   └── SKILL.md
+```
+
+**Wrong:**
+```
+~/.claude/skills/
+  ├── tdd-workflow.md  ❌ (should be in subdirectory)
+  ├── SKILL.md         ❌ (no parent directory)
+```
+
+#### 2. Missing SKILL.md File
+
+```bash
+# Check each skill has SKILL.md
+find ~/.claude/skills -name "SKILL.md"
+```
+
+#### 3. Invalid YAML Frontmatter
+
+SKILL.md must start with valid frontmatter:
+
+```markdown
+---
+name: skill-name
+description: Brief description
+origin: ECC
+---
+
+# Skill Content
+```
+
+### Rules Not Working
+
+**Symptoms:**
+- Claude not following rules
+- Rules seem ignored
+
+**Causes & Fixes:**
+
+#### 1. Rules Not Flat Files
+
+**Correct (user-level):**
+```
+~/.claude/rules/
+  ├── coding-style.md
+  ├── git-workflow.md
+  ├── testing.md
+```
+
+**Wrong:**
+```
+~/.claude/rules/
+  ├── common/
+  │   ├── coding-style.md  ❌ (should be flat)
+```
+
+**Fix:** Flatten during install:
+```bash
+cp -r rules/common/* ~/.claude/rules/
+cp -r rules/typescript/* ~/.claude/rules/
+```
+
+#### 2. Rules in Wrong Location
+
+```bash
+# User-level rules (all projects)
+ls ~/.claude/rules/
+
+# Project-level rules (current project only)
+ls .claude/rules/
+```
+
+#### 3. Restart Required
+
+Restart Claude Code after installing rules:
+
+```bash
+# Exit Claude Code session
+# Start new session
+```
+
+## Context & Token Issues
+
+### Context Window Shrinking
+
+**Symptoms:**
+- Claude says "running out of context"
+- Window feels smaller than 200k tokens
+
+**Cause:** Too many MCP servers consuming context.
+
+**Fix:** Disable unused MCPs in `.claude/settings.json`:
+
+```json
+{
+  "disabledMcpServers": ["supabase", "railway", "vercel"]
+}
+```
+
+**Guidelines:**
+- Keep under 10 MCPs enabled
+- Keep under 80 tools active
+- Each MCP tool description consumes ~200-500 tokens
+
+### Hitting Daily Token Limits
+
+**Cause:** Inefficient token usage.
+
+**Fix:** Apply token optimization settings in `~/.claude/settings.json`:
+
+```json
+{
+  "model": "sonnet",
+  "env": {
+    "MAX_THINKING_TOKENS": "10000",
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "haiku"
+  }
+}
+```
+
+See [Settings Reference](/reference/settings) for details.
+
+### "Quality Degraded in Long Sessions"
+
+**Cause:** Auto-compaction at 95% loses important context.
+
+**Fix:** Lower compaction threshold to 50%:
+
+```json
+{
+  "env": {
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50"
+  }
+}
+```
+
+And use `/compact` manually at logical breakpoints.
+
+## Package Manager Issues
+
+### "Package manager not found"
+
+**Error:**
+```
+[Hook] ERROR: pnpm command not found
+```
+
+**Cause:** Detected package manager not installed.
+
+**Fix:**
+
+```bash
+# Option 1: Install the package manager
+npm install -g pnpm
+
+# Option 2: Change to installed package manager
+/setup-pm
+# Select npm or yarn
+```
+
+### "Wrong package manager being used"
+
+**Symptoms:**
+- Hook runs `npm` but you use `pnpm`
+- Lock file conflicts
+
+**Cause:** Detection priority picking wrong manager.
+
+**Fix:** Override with environment variable:
+
+```bash
+# Add to ~/.bashrc or ~/.zshrc
+export CLAUDE_PACKAGE_MANAGER=pnpm
+```
+
+Or use project config:
+
+```bash
+node scripts/setup-package-manager.js --project pnpm
+```
+
+## Installation Issues
+
+### "Skills not installed after running installer"
+
+**Cause:** Installer targets wrong directory.
+
+**Fix:** Check installation target:
+
+```bash
+# User-level install (default)
+ls ~/.claude/skills/
+
+# If empty, re-run installer
+./install.sh typescript
+```
+
+### "Path reference errors after project-level install"
+
+**Symptoms:**
+- Skills reference `~/.claude/` paths
+- Cross-references broken
+
+**Cause:** Some skills assume user-level install.
+
+**Fix:** Use `/configure-ecc` wizard:
+
+```bash
+/configure-ecc
+```
+
+It detects and fixes path issues automatically.
+
+### "Rules overwriting each other"
+
+**Cause:** Installing common and language rules to same flat directory.
+
+**Expected behavior:** Language-specific files extend common rules. Files with same names (e.g., `coding-style.md`) have language-specific content.
+
+**Fix:** This is correct. Language rules override common rules where needed.
+
+## Hook-Specific Issues
+
+### "Dev server blocker not working"
+
+**Expected:** Hook blocks `npm run dev` outside tmux.
+
+**Symptoms:** Dev server starts anyway.
+
+**Causes & Fixes:**
+
+#### 1. Not Using Bash Tool
+
+Hook only blocks Bash tool, not direct terminal commands.
+
+**Fix:** Ask Claude to run commands (they'll use Bash tool).
+
+#### 2. Tmux Check Failing
+
+```bash
+# Check if tmux detected
+echo $TMUX
+# Should output tmux session if inside tmux
+```
+
+### "Auto-format not running"
+
+**Expected:** PostToolUse hook formats files after Edit.
+
+**Symptoms:** Files not formatted.
+
+**Causes & Fixes:**
+
+#### 1. Prettier Not Installed
+
+```bash
+# Check Prettier
+npx prettier --version
+
+# Install if missing
+npm install -D prettier
+```
+
+#### 2. Prettier Config Missing
+
+Create `.prettierrc`:
+
+```json
+{
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "es5"
+}
+```
+
+#### 3. File Type Not Matched
+
+Hook targets `.ts`, `.tsx`, `.js`, `.jsx` only. Other files not formatted.
+
+### "TypeScript check failing"
+
+**Error:**
+```
+[Hook] TypeScript check failed: 5 errors
+```
+
+**Cause:** Actual TypeScript errors in edited file.
+
+**Fix:** 
+1. Review errors shown by hook
+2. Fix type errors
+3. Re-edit file
+
+**Disable check temporarily:**
+
+Override hook in `~/.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [],
+        "description": "Disable TypeScript check"
+      }
+    ]
+  }
+}
+```
+
+## Agent Issues
+
+### "Agents not being invoked"
+
+**Symptoms:**
+- Complex tasks not delegated
+- No agent-specific formatting
+
+**Causes & Fixes:**
+
+#### 1. Agents Not Installed
+
+```bash
+# Check agents directory
+ls ~/.claude/agents/
+
+# If empty, install plugin or copy manually
+cp agents/*.md ~/.claude/agents/
+```
+
+#### 2. Agent Description Too Vague
+
+Agents need specific descriptions for auto-delegation.
+
+**Fix:** Use commands to invoke explicitly:
+
+```bash
+/plan "Add user authentication"
+/tdd
+/code-review
+```
+
+## MCP Server Issues
+
+### "MCP server not connecting"
+
+**Error:**
+```
+MCP server 'github' failed to connect
+```
+
+**Causes & Fixes:**
+
+#### 1. Missing API Key
+
+Check `~/.claude.json` for placeholder:
+
+```json
+{
+  "mcpServers": {
+    "github": {
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_PAT_HERE"  // ❌
+      }
+    }
+  }
+}
+```
+
+**Fix:** Replace with actual token.
+
+#### 2. Package Not Installed
+
+Some MCPs require global install:
+
+```bash
+npm list -g @modelcontextprotocol/server-github
+# If not found:
+npm install -g @modelcontextprotocol/server-github
+```
+
+#### 3. Network Issues
+
+HTTP MCPs may have connectivity issues:
+
+```bash
+# Test connectivity
+curl https://mcp.vercel.com
+```
+
+## Performance Issues
+
+### "Claude is slow to respond"
+
+**Causes & Fixes:**
+
+#### 1. Too Many Skills Loaded
+
+Each skill adds to context.
+
+**Fix:** Remove unused skills:
+
+```bash
+rm -rf ~/.claude/skills/django-*  # If not using Django
+rm -rf ~/.claude/skills/golang-*  # If not using Go
+```
+
+#### 2. Using Opus for Simple Tasks
+
+**Fix:** Switch to Sonnet:
+
+```bash
+/model sonnet
+```
+
+#### 3. Large Context Window
+
+**Fix:** Compact more often:
+
+```bash
+/compact
+```
+
+## Getting Further Help
+
+### Check Documentation
+
+1. [FAQ](/reference/faq)
+2. [Settings Reference](/reference/settings)
+3. [Hooks Reference](/reference/hooks)
+
+### Search GitHub Issues
+
+[github.com/affaan-m/everything-claude-code/issues](https://github.com/affaan-m/everything-claude-code/issues)
+
+Search for your error message or symptoms.
+
+### Open New Issue
+
+Include:
+
+```markdown
+## Environment
+- ECC Version: [check plugin list or git tag]
+- Claude Code Version: [run `claude --version`]
+- OS: [macOS / Windows / Linux]
+- Node.js Version: [run `node --version`]
+
+## Issue
+[Describe what's happening]
+
+## Expected Behavior
+[Describe what should happen]
+
+## Steps to Reproduce
+1. ...
+2. ...
+
+## Logs/Errors
+[Paste any error messages]
+```
+
+### Community
+
+- **X/Twitter:** [@affaanmustafa](https://x.com/affaanmustafa)
+- **Discussions:** [GitHub Discussions](https://github.com/affaan-m/everything-claude-code/discussions)

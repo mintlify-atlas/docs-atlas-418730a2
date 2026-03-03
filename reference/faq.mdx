@@ -1,0 +1,424 @@
+---
+title: FAQ
+description: Frequently asked questions about Everything Claude Code
+---
+
+## General Questions
+
+### How do I check which agents/commands are installed?
+
+```bash
+/plugin list everything-claude-code@everything-claude-code
+```
+
+This shows all available agents, commands, and skills from the plugin.
+
+### Can I use only some components (e.g., just agents)?
+
+Yes. Use manual installation and copy only what you need:
+
+```bash
+# Just agents
+cp agents/*.md ~/.claude/agents/
+
+# Just rules
+cp -r rules/common/* ~/.claude/rules/
+```
+
+Each component is fully independent.
+
+### Does this work with Cursor / OpenCode / Codex?
+
+Yes. ECC is cross-platform:
+
+- **Cursor:** Pre-translated configs in `.cursor/`. See README Cursor IDE Support section.
+- **OpenCode:** Full plugin support in `.opencode/`. See README OpenCode Support section.
+- **Codex:** First-class support with adapter drift guards and SessionStart fallback.
+- **Claude Code:** Native — this is the primary target.
+
+### How do I contribute a new skill or agent?
+
+See [CONTRIBUTING.md](https://github.com/affaan-m/everything-claude-code/blob/main/CONTRIBUTING.md).
+
+Short version:
+1. Fork the repo
+2. Create your skill in `skills/your-skill-name/SKILL.md`
+3. Or create an agent in `agents/your-agent.md`
+4. Submit a PR with clear description
+
+## Installation & Setup
+
+### What's the difference between plugin install and manual install?
+
+**Plugin install:**
+- One command: `/plugin install everything-claude-code@everything-claude-code`
+- Auto-updates with plugin system
+- Namespaced commands: `/everything-claude-code:plan`
+- Rules must still be installed manually (Claude Code limitation)
+
+**Manual install:**
+- Copy each component manually
+- Full control over what's installed
+- Shorter command names: `/plan`
+- Requires manual updates
+
+### Why do I need to install rules manually?
+
+Claude Code plugin system does not support distributing `rules` automatically ([upstream limitation](https://code.claude.com/docs/en/plugins-reference)).
+
+You must copy them manually:
+
+```bash
+cp -r rules/common/* ~/.claude/rules/
+cp -r rules/typescript/* ~/.claude/rules/
+```
+
+Or use the installer:
+
+```bash
+./install.sh typescript
+```
+
+### What's the minimum Claude Code version required?
+
+**v2.1.0 or later**
+
+Check your version:
+```bash
+claude --version
+```
+
+Earlier versions have incompatible hook handling.
+
+## Hooks
+
+### My hooks aren't working / I see "Duplicate hooks file" errors
+
+**Do NOT add a `"hooks"` field to `.claude-plugin/plugin.json`.**
+
+Claude Code v2.1+ automatically loads `hooks/hooks.json` from installed plugins. Explicitly declaring it causes duplicate detection errors.
+
+See:
+- [Issue #29](https://github.com/affaan-m/everything-claude-code/issues/29)
+- [Issue #52](https://github.com/affaan-m/everything-claude-code/issues/52)
+- [Issue #103](https://github.com/affaan-m/everything-claude-code/issues/103)
+
+### How do I disable a specific hook?
+
+Override in `~/.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [],
+        "description": "Override: allow all .md file creation"
+      }
+    ]
+  }
+}
+```
+
+### Can I add my own hooks?
+
+Yes. See [Hooks README](https://github.com/affaan-m/everything-claude-code/blob/main/hooks/README.md) for examples and recipes.
+
+## Context & Tokens
+
+### My context window is shrinking / Claude is running out of context
+
+**Cause:** Too many MCP servers eating your context.
+
+Each MCP tool description consumes tokens from your 200k window, potentially reducing it to ~70k.
+
+**Fix:** Disable unused MCPs per project in `.claude/settings.json`:
+
+```json
+{
+  "disabledMcpServers": ["supabase", "railway", "vercel"]
+}
+```
+
+**Guidelines:**
+- Keep under 10 MCPs enabled
+- Keep under 80 tools active
+
+### How do I reduce token costs?
+
+Apply token optimization settings in `~/.claude/settings.json`:
+
+```json
+{
+  "model": "sonnet",
+  "env": {
+    "MAX_THINKING_TOKENS": "10000",
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "haiku"
+  }
+}
+```
+
+**Impact:**
+- ~60% cost reduction (opus → sonnet)
+- ~70% reduction in hidden thinking costs
+- Better quality in long sessions (compact at 50% vs 95%)
+
+See [Token Optimization](/reference/settings#token-optimization-settings).
+
+### When should I use /compact vs /clear?
+
+**`/clear`:**
+- Between unrelated tasks
+- Free and instant
+- Completely resets context
+
+**`/compact`:**
+- At logical task breakpoints:
+  - After research, before implementation
+  - After milestone, before next phase
+  - After debugging, before feature work
+- Costs tokens but preserves context
+- Don't use mid-implementation
+
+## Skills & Agents
+
+### How do I know which skills are active?
+
+Claude Code loads all skills in `~/.claude/skills/` and `.claude/skills/`.
+
+List them:
+
+```bash
+ls -la ~/.claude/skills/
+ls -la .claude/skills/
+```
+
+### Which skills should I install?
+
+**For new users:**
+
+Start with core bundle:
+- `.agents/skills/*` — Engineering, evals, verification
+- `skills/search-first/` — Research-first workflow
+
+**For specific stacks:**
+
+- **TypeScript/React:** `frontend-patterns`, `backend-patterns`, `coding-standards`
+- **Python/Django:** `django-patterns`, `django-tdd`, `python-patterns`
+- **Go:** `golang-patterns`, `golang-testing`
+- **Java/Spring Boot:** `springboot-patterns`, `springboot-tdd`
+
+**For workflows:**
+
+- **TDD:** `tdd-workflow`, language-specific testing skills
+- **Security:** `security-review`, use `/security-scan`
+- **Database:** `postgres-patterns`, `clickhouse-io`, `jpa-patterns`
+
+### How are agents different from skills?
+
+**Agents:**
+- Specialized subagents for delegation
+- Defined in `agents/*.md`
+- Invoked via commands or auto-delegation
+- Have specific tool restrictions
+- Examples: `code-reviewer`, `tdd-guide`, `planner`
+
+**Skills:**
+- Knowledge modules and workflow definitions
+- Defined in `skills/*/SKILL.md`
+- Loaded as context, not invoked directly
+- Provide reference material
+- Examples: `coding-standards`, `frontend-patterns`
+
+## Package Managers
+
+### How do I change my package manager?
+
+```bash
+/setup-pm
+```
+
+Or set environment variable:
+
+```bash
+export CLAUDE_PACKAGE_MANAGER=pnpm
+```
+
+Or use script:
+
+```bash
+node scripts/setup-package-manager.js --global pnpm
+```
+
+See [Package Managers Reference](/reference/package-managers).
+
+### What package managers are supported?
+
+- npm (default fallback)
+- pnpm
+- yarn (classic and berry)
+- bun
+
+### Why is the wrong package manager being used?
+
+Check detection order:
+
+```bash
+node scripts/setup-package-manager.js --detect
+```
+
+Priority:
+1. Environment variable (`CLAUDE_PACKAGE_MANAGER`)
+2. Project config (`.claude/package-manager.json`)
+3. package.json `packageManager` field
+4. Lock file detection
+5. Global config (`~/.claude/package-manager.json`)
+6. First available package manager
+
+Override with highest priority (environment variable).
+
+## Security
+
+### How do I scan for security issues?
+
+```bash
+/security-scan
+# Or:
+npx ecc-agentshield scan
+```
+
+See [AgentShield Reference](/reference/agentshield).
+
+### What does AgentShield check?
+
+5 categories:
+1. **Secrets detection** (14 patterns)
+2. **Permission auditing**
+3. **Hook injection analysis**
+4. **MCP server risk profiling**
+5. **Agent config review**
+
+Scans: `CLAUDE.md`, `settings.json`, `.claude.json`, `hooks/`, `agents/`, `skills/`
+
+### How do I fix hardcoded secrets?
+
+**Wrong:**
+```markdown
+# CLAUDE.md
+API_KEY=sk-1234567890abcdef
+```
+
+**Right:**
+```markdown
+# CLAUDE.md
+API_KEY=${OPENAI_API_KEY}
+```
+
+Then set in shell:
+```bash
+export OPENAI_API_KEY=sk-1234567890abcdef
+```
+
+Or use secret manager (AWS Secrets Manager, 1Password, etc.).
+
+## Advanced
+
+### Can I use this with Agent Teams?
+
+Yes, but be aware:
+
+**Agent Teams spawns multiple context windows.** Each teammate consumes tokens independently.
+
+Only use for tasks where parallelism provides clear value:
+- Multi-module work
+- Parallel reviews
+- Independent research tasks
+
+For simple sequential tasks, subagents are more token-efficient.
+
+### How do I use continuous learning?
+
+Two versions:
+
+**v1 (continuous-learning):**
+```bash
+/learn   # Extract patterns mid-session
+```
+
+**v2 (continuous-learning-v2):**
+```bash
+/instinct-status        # View learned instincts
+/instinct-import <file> # Import instincts
+/instinct-export        # Export instincts
+/evolve                 # Cluster instincts into skills
+```
+
+See [Continuous Learning Guide](/guides/continuous-learning).
+
+### How do I create project-specific skills?
+
+Use the template:
+
+```bash
+cp -r skills/project-guidelines-example ~/.claude/skills/my-project/
+```
+
+Edit `~/.claude/skills/my-project/SKILL.md` with project-specific:
+- Architecture decisions
+- Naming conventions
+- Deployment procedures
+- Team workflows
+
+### What's the `search-first` skill?
+
+Enforces **research-before-coding workflow:**
+
+1. Search existing code first
+2. Check documentation
+3. Only then implement
+
+Prevents:
+- Reinventing existing solutions
+- Inconsistent patterns
+- Missing context
+
+Use with Exa MCP for web research.
+
+## Troubleshooting
+
+### Where can I find more troubleshooting help?
+
+See [Troubleshooting Reference](/reference/troubleshooting) for:
+- Plugin issues
+- Hook problems
+- Context/token issues
+- Package manager errors
+- Installation problems
+
+### How do I report a bug?
+
+1. Search [GitHub Issues](https://github.com/affaan-m/everything-claude-code/issues)
+2. If not found, open new issue with:
+   - ECC version
+   - Claude Code version
+   - OS and Node.js version
+   - Steps to reproduce
+   - Error messages/logs
+
+### How do I request a feature?
+
+Open a [GitHub Discussion](https://github.com/affaan-m/everything-claude-code/discussions) in the **Ideas** category.
+
+Include:
+- Use case (what you're trying to achieve)
+- Proposed solution (how it might work)
+- Alternatives considered
+
+## Related Resources
+
+- [Troubleshooting](/reference/troubleshooting)
+- [Settings Reference](/reference/settings)
+- [Migration Guide](/reference/migration)
+- [GitHub Issues](https://github.com/affaan-m/everything-claude-code/issues)

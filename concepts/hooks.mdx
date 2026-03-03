@@ -1,0 +1,526 @@
+---
+title: Hooks
+description: Event-driven automations that fire before or after Claude Code tool executions
+---
+
+Hooks are event-driven automations that fire before or after tool executions. They enforce code quality, catch mistakes early, and automate repetitive checks without manual intervention.
+
+## How Hooks Work
+
+<Steps>
+  <Step title="User Request">
+    You make a request: "Add authentication middleware"
+  </Step>
+  
+  <Step title="Claude Picks Tool">
+    Claude decides to use the **Edit** tool to modify a file
+  </Step>
+  
+  <Step title="PreToolUse Hook Fires">
+    **Before** the edit executes, PreToolUse hooks run:
+    - Doc file warning checks if it's a non-standard .md file
+    - Strategic compact suggests manual compaction if needed
+  </Step>
+  
+  <Step title="Tool Executes">
+    The Edit tool modifies the file
+  </Step>
+  
+  <Step title="PostToolUse Hook Fires">
+    **After** the edit completes, PostToolUse hooks run:
+    - Prettier auto-formats the file
+    - TypeScript check runs `tsc --noEmit`
+    - Console.log warning scans for debug statements
+  </Step>
+</Steps>
+
+## Hook Types
+
+ECC uses five hook event types:
+
+<CardGroup cols={2}>
+  <Card title="PreToolUse" icon="shield">
+    **When:** Before a tool executes
+    
+    **Can:** Block execution (exit code 2) or warn (stderr)
+    
+    **Use cases:**
+    - Block dev servers outside tmux
+    - Warn about non-standard file creation
+    - Secret detection in prompts
+    - Rate limiting validation
+  </Card>
+  
+  <Card title="PostToolUse" icon="check">
+    **When:** After a tool completes
+    
+    **Can:** Analyze output, trigger followup actions
+    
+    **Cannot:** Block execution (already completed)
+    
+    **Use cases:**
+    - Auto-format code after edits
+    - Run type checks
+    - Log PR URLs after creation
+    - Background build analysis
+  </Card>
+  
+  <Card title="Stop" icon="stop">
+    **When:** After each Claude response
+    
+    **Use cases:**
+    - Audit all modified files
+    - Extract session patterns
+    - Update metrics
+  </Card>
+  
+  <Card title="SessionStart" icon="play">
+    **When:** Session begins
+    
+    **Use cases:**
+    - Load previous context
+    - Detect package manager
+    - Initialize session state
+  </Card>
+  
+  <Card title="SessionEnd" icon="power-off">
+    **When:** Session ends
+    
+    **Use cases:**
+    - Persist session state
+    - Extract patterns for continuous learning
+    - Save checkpoints
+  </Card>
+  
+  <Card title="PreCompact" icon="compress">
+    **When:** Before context compaction
+    
+    **Use cases:**
+    - Save state before compaction
+    - Log compaction event
+    - Archive context
+  </Card>
+</CardGroup>
+
+## Hooks in ECC
+
+### PreToolUse Hooks
+
+<AccordionGroup>
+  <Accordion title="Block Dev Servers Outside Tmux">
+    **Matcher:** `Bash`
+    
+    **Behavior:** Blocks `npm run dev`, `pnpm dev`, `yarn dev`, `bun run dev` outside tmux
+    
+    **Exit code:** 2 (blocks execution)
+    
+    **Why:** Ensures you can access server logs later via `tmux attach`
+    
+    **Example:**
+    ```
+    [Hook] BLOCKED: Dev server must run in tmux for log access
+    [Hook] Use: tmux new-session -d -s dev "npm run dev"
+    [Hook] Then: tmux attach -t dev
+    ```
+  </Accordion>
+  
+  <Accordion title="Tmux Reminder for Long Commands">
+    **Matcher:** `Bash`
+    
+    **Behavior:** Warns about long-running commands (tests, builds, docker)
+    
+    **Exit code:** 0 (warns only)
+    
+    **Commands matched:**
+    - `npm install`, `npm test`
+    - `cargo build`, `make`
+    - `docker`, `pytest`, `vitest`, `playwright`
+    
+    **Example:**
+    ```
+    [Hook] Consider running in tmux for session persistence
+    [Hook] tmux new -s dev  |  tmux attach -t dev
+    ```
+  </Accordion>
+  
+  <Accordion title="Git Push Reminder">
+    **Matcher:** `Bash`
+    
+    **Behavior:** Reminds to review changes before `git push`
+    
+    **Exit code:** 0 (warns only)
+    
+    **Example:**
+    ```
+    [Hook] Review changes before push...
+    [Hook] Continuing with push (remove this hook to add interactive review)
+    ```
+  </Accordion>
+  
+  <Accordion title="Doc File Warning">
+    **Matcher:** `Write`
+    
+    **Behavior:** Warns about non-standard .md/.txt files
+    
+    **Exit code:** 0 (warns only)
+    
+    **Allowed files:**
+    - README.md, CLAUDE.md, CONTRIBUTING.md
+    - CHANGELOG.md, LICENSE, SKILL.md
+    - Files in `docs/` or `skills/` directories
+    
+    **Example:**
+    ```
+    [Hook] Unusual documentation file detected: notes.md
+    [Hook] Standard docs belong in docs/ or README.md
+    ```
+  </Accordion>
+  
+  <Accordion title="Strategic Compact Suggestion">
+    **Matcher:** `Edit|Write`
+    
+    **Behavior:** Suggests manual `/compact` every ~50 tool calls
+    
+    **Exit code:** 0 (warns only)
+    
+    **Example:**
+    ```
+    [Hook] Consider manual /compact - you've done ~50 operations
+    [Hook] Good time: after research, before implementation
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### PostToolUse Hooks
+
+<AccordionGroup>
+  <Accordion title="PR Logger">
+    **Matcher:** `Bash`
+    
+    **Behavior:** Logs PR URL after `gh pr create`
+    
+    **Example:**
+    ```
+    [Hook] PR created: https://github.com/user/repo/pull/123
+    [Hook] Review: gh pr view 123 --web
+    ```
+  </Accordion>
+  
+  <Accordion title="Build Analysis (Background)">
+    **Matcher:** `Bash`
+    
+    **Behavior:** Async analysis after build commands
+    
+    **Async:** Yes (doesn't block)
+    
+    **Timeout:** 30 seconds
+    
+    **Commands matched:** `npm run build`, `yarn build`, `tsc`, `webpack`
+  </Accordion>
+  
+  <Accordion title="Prettier Auto-Format">
+    **Matcher:** `Edit`
+    
+    **Behavior:** Runs Prettier on JS/TS files after edits
+    
+    **Files matched:** `.js`, `.jsx`, `.ts`, `.tsx`
+    
+    **Example:**
+    ```javascript
+    // After editing file.ts, automatically runs:
+    prettier --write file.ts
+    ```
+  </Accordion>
+  
+  <Accordion title="TypeScript Check">
+    **Matcher:** `Edit`
+    
+    **Behavior:** Runs `tsc --noEmit` after editing .ts/.tsx files
+    
+    **Example:**
+    ```
+    [Hook] Running TypeScript check...
+    [Hook] ✓ No type errors found
+    ```
+  </Accordion>
+  
+  <Accordion title="Console.log Warning">
+    **Matcher:** `Edit`
+    
+    **Behavior:** Warns about `console.log` statements in edited files
+    
+    **Example:**
+    ```
+    [Hook] console.log detected on line 42
+    [Hook] Remove before committing
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Lifecycle Hooks
+
+<AccordionGroup>
+  <Accordion title="Session Start">
+    **Event:** `SessionStart`
+    
+    **Actions:**
+    - Loads previous session context from `.claude/session-state.json`
+    - Detects package manager (npm, pnpm, yarn, bun)
+    - Initializes continuous learning observer
+    
+    **Example:**
+    ```
+    [Hook] Loaded session state from previous run
+    [Hook] Package manager: pnpm
+    ```
+  </Accordion>
+  
+  <Accordion title="Pre-Compact">
+    **Event:** `PreCompact`
+    
+    **Actions:**
+    - Saves current state to `.claude/pre-compact-state.json`
+    - Archives context for potential recovery
+    
+    **Example:**
+    ```
+    [Hook] Saving state before compaction...
+    [Hook] State saved to .claude/pre-compact-state.json
+    ```
+  </Accordion>
+  
+  <Accordion title="Console.log Audit (Stop)">
+    **Event:** `Stop` (after each response)
+    
+    **Actions:**
+    - Scans all modified files for `console.log`
+    - Reports findings with file paths and line numbers
+    
+    **Example:**
+    ```
+    [Hook] Console.log audit:
+    [Hook] src/lib/utils.ts:15
+    [Hook] src/components/Button.tsx:42
+    ```
+  </Accordion>
+  
+  <Accordion title="Session End">
+    **Event:** `SessionEnd`
+    
+    **Actions:**
+    - Persists session state to `.claude/session-state.json`
+    - Evaluates session for extractable patterns
+    - Updates continuous learning instincts
+    
+    **Example:**
+    ```
+    [Hook] Session state saved
+    [Hook] 3 patterns extracted for continuous learning
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Hook Input Schema
+
+Hooks receive JSON on stdin:
+
+```typescript
+interface HookInput {
+  tool_name: string          // "Bash", "Edit", "Write", "Read", etc.
+  tool_input: {
+    command?: string         // Bash: the command being run
+    file_path?: string       // Edit/Write/Read: target file
+    old_string?: string      // Edit: text being replaced
+    new_string?: string      // Edit: replacement text
+    content?: string         // Write: file content
+  }
+  tool_output?: {            // PostToolUse only
+    output?: string          // Command/tool output
+  }
+}
+```
+
+## Exit Codes
+
+Hooks communicate via exit codes:
+
+| Exit Code | Meaning | Effect |
+|-----------|---------|--------|
+| **0** | Success | Continue execution, show warnings (stderr) |
+| **2** | Block | Stop tool execution (PreToolUse only) |
+| **Other** | Error | Logged but does not block |
+
+## Writing Custom Hooks
+
+Hooks are Node.js scripts that read JSON from stdin:
+
+```javascript
+// my-hook.js
+let data = ''
+process.stdin.on('data', chunk => data += chunk)
+process.stdin.on('end', () => {
+  const input = JSON.parse(data)
+  
+  // Access tool info
+  const toolName = input.tool_name        // "Edit", "Bash", etc.
+  const toolInput = input.tool_input      // Tool-specific parameters
+  const toolOutput = input.tool_output    // PostToolUse only
+  
+  // Warn (non-blocking): write to stderr
+  if (someCondition) {
+    console.error('[Hook] Warning message shown to Claude')
+  }
+  
+  // Block (PreToolUse only): exit with code 2
+  if (shouldBlock) {
+    console.error('[Hook] BLOCKED: Reason for blocking')
+    process.exit(2)
+  }
+  
+  // Always output original data to stdout
+  console.log(data)
+})
+```
+
+### Add to hooks.json
+
+```json
+{
+  "PreToolUse": [
+    {
+      "matcher": "Edit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node /path/to/my-hook.js"
+        }
+      ],
+      "description": "Custom edit validation"
+    }
+  ]
+}
+```
+
+## Common Hook Recipes
+
+### Warn About TODO Comments
+
+```json
+{
+  "matcher": "Edit",
+  "hooks": [{
+    "type": "command",
+    "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const ns=i.tool_input?.new_string||'';if(/TODO|FIXME|HACK/.test(ns)){console.error('[Hook] New TODO/FIXME added - consider creating an issue')}console.log(d)})\""
+  }],
+  "description": "Warn when adding TODO/FIXME comments"
+}
+```
+
+### Block Large File Creation
+
+```json
+{
+  "matcher": "Write",
+  "hooks": [{
+    "type": "command",
+    "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const c=i.tool_input?.content||'';const lines=c.split('\\n').length;if(lines>800){console.error('[Hook] BLOCKED: File exceeds 800 lines ('+lines+' lines)');console.error('[Hook] Split into smaller, focused modules');process.exit(2)}console.log(d)})\""
+  }],
+  "description": "Block creation of files larger than 800 lines"
+}
+```
+
+### Auto-Format Python with Ruff
+
+```json
+{
+  "matcher": "Edit",
+  "hooks": [{
+    "type": "command",
+    "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const p=i.tool_input?.file_path||'';if(/\\.py$/.test(p)){const{execFileSync}=require('child_process');try{execFileSync('ruff',['format',p],{stdio:'pipe'})}catch(e){}}console.log(d)})\""
+  }],
+  "description": "Auto-format Python files with ruff after edits"
+}
+```
+
+### Require Test Files for New Source
+
+```json
+{
+  "matcher": "Write",
+  "hooks": [{
+    "type": "command",
+    "command": "node -e \"const fs=require('fs');let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const p=i.tool_input?.file_path||'';if(/src\\/.*\\.(ts|js)$/.test(p)&&!/\\.test\\.|\\.spec\\./.test(p)){const testPath=p.replace(/\\.(ts|js)$/,'.test.$1');if(!fs.existsSync(testPath)){console.error('[Hook] No test file found for: '+p);console.error('[Hook] Expected: '+testPath);console.error('[Hook] Consider writing tests first (/tdd)')}}console.log(d)})\""
+  }],
+  "description": "Remind to create tests when adding new source files"
+}
+```
+
+## Cross-Platform Compatibility
+
+All ECC hooks use Node.js for maximum compatibility across Windows, macOS, and Linux. Avoid bash-specific syntax.
+
+<Warning>
+**Windows Users:** Hooks using `bash` or shell-specific features may not work. ECC hooks use `node -e` for portability.
+</Warning>
+
+## Hook Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Exit Code 2 Sparingly">
+    Blocking hooks (exit 2) should only be used for critical issues like security violations or dev server misconfigurations. Most hooks should warn (stderr) instead.
+  </Accordion>
+  
+  <Accordion title="Keep Hooks Fast">
+    Hooks run synchronously (except async hooks). Slow hooks delay tool execution. Keep hook logic under 100ms.
+  </Accordion>
+  
+  <Accordion title="Always Output Original Data">
+    Hooks must `console.log(data)` to pass the original input through. Forgetting this breaks the tool chain.
+  </Accordion>
+  
+  <Accordion title="Use Async for Slow Operations">
+    Build analysis, background jobs, or slow checks should use `"async": true` to avoid blocking.
+  </Accordion>
+  
+  <Accordion title="Test Hook Exit Codes">
+    Verify that blocking hooks (exit 2) actually block tool execution, and warning hooks (exit 0) don't.
+  </Accordion>
+</AccordionGroup>
+
+## Disabling Hooks
+
+To disable a hook, override it in `~/.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [],
+        "description": "Override: allow all .md file creation"
+      }
+    ]
+  }
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Explore Rules" icon="scale-balanced" href="/concepts/rules">
+    Learn about always-follow guidelines
+  </Card>
+  
+  <Card title="Hook Reference" icon="list" href="/hooks/overview">
+    Full catalog of all hooks
+  </Card>
+  
+  <Card title="Memory Persistence" icon="floppy-disk" href="/hooks/memory-persistence">
+    Session lifecycle hooks for context management
+  </Card>
+  
+  <Card title="Custom Hooks" icon="code" href="/hooks/custom-hooks">
+    Step-by-step guide to building your own hooks
+  </Card>
+</CardGroup>

@@ -1,0 +1,183 @@
+---
+title: Package Manager Detection
+description: How ECC detects and uses your preferred package manager (npm, pnpm, yarn, bun)
+---
+
+## Overview
+
+ECC automatically detects your preferred package manager (npm, pnpm, yarn, or bun) and uses it consistently across hooks, commands, and scripts.
+
+## Detection Priority
+
+The plugin detects your package manager in this order:
+
+1. **Environment variable**: `CLAUDE_PACKAGE_MANAGER`
+2. **Project config**: `.claude/package-manager.json`
+3. **package.json**: `packageManager` field
+4. **Lock file**: Detection from package-lock.json, yarn.lock, pnpm-lock.yaml, or bun.lockb
+5. **Global config**: `~/.claude/package-manager.json`
+6. **Fallback**: First available package manager
+
+## Configuration Methods
+
+### 1. Environment Variable (Highest Priority)
+
+```bash
+# Set for current session
+export CLAUDE_PACKAGE_MANAGER=pnpm
+
+# Add to shell profile for persistence
+echo 'export CLAUDE_PACKAGE_MANAGER=pnpm' >> ~/.bashrc
+```
+
+Supported values: `npm`, `pnpm`, `yarn`, `bun`
+
+### 2. Global Configuration
+
+Applies to all projects unless overridden:
+
+```bash
+node scripts/setup-package-manager.js --global pnpm
+```
+
+Or manually create `~/.claude/package-manager.json`:
+
+```json
+{
+  "packageManager": "pnpm"
+}
+```
+
+### 3. Project Configuration
+
+Applies to current project only:
+
+```bash
+node scripts/setup-package-manager.js --project bun
+```
+
+Or manually create `.claude/package-manager.json`:
+
+```json
+{
+  "packageManager": "bun"
+}
+```
+
+### 4. package.json Field
+
+Add to your `package.json`:
+
+```json
+{
+  "packageManager": "pnpm@8.6.0"
+}
+```
+
+ECC will extract `pnpm` from this field.
+
+### 5. Lock File Detection
+
+If no explicit configuration exists, ECC detects from lock files:
+
+- `package-lock.json` → npm
+- `yarn.lock` → yarn
+- `pnpm-lock.yaml` → pnpm
+- `bun.lockb` → bun
+
+## Using the `/setup-pm` Command
+
+Interactive configuration via Claude Code:
+
+```bash
+/setup-pm
+```
+
+This command:
+1. Detects your current package manager
+2. Shows available package managers
+3. Lets you choose global or project-level configuration
+4. Creates the appropriate config file
+
+## Checking Current Configuration
+
+```bash
+node scripts/setup-package-manager.js --detect
+```
+
+Output:
+```
+Detected package manager: pnpm
+Source: environment variable (CLAUDE_PACKAGE_MANAGER)
+```
+
+## Where It's Used
+
+### Hooks
+
+- **Session start**: Detects and displays package manager
+- **Build commands**: Uses detected package manager for `npm run build` → `pnpm run build`
+- **Test commands**: Uses detected package manager for test scripts
+
+### Commands
+
+- `/tdd`: Uses package manager to run tests
+- `/build-fix`: Uses package manager for build commands
+- `/test-coverage`: Uses package manager for coverage reports
+
+### Scripts
+
+- `scripts/hooks/session-start.js`: Package manager detection
+- `scripts/setup-package-manager.js`: Configuration utility
+
+## Cross-Platform Support
+
+Package manager detection works on:
+
+- **Windows**: Full support (cmd.exe, PowerShell, Git Bash)
+- **macOS**: Full support
+- **Linux**: Full support
+
+All detection scripts are written in Node.js for maximum compatibility.
+
+## Supported Package Managers
+
+| Package Manager | Detection | Installation Check | Notes |
+|----------------|-----------|-------------------|-------|
+| **npm** | ✅ package-lock.json | `npm --version` | Default fallback |
+| **pnpm** | ✅ pnpm-lock.yaml | `pnpm --version` | Recommended for monorepos |
+| **yarn** | ✅ yarn.lock | `yarn --version` | Classic and Berry supported |
+| **bun** | ✅ bun.lockb | `bun --version` | Fast alternative |
+
+## Troubleshooting
+
+### "Package manager not found"
+
+**Cause:** The detected package manager is not installed on your system.
+
+**Fix:**
+1. Install the package manager: `npm install -g pnpm`
+2. Or change to an installed package manager: `/setup-pm`
+
+### "Wrong package manager being used"
+
+**Cause:** Higher-priority configuration is overriding your preference.
+
+**Fix:**
+1. Check detection order: `node scripts/setup-package-manager.js --detect`
+2. Set environment variable to override all: `export CLAUDE_PACKAGE_MANAGER=pnpm`
+
+### "Commands fail with package manager errors"
+
+**Cause:** Lock file and package manager mismatch.
+
+**Fix:**
+1. Delete the old lock file
+2. Set correct package manager: `/setup-pm`
+3. Reinstall dependencies
+
+## Related Resources
+
+- [Settings Configuration](/reference/settings)
+- [Hooks Reference](/reference/hooks)
+- [Troubleshooting](/reference/troubleshooting)

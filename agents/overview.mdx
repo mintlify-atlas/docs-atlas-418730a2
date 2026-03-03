@@ -1,0 +1,154 @@
+---
+title: Agents Overview
+description: Everything Claude Code provides 13 specialized agents for software development tasks
+---
+
+Everything Claude Code includes 13 specialized agents that handle specific aspects of software development. These agents work autonomously or can be invoked explicitly when needed.
+
+## Agent Philosophy
+
+**Agent-First Development**: Delegate to specialized agents for domain-specific tasks. Agents are designed to be proactive — they automatically activate when their expertise is needed.
+
+## Available Agents
+
+<CardGroup cols={2}>
+  <Card title="Planner" icon="map" href="/agents/planner">
+    Implementation planning for complex features and refactoring
+  </Card>
+  <Card title="Architect" icon="building" href="/agents/architect">
+    System design, scalability, and technical decision-making
+  </Card>
+  <Card title="TDD Guide" icon="flask" href="/agents/tdd-guide">
+    Test-driven development with 80%+ coverage enforcement
+  </Card>
+  <Card title="Code Reviewer" icon="magnifying-glass" href="/agents/code-reviewer">
+    Code quality, security, and maintainability review
+  </Card>
+  <Card title="Build Error Resolver" icon="wrench" href="/agents/build-error-resolver">
+    Fix TypeScript and build errors quickly
+  </Card>
+  <Card title="Security Reviewer" icon="shield" href="/agents/security-reviewer">
+    Vulnerability detection and OWASP compliance
+  </Card>
+  <Card title="E2E Runner" icon="robot" href="/agents/e2e-runner">
+    End-to-end testing with Playwright
+  </Card>
+  <Card title="Refactor Cleaner" icon="broom" href="/agents/refactor-cleaner">
+    Dead code cleanup and consolidation
+  </Card>
+  <Card title="Doc Updater" icon="book" href="/agents/doc-updater">
+    Documentation and codemap generation
+  </Card>
+  <Card title="Database Reviewer" icon="database" href="/agents/database-reviewer">
+    PostgreSQL optimization and schema design
+  </Card>
+  <Card title="Go Reviewer" icon="golang" href="/agents/go-reviewer">
+    Idiomatic Go code review
+  </Card>
+  <Card title="Go Build Resolver" icon="hammer" href="/agents/go-build-resolver">
+    Go compilation error resolution
+  </Card>
+  <Card title="Python Reviewer" icon="python" href="/agents/python-reviewer">
+    Pythonic patterns and PEP 8 compliance
+  </Card>
+</CardGroup>
+
+## Agent Summary Table
+
+| Agent | Model | Tools | Primary Use Case |
+|-------|-------|-------|------------------|
+| **planner** | opus | Read, Grep, Glob | Complex features, refactoring plans |
+| **architect** | opus | Read, Grep, Glob | System design, scalability decisions |
+| **tdd-guide** | sonnet | Read, Write, Edit, Bash, Grep | Test-first development, 80%+ coverage |
+| **code-reviewer** | sonnet | Read, Grep, Glob, Bash | Code quality and security review |
+| **build-error-resolver** | sonnet | Read, Write, Edit, Bash, Grep, Glob | TypeScript/build error fixing |
+| **security-reviewer** | sonnet | Read, Write, Edit, Bash, Grep, Glob | Vulnerability detection, secrets scanning |
+| **e2e-runner** | sonnet | Read, Write, Edit, Bash, Grep, Glob | Playwright E2E testing |
+| **refactor-cleaner** | sonnet | Read, Write, Edit, Bash, Grep, Glob | Dead code removal, consolidation |
+| **doc-updater** | haiku | Read, Write, Edit, Bash, Grep, Glob | Codemap and documentation updates |
+| **database-reviewer** | sonnet | Read, Write, Edit, Bash, Grep, Glob | PostgreSQL query optimization |
+| **go-reviewer** | sonnet | Read, Grep, Glob, Bash | Go code review |
+| **go-build-resolver** | sonnet | Read, Write, Edit, Bash, Grep, Glob | Go build error resolution |
+| **python-reviewer** | sonnet | Read, Grep, Glob, Bash | Python code review |
+
+## Agent Orchestration
+
+### Automatic Activation
+
+Agents activate proactively based on context:
+
+- **Complex feature request** → `planner`
+- **Code written/modified** → `code-reviewer`
+- **Bug fix or new feature** → `tdd-guide`
+- **Architectural decision** → `architect`
+- **Security-sensitive code** → `security-reviewer`
+- **Build failure** → `build-error-resolver` or `go-build-resolver`
+- **Database query/migration** → `database-reviewer`
+
+### Parallel Execution
+
+For independent operations, multiple agents can run simultaneously:
+
+```bash
+# Example: Launch multiple reviews in parallel
+ask "Review this PR for security, code quality, and database patterns"
+# → security-reviewer, code-reviewer, database-reviewer run in parallel
+```
+
+## When to Use Each Agent
+
+<AccordionGroup>
+  <Accordion title="Planning & Architecture">
+    - **planner**: Breaking down large features, refactoring plans, risk analysis
+    - **architect**: System design, technology choices, scalability planning
+  </Accordion>
+
+  <Accordion title="Development & Testing">
+    - **tdd-guide**: Writing tests first, ensuring coverage
+    - **e2e-runner**: Critical user flow testing
+  </Accordion>
+
+  <Accordion title="Code Quality">
+    - **code-reviewer**: General code review after writing code
+    - **go-reviewer**: Go-specific review
+    - **python-reviewer**: Python-specific review
+    - **database-reviewer**: SQL query and schema review
+  </Accordion>
+
+  <Accordion title="Error Resolution">
+    - **build-error-resolver**: TypeScript/JavaScript build errors
+    - **go-build-resolver**: Go compilation errors
+  </Accordion>
+
+  <Accordion title="Maintenance">
+    - **refactor-cleaner**: Dead code removal
+    - **doc-updater**: Keep documentation current
+    - **security-reviewer**: Regular security audits
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<Check>Use agents proactively — don't wait for user prompts</Check>
+<Check>Run independent agents in parallel for better performance</Check>
+<Check>Trust agent specialization — let them handle their domain</Check>
+<Check>Review agent recommendations before applying fixes</Check>
+
+<Warning>Agents make minimal changes by design — they won't refactor unless specifically asked</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Learn About Planner" icon="map" href="/agents/planner">
+    Deep dive into implementation planning
+  </Card>
+  <Card title="TDD Workflow" icon="flask" href="/agents/tdd-guide">
+    Master test-driven development
+  </Card>
+  <Card title="Security Best Practices" icon="shield" href="/agents/security-reviewer">
+    Prevent vulnerabilities before deployment
+  </Card>
+  <Card title="Database Optimization" icon="database" href="/agents/database-reviewer">
+    Write performant PostgreSQL queries
+  </Card>
+</CardGroup>

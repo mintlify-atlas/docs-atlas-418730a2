@@ -1,0 +1,319 @@
+---
+title: TDD Guide Agent
+description: Test-Driven Development specialist enforcing write-tests-first methodology
+---
+
+## Overview
+
+The **tdd-guide** agent is a Test-Driven Development specialist who ensures all code is developed test-first with comprehensive coverage (80%+ required).
+
+<ParamField path="name" type="string" default="tdd-guide">
+  Agent identifier
+</ParamField>
+
+<ParamField path="model" type="string" default="sonnet">
+  Uses Claude Sonnet for efficient test generation
+</ParamField>
+
+<ParamField path="tools" type="array">
+  Available tools: `Read`, `Write`, `Edit`, `Bash`, `Grep`
+</ParamField>
+
+## When to Use
+
+<Check>Writing new features</Check>
+<Check>Fixing bugs</Check>
+<Check>Refactoring existing code</Check>
+<Check>Ensuring test coverage meets 80%+ threshold</Check>
+
+<Info>The tdd-guide agent activates **PROACTIVELY** when writing new features, fixing bugs, or refactoring code.</Info>
+
+## Core Responsibilities
+
+- Enforce tests-before-code methodology
+- Guide through Red-Green-Refactor cycle
+- Ensure 80%+ test coverage
+- Write comprehensive test suites (unit, integration, E2E)
+- Catch edge cases before implementation
+
+## TDD Workflow
+
+The agent follows the classic Red-Green-Refactor cycle:
+
+### 1. Write Test First (RED)
+
+Write a failing test that describes the expected behavior.
+
+```typescript
+// Write the test BEFORE implementation
+test('calculateTotal should sum item prices', () => {
+  const items = [{ price: 10 }, { price: 20 }];
+  expect(calculateTotal(items)).toBe(30);
+});
+```
+
+### 2. Run Test — Verify it FAILS
+
+```bash
+npm test
+# Test should FAIL because calculateTotal doesn't exist yet
+```
+
+<Warning>If the test passes immediately, you haven't written a proper test!</Warning>
+
+### 3. Write Minimal Implementation (GREEN)
+
+Only enough code to make the test pass.
+
+```typescript
+function calculateTotal(items: Array<{ price: number }>): number {
+  return items.reduce((sum, item) => sum + item.price, 0);
+}
+```
+
+### 4. Run Test — Verify it PASSES
+
+```bash
+npm test
+# Test should now PASS
+```
+
+### 5. Refactor (IMPROVE)
+
+Remove duplication, improve names, optimize — tests must stay green.
+
+### 6. Verify Coverage
+
+```bash
+npm run test:coverage
+# Required: 80%+ branches, functions, lines, statements
+```
+
+<Check>Coverage must be at least 80% for all metrics</Check>
+
+## Test Types Required
+
+| Type | What to Test | When |
+|------|-------------|------|
+| **Unit** | Individual functions in isolation | Always |
+| **Integration** | API endpoints, database operations | Always |
+| **E2E** | Critical user flows (Playwright) | Critical paths |
+
+### Unit Tests
+
+Test individual functions without external dependencies:
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { formatCurrency } from './utils';
+
+describe('formatCurrency', () => {
+  it('formats USD correctly', () => {
+    expect(formatCurrency(1234.56, 'USD')).toBe('$1,234.56');
+  });
+
+  it('handles zero', () => {
+    expect(formatCurrency(0, 'USD')).toBe('$0.00');
+  });
+
+  it('handles negative amounts', () => {
+    expect(formatCurrency(-50, 'USD')).toBe('-$50.00');
+  });
+});
+```
+
+### Integration Tests
+
+Test API endpoints and database operations:
+
+```typescript
+import { describe, it, expect, beforeEach } from 'vitest';
+import { createUser, getUser } from './api/users';
+
+describe('User API', () => {
+  beforeEach(async () => {
+    // Clear database before each test
+    await db.users.deleteAll();
+  });
+
+  it('creates and retrieves user', async () => {
+    const user = await createUser({ email: 'test@example.com' });
+    const retrieved = await getUser(user.id);
+    expect(retrieved.email).toBe('test@example.com');
+  });
+});
+```
+
+### E2E Tests
+
+Test critical user journeys:
+
+```typescript
+import { test, expect } from '@playwright/test';
+
+test('user can sign up and log in', async ({ page }) => {
+  await page.goto('/signup');
+  await page.fill('[data-testid="email"]', 'user@example.com');
+  await page.fill('[data-testid="password"]', 'secure123');
+  await page.click('[data-testid="submit"]');
+  
+  await expect(page).toHaveURL('/dashboard');
+  await expect(page.locator('[data-testid="welcome"]')).toBeVisible();
+});
+```
+
+## Edge Cases You MUST Test
+
+<Warning>Never skip edge case testing!</Warning>
+
+1. **Null/Undefined** input
+2. **Empty** arrays/strings
+3. **Invalid types** passed
+4. **Boundary values** (min/max)
+5. **Error paths** (network failures, DB errors)
+6. **Race conditions** (concurrent operations)
+7. **Large data** (performance with 10k+ items)
+8. **Special characters** (Unicode, emojis, SQL chars)
+
+```typescript
+describe('validateEmail edge cases', () => {
+  it('rejects null', () => {
+    expect(validateEmail(null)).toBe(false);
+  });
+
+  it('rejects empty string', () => {
+    expect(validateEmail('')).toBe(false);
+  });
+
+  it('rejects invalid format', () => {
+    expect(validateEmail('notanemail')).toBe(false);
+  });
+
+  it('handles unicode characters', () => {
+    expect(validateEmail('user@例え.jp')).toBe(true);
+  });
+});
+```
+
+## Test Anti-Patterns to Avoid
+
+<Warning>Common mistakes that reduce test value:</Warning>
+
+| Anti-Pattern | Problem | Solution |
+|--------------|---------|----------|
+| Testing implementation details | Tests break on refactor | Test behavior, not internals |
+| Tests depending on each other | Shared state causes failures | Independent tests |
+| Asserting too little | Passing tests that don't verify anything | Specific assertions |
+| Not mocking external dependencies | Flaky tests, slow tests | Mock Supabase, Redis, OpenAI, etc. |
+| Using real timers | Non-deterministic tests | Use `vi.useFakeTimers()` |
+
+### Bad: Testing Implementation Details
+
+```typescript
+// BAD: Testing internal state
+test('counter increments internal value', () => {
+  const counter = new Counter();
+  counter.increment();
+  expect(counter._value).toBe(1); // Testing private property
+});
+```
+
+### Good: Testing Behavior
+
+```typescript
+// GOOD: Testing observable behavior
+test('counter increments', () => {
+  const counter = new Counter();
+  counter.increment();
+  expect(counter.getValue()).toBe(1); // Testing public API
+});
+```
+
+## Mocking External Dependencies
+
+Always mock external services to keep tests fast and deterministic:
+
+```typescript
+import { vi } from 'vitest';
+import { supabase } from './lib/supabase';
+
+// Mock Supabase
+vi.mock('./lib/supabase', () => ({
+  supabase: {
+    from: vi.fn(() => ({
+      select: vi.fn().mockResolvedValue({
+        data: [{ id: 1, name: 'Test' }],
+        error: null,
+      }),
+    })),
+  },
+}));
+```
+
+## Quality Checklist
+
+<AccordionGroup>
+  <Accordion title="Coverage Requirements">
+    - [ ] All public functions have unit tests
+    - [ ] All API endpoints have integration tests
+    - [ ] Critical user flows have E2E tests
+    - [ ] Coverage is 80%+ (branches, functions, lines, statements)
+  </Accordion>
+
+  <Accordion title="Edge Cases">
+    - [ ] Null/undefined inputs tested
+    - [ ] Empty arrays/strings tested
+    - [ ] Invalid type inputs tested
+    - [ ] Boundary values tested
+    - [ ] Error paths tested (not just happy path)
+  </Accordion>
+
+  <Accordion title="Test Quality">
+    - [ ] External dependencies mocked
+    - [ ] Tests are independent (no shared state)
+    - [ ] Assertions are specific and meaningful
+    - [ ] Test names clearly describe behavior
+    - [ ] Tests run fast (&lt;100ms per unit test)
+  </Accordion>
+</AccordionGroup>
+
+## Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm test -- --watch
+
+# Run with coverage report
+npm run test:coverage
+
+# Run specific test file
+npm test -- src/utils.test.ts
+
+# Run tests matching pattern
+npm test -- --grep="calculateTotal"
+```
+
+## Usage Example
+
+```bash
+# Invoke tdd-guide directly
+ask tdd-guide "Write tests for user authentication flow"
+
+# Or let it activate automatically
+ask "Implement password reset functionality"
+# → tdd-guide activates and writes tests FIRST
+```
+
+## Success Criteria
+
+<Check>Tests written before implementation</Check>
+<Check>All tests pass</Check>
+<Check>Coverage meets 80%+ threshold</Check>
+<Check>Edge cases covered</Check>
+<Check>External dependencies mocked</Check>
+<Check>Tests are independent and fast</Check>
+
+<Tip>For detailed mocking patterns and framework-specific examples, use the `tdd-workflow` skill.</Tip>

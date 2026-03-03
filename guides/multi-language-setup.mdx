@@ -1,0 +1,470 @@
+---
+title: Multi-Language Rules Setup
+description: Install language-specific rules (TypeScript, Python, Go, Swift) that extend common principles with framework-specific patterns
+icon: code
+---
+
+Everything Claude Code uses a **layered rules architecture**: common principles + language-specific extensions.
+
+## Rules Structure
+
+```
+rules/
+├── common/          # Language-agnostic principles (always install)
+│   ├── coding-style.md
+│   ├── git-workflow.md
+│   ├── testing.md
+│   ├── performance.md
+│   ├── patterns.md
+│   ├── hooks.md
+│   ├── agents.md
+│   └── security.md
+├── typescript/      # TypeScript/JavaScript specific
+├── python/          # Python specific
+├── golang/          # Go specific
+└── swift/           # Swift specific
+```
+
+<Note>
+  **common/** contains universal principles with no language-specific code. Language directories extend common rules with framework patterns, tools, and examples.
+</Note>
+
+## Installation Options
+
+### Option 1: Install Script (Recommended)
+
+<Steps>
+  <Step title="Clone Repository">
+    ```bash
+    git clone https://github.com/affaan-m/everything-claude-code.git
+    cd everything-claude-code
+    ```
+  </Step>
+  
+  <Step title="Run Installer">
+    ```bash
+    # Install common + one or more languages
+    ./install.sh typescript
+    ./install.sh python
+    ./install.sh golang
+    ./install.sh swift
+    
+    # Install multiple languages at once
+    ./install.sh typescript python golang
+    ```
+  </Step>
+  
+  <Step title="Verify Installation">
+    ```bash
+    ls ~/.claude/rules/
+    # Should show: common/ typescript/ python/ golang/ swift/
+    ```
+  </Step>
+</Steps>
+
+### Option 2: Manual Installation
+
+<Warning>
+  **Important:** Copy entire directories — do NOT flatten with `/*`.
+  
+  Common and language-specific directories contain files with the same names. Flattening causes language-specific files to overwrite common rules and breaks relative `../common/` references.
+</Warning>
+
+<Steps>
+  <Step title="Install Common Rules (Required)">
+    ```bash
+    cp -r rules/common ~/.claude/rules/common
+    ```
+  </Step>
+  
+  <Step title="Install Language-Specific Rules">
+    ```bash
+    # Choose based on your tech stack
+    cp -r rules/typescript ~/.claude/rules/typescript
+    cp -r rules/python ~/.claude/rules/python
+    cp -r rules/golang ~/.claude/rules/golang
+    cp -r rules/swift ~/.claude/rules/swift
+    ```
+  </Step>
+</Steps>
+
+## Common Rules Overview
+
+### coding-style.md
+
+<Card title="Coding Style" icon="palette">
+  **Core Principles:**
+  - Immutability (CRITICAL) — never mutate, always return new copies
+  - Many small files > few large files (200-400 lines typical, 800 max)
+  - Comprehensive error handling
+  - Input validation at system boundaries
+  - Code quality checklist
+</Card>
+
+### testing.md
+
+<Card title="Testing Requirements" icon="vial">
+  **Minimum 80% Coverage:**
+  - Unit tests (functions, utilities, components)
+  - Integration tests (API endpoints, database)
+  - E2E tests (critical user flows)
+  
+  **TDD Workflow:**
+  1. Write test first (RED)
+  2. Implement (GREEN)
+  3. Refactor (IMPROVE)
+  4. Verify 80%+ coverage
+</Card>
+
+### security.md
+
+<Card title="Security Guidelines" icon="shield-halved">
+  **Mandatory Checks:**
+  - No hardcoded secrets
+  - All user inputs validated
+  - SQL injection prevention
+  - XSS/CSRF protection
+  - Rate limiting on endpoints
+  - Authorization checks
+  
+  **Protocol:** If security issue found → STOP → use security-reviewer agent → fix CRITICAL → rotate secrets → review entire codebase
+</Card>
+
+### git-workflow.md
+
+<Card title="Git Workflow" icon="code-branch">
+  **Commit Format:**
+  ```
+  <type>: <description>
+  ```
+  
+  Types: feat, fix, refactor, docs, test, chore, perf, ci
+  
+  **PR Workflow:** Analyze full commit history → draft comprehensive summary → include test plan → push with `-u` flag
+</Card>
+
+### performance.md
+
+<Card title="Performance" icon="gauge-high">
+  **Context Management:**
+  - Avoid last 20% of context window for large refactoring
+  - Lower-sensitivity tasks tolerate higher utilization
+  
+  **Build Troubleshooting:** Use build-error-resolver agent → analyze → fix incrementally → verify
+</Card>
+
+### patterns.md
+
+<Card title="Architecture Patterns" icon="diagram-project">
+  - API response format (consistent envelope)
+  - Repository pattern (encapsulate data access)
+  - Skeleton projects (battle-tested templates)
+</Card>
+
+### hooks.md
+
+<Card title="Hook Usage" icon="link">
+  - When to use PreToolUse/PostToolUse hooks
+  - Memory persistence patterns
+  - Strategic compaction triggers
+</Card>
+
+### agents.md
+
+<Card title="Agent Orchestration" icon="users">
+  - When to delegate to specialized agents
+  - Parallel vs sequential execution
+  - Agent selection guide
+</Card>
+
+## Language-Specific Rules
+
+### TypeScript/JavaScript
+
+<CodeGroup>
+```markdown coding-style.md
+> Extends [common/coding-style.md](../common/coding-style.md)
+
+## TypeScript Specific
+
+- **Strict mode enabled:** `"strict": true`
+- **Type everything:** No `any` types
+- **Immutability:** Use `as const`, `readonly`
+- **Formatting:** Prettier + ESLint
+- **File naming:** kebab-case for files
+```
+
+```markdown testing.md
+> Extends [common/testing.md](../common/testing.md)
+
+## TypeScript Testing
+
+- **Framework:** Jest or Vitest
+- **React:** @testing-library/react
+- **Coverage:** 80%+ with Jest coverage
+```
+
+```markdown hooks.md
+> Extends [common/hooks.md](../common/hooks.md)
+
+## TypeScript Hooks
+
+- **PostToolUse:** Run `prettier` and `tsc --noEmit`
+- **PreCommit:** ESLint + type check
+```
+</CodeGroup>
+
+### Python
+
+<CodeGroup>
+```markdown coding-style.md
+> Extends [common/coding-style.md](../common/coding-style.md)
+
+## Python Specific
+
+- **PEP 8 compliance:** Use `black` for formatting
+- **Type hints:** Use for all functions
+- **Docstrings:** All public functions
+- **Imports:** Sorted with `isort`
+```
+
+```markdown testing.md
+> Extends [common/testing.md](../common/testing.md)
+
+## Python Testing
+
+- **Framework:** pytest
+- **Coverage:** pytest-cov with 80%+
+- **Fixtures:** Use pytest fixtures
+```
+
+```markdown hooks.md
+> Extends [common/hooks.md](../common/hooks.md)
+
+## Python Hooks
+
+- **PostToolUse:** Run `black` and `mypy`
+- **PreCommit:** `flake8` + type check
+```
+</CodeGroup>
+
+### Go
+
+<CodeGroup>
+```markdown coding-style.md
+> Extends [common/coding-style.md](../common/coding-style.md)
+
+## Go Specific
+
+- **Idiomatic Go:** Follow Effective Go
+- **Error handling:** Explicit error returns
+- **Formatting:** `gofmt` and `goimports`
+- **Mutation:** Pointer receivers are idiomatic
+```
+
+```markdown testing.md
+> Extends [common/testing.md](../common/testing.md)
+
+## Go Testing
+
+- **Framework:** Built-in `testing` package
+- **Coverage:** `go test -cover` with 80%+
+- **Table-driven tests:** Preferred pattern
+```
+
+```markdown hooks.md
+> Extends [common/hooks.md](../common/hooks.md)
+
+## Go Hooks
+
+- **PostToolUse:** Run `gofmt` and `go vet`
+- **PreCommit:** `golangci-lint`
+```
+</CodeGroup>
+
+### Swift
+
+<CodeGroup>
+```markdown coding-style.md
+> Extends [common/coding-style.md](../common/coding-style.md)
+
+## Swift Specific
+
+- **Swift 6.2 concurrency:** Use actors for thread-safety
+- **Protocol-oriented:** Use protocols for DI
+- **Error handling:** Use `Result` type
+- **Formatting:** SwiftFormat
+```
+
+```markdown testing.md
+> Extends [common/testing.md](../common/testing.md)
+
+## Swift Testing
+
+- **Framework:** XCTest
+- **Coverage:** Xcode coverage with 80%+
+- **Mocking:** Protocol-based mocking
+```
+</CodeGroup>
+
+## Rules vs Skills
+
+<CardGroup cols={2}>
+  <Card title="Rules (rules/)" icon="gavel">
+    Define **what** to do:
+    - Standards and conventions
+    - Checklists
+    - Broad applicability
+    
+    Example: "80% test coverage", "No hardcoded secrets"
+  </Card>
+  
+  <Card title="Skills (skills/)" icon="book">
+    Provide **how** to do it:
+    - Deep reference material
+    - Specific task workflows
+    - Actionable patterns
+    
+    Example: `python-patterns`, `golang-testing`, `tdd-workflow`
+  </Card>
+</CardGroup>
+
+<Note>
+  Language-specific rule files reference relevant skills where appropriate.
+</Note>
+
+## Rule Priority
+
+<Warning>
+  When language-specific rules and common rules conflict, **language-specific rules take precedence**.
+</Warning>
+
+This follows the standard layered configuration pattern (similar to CSS specificity or `.gitignore` precedence).
+
+### Example
+
+`common/coding-style.md` recommends immutability. `golang/coding-style.md` overrides:
+
+> Idiomatic Go uses pointer receivers for struct mutation — see [common/coding-style.md](../common/coding-style.md) for the general principle, but Go-idiomatic mutation is preferred here.
+
+## Adding a New Language
+
+<Steps>
+  <Step title="Create Language Directory">
+    ```bash
+    mkdir rules/rust
+    ```
+  </Step>
+  
+  <Step title="Add Extension Files">
+    Create files that extend common rules:
+    - `coding-style.md` — formatting tools, idioms, error handling
+    - `testing.md` — test framework, coverage tools
+    - `patterns.md` — language-specific design patterns
+    - `hooks.md` — PostToolUse hooks for formatters, linters
+    - `security.md` — secret management, security tools
+  </Step>
+  
+  <Step title="Reference Common Rules">
+    Each file should start with:
+    ```markdown
+    > This file extends [common/xxx.md](../common/xxx.md) with Rust specific content.
+    ```
+  </Step>
+  
+  <Step title="Reference or Create Skills">
+    - Reference existing skills if available
+    - Create new ones under `skills/` for deep patterns
+  </Step>
+</Steps>
+
+## Verification
+
+### Check Installed Rules
+
+```bash
+ls -la ~/.claude/rules/
+```
+
+Expected output:
+```
+common/
+typescript/
+python/
+golang/
+swift/
+```
+
+### Verify Common Rules
+
+```bash
+ls ~/.claude/rules/common/
+```
+
+Expected output:
+```
+coding-style.md
+git-workflow.md
+testing.md
+performance.md
+patterns.md
+hooks.md
+agents.md
+security.md
+```
+
+### Verify Language-Specific Rules
+
+```bash
+ls ~/.claude/rules/typescript/
+```
+
+Expected output:
+```
+coding-style.md
+testing.md
+patterns.md
+hooks.md
+security.md
+```
+
+## Installation Checklist
+
+- [ ] Common rules installed (`~/.claude/rules/common/`)
+- [ ] Language-specific rules installed (TypeScript, Python, Go, Swift)
+- [ ] Directory structure preserved (not flattened)
+- [ ] Relative references intact (`../common/` links work)
+- [ ] Verified with `ls ~/.claude/rules/`
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Start with Common" icon="foundation">
+    Always install common rules first. They provide the foundation.
+  </Card>
+  
+  <Card title="Install Only What You Use" icon="filter">
+    Only install language rules for your project's tech stack.
+  </Card>
+  
+  <Card title="Keep Directory Structure" icon="folder-tree">
+    Never flatten. Common and language-specific rules must stay separate.
+  </Card>
+  
+  <Card title="Update Regularly" icon="rotate">
+    Pull latest rules from the repo periodically for improvements.
+  </Card>
+</CardGroup>
+
+## Related Documentation
+
+- [Token Optimization](/guides/token-optimization) — Reduce Claude Code costs
+- [TDD Workflow](/guides/tdd-workflow) — Test-driven development
+- [Security Best Practices](/guides/security-best-practices) — Security guidelines
+- [Continuous Learning](/guides/continuous-learning) — Instinct-based learning
+
+---
+
+<Tip>
+  **Pro Tip:** Use the install script (`./install.sh`) for safe, automated installation. It handles directory structure and prevents common mistakes.
+</Tip>

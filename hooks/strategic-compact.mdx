@@ -1,0 +1,196 @@
+---
+title: Strategic Compaction
+description: Manual compaction suggestions at logical intervals
+---
+
+Strategic compaction suggests manual `/compact` at logical intervals to preserve context through task phases, rather than auto-compacting at arbitrary points.
+
+## Why Manual Over Auto-Compact?
+
+<CardGroup cols={2}>
+  <Card title="Timing Control" icon="clock">
+    Auto-compact happens at arbitrary points, often mid-task
+  </Card>
+  <Card title="Context Preservation" icon="shield">
+    Strategic compacting preserves context through logical phases
+  </Card>
+  <Card title="Phase Transitions" icon="right-left">
+    Compact after exploration, before execution
+  </Card>
+  <Card title="Milestone Boundaries" icon="flag-checkered">
+    Compact after completing a milestone, before starting next
+  </Card>
+</CardGroup>
+
+## How It Works
+
+The strategic compact hook tracks tool call count and suggests manual compaction at:
+
+1. **Threshold reached** (default: 50 tool calls)
+2. **Regular intervals** after threshold (every 25 calls)
+
+### Tracking Tool Calls
+
+```javascript
+// Track tool call count in a session-specific file
+const sessionId = process.env.CLAUDE_SESSION_ID || 'default';
+const counterFile = path.join(getTempDir(), `claude-tool-count-${sessionId}`);
+const threshold = parseInt(process.env.COMPACT_THRESHOLD || '50', 10);
+
+let count = 1;
+
+// Read existing count or start at 1
+try {
+  const fd = fs.openSync(counterFile, 'a+');
+  const buf = Buffer.alloc(64);
+  const bytesRead = fs.readSync(fd, buf, 0, 64, 0);
+  if (bytesRead > 0) {
+    const parsed = parseInt(buf.toString('utf8', 0, bytesRead).trim(), 10);
+    count = (Number.isFinite(parsed) && parsed > 0 && parsed <= 1000000)
+      ? parsed + 1
+      : 1;
+  }
+  fs.ftruncateSync(fd, 0);
+  fs.writeSync(fd, String(count), 0);
+} finally {
+  fs.closeSync(fd);
+}
+```
+
+### Suggestion Logic
+
+```javascript
+// Suggest compact after threshold tool calls
+if (count === threshold) {
+  log(`[StrategicCompact] ${threshold} tool calls reached - consider /compact if transitioning phases`);
+}
+
+// Suggest at regular intervals after threshold
+if (count > threshold && (count - threshold) % 25 === 0) {
+  log(`[StrategicCompact] ${count} tool calls - good checkpoint for /compact if context is stale`);
+}
+```
+
+## Hook Configuration
+
+```json hooks.json
+{
+  "PreToolUse": [
+    {
+      "matcher": "Edit|Write",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hooks/suggest-compact.js\""
+        }
+      ],
+      "description": "Suggest manual compaction at logical intervals"
+    }
+  ]
+}
+```
+
+## Environment Configuration
+
+<ParamField path="COMPACT_THRESHOLD" type="number" default="50">
+  Number of tool calls before suggesting compaction (range: 1-10000)
+</ParamField>
+
+<ParamField path="CLAUDE_SESSION_ID" type="string" default="default">
+  Session identifier for tracking tool counts across sessions
+</ParamField>
+
+### Example
+
+```bash
+# Set custom threshold to 100 tool calls
+export COMPACT_THRESHOLD=100
+```
+
+## PreCompact Hook
+
+Runs before context compaction to save state that might be lost during summarization.
+
+### What It Does
+
+<AccordionGroup>
+  <Accordion title="Log Compaction Event">
+    Records the compaction event with timestamp in a compaction log file.
+    
+    ```javascript
+    const timestamp = getDateTimeString();
+    appendFile(compactionLog, `[${timestamp}] Context compaction triggered\n`);
+    ```
+  </Accordion>
+  
+  <Accordion title="Mark Active Session">
+    If there's an active session file, adds a marker noting when compaction occurred.
+    
+    ```javascript
+    const sessions = findFiles(sessionsDir, '*-session.tmp');
+    if (sessions.length > 0) {
+      const activeSession = sessions[0].path;
+      const timeStr = getTimeString();
+      appendFile(activeSession, 
+        `\n---\n**[Compaction occurred at ${timeStr}]** - Context was summarized\n`);
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Hook Configuration
+
+```json hooks.json
+{
+  "PreCompact": [
+    {
+      "matcher": "*",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hooks/pre-compact.js\""
+        }
+      ],
+      "description": "Save state before context compaction"
+    }
+  ]
+}
+```
+
+## Best Practices
+
+<Steps>
+  <Step title="Exploration Phase">
+    Let tool count build up during exploration (reading files, searching code)
+  </Step>
+  <Step title="Before Execution">
+    Run `/compact` before writing code to free up context for implementation
+  </Step>
+  <Step title="After Milestones">
+    Compact after completing a feature or fixing a bug
+  </Step>
+  <Step title="Before Planning">
+    Compact before starting a new feature or major refactoring
+  </Step>
+</Steps>
+
+## Compaction Log
+
+Track all compaction events:
+
+```
+~/.claude/sessions/compaction-log.txt
+```
+
+Example log:
+
+```
+[2026-03-03 14:23:45] Context compaction triggered
+[2026-03-03 15:47:12] Context compaction triggered
+[2026-03-03 17:02:33] Context compaction triggered
+```
+
+## Related
+
+- [Session Lifecycle](/hooks/memory-persistence) — Session start and end hooks
+- [Hook Overview](/hooks/overview) — Complete hook system reference
